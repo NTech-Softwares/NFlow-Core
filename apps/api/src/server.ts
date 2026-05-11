@@ -1,7 +1,17 @@
 import { app } from "./app";
+import { startWhatsapp } from '../../../providers/whatsapp/baileys/client'
+import { startWorker } from "../../worker/src/server";
 
-const PORT = 3333;
 
-app.listen(PORT, () => {
-  console.log(`🚀 API running on port ${PORT}`);
-});
+const PORT = 3000;
+
+async function bootstrap() {
+  await startWhatsapp()
+  startWorker();
+
+  app.listen(PORT, () => {
+    console.log(`🚀 API running on port ${PORT}`);
+  })
+}
+
+bootstrap()
