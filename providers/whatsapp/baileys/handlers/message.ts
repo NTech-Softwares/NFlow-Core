@@ -1,17 +1,146 @@
-import { WASocket } from "@whiskeysockets/baileys";
 import { FormattedMessage } from "../../../../shared/utils/message";
 import { messageQueue } from "../../../../shared/queue/messageQueue";
+import { messages } from "../templates/messages";
 
-const MessageHandler = (message: FormattedMessage) => {
-    if (message.content === 'oi' || message.content === 'Oi') {
-        console.log("Tentando Enviar")
+const MessageHandler = (
+    message: FormattedMessage
+) => {
+
+    const content =
+        message.content?.toLowerCase();
+
+    /*
+     =========================
+     MENU PRINCIPAL
+     =========================
+    */
+
+    if (
+        content === 'oi' ||
+        content === 'olá' ||
+        content === 'ola'
+    ) {
+
         messageQueue.push({
             jid: message.key.remoteJid!,
             message: {
-                text: 'Olá! Você está falando com a NTech. \n\n Digite uma das opções para ser atendido: \n\n 1- Aprender para cursos e treinamentos \n\n 2- Automação para automações de processos no seu negócio \n\n 3- Web para sites ou landing pages \n\n 4- App para aplicativos móveis Android ou IOS'
+                text: messages.welcome
             }
         })
-        //await bot.sendMessage(message.key.remoteJid!, { text: 'Olá! Aqui quem fala é o bot!' })
+        
+        return
+    }
+
+    /*
+    =========================
+    VOLTAR AO MENU
+    =========================
+    */
+
+    if (
+        content === '0' ||
+        content === 'menu' ||
+        content === 'voltar'
+    ) {
+
+        messageQueue.push({
+            jid: message.key.remoteJid!,
+            message: {
+                text: messages.welcome
+            }
+        })
+
+        return
+    }
+
+    /*
+     =========================
+     CURSOS
+     =========================
+    */
+
+    if (content === '1') {
+
+        messageQueue.push({
+            jid: message.key.remoteJid!,
+            message: {
+                text: messages.courses
+            }
+        })
+
+        return
+    }
+
+    /*
+     =========================
+     AUTOMAÇÃO
+     =========================
+    */
+
+    if (content === '2') {
+
+        messageQueue.push({
+            jid: message.key.remoteJid!,
+            message: {
+                text: messages.automation
+            }
+        })
+
+        return
+    }
+
+    /*
+     =========================
+     WEB
+     =========================
+    */
+
+    if (content === '3') {
+
+        messageQueue.push({
+            jid: message.key.remoteJid!,
+            message: {
+                text: messages.web
+            }
+        })
+
+        return
+    }
+
+    /*
+     =========================
+     MOBILE
+     =========================
+    */
+
+    if (content === '4') {
+
+        messageQueue.push({
+            jid: message.key.remoteJid!,
+            message: {
+                text: messages.mobile
+            }
+        })
+
+        return
+    }
+
+    /*
+     =========================
+     ATENDENTE
+     =========================
+    */
+
+    if (content === '5') {
+
+        messageQueue.push({
+            jid: message.key.remoteJid!,
+            message: {
+                text: messages.attendant
+            }
+        })
+
+        return
     }
 }
 

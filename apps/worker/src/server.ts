@@ -21,39 +21,104 @@ export async function startWorker() {
 
             try {
 
-                console.log('Processando job:', job)
+                console.log(
+                    'Processando job:',
+                    job
+                )
 
-                const [result] =
-                    await sock.onWhatsApp(job.jid)
+                const isGroup =
+                    job.jid.endsWith('@g.us')
 
-                console.log('Lookup:', result)
+                const isLid =
+                    job.jid.endsWith('@lid')
 
-                if (!result?.exists) {
+                const isUser =
+                    job.jid.endsWith('@s.whatsapp.net')
+
+                /*
+                 =========================
+                 GRUPOS E LIDS
+                 =========================
+                */
+
+                if (isGroup || isLid) {
+
+                    await sock.sendPresenceUpdate(
+                        'composing',
+                        job.jid
+                    )
+
+                    await delay(2000)
+
+                    const response =
+                        await sock.sendMessage(
+                            job.jid,
+                            job.message
+                        )
 
                     console.log(
-                        'Número não existe no WhatsApp'
+                        'Mensagem enviada:',
+                        response
                     )
-
-                    continue
                 }
 
-                await sock.sendPresenceUpdate(
-                    'composing',
-                    result.jid
-                )
+                /*
+                 =========================
+                 USUÁRIOS
+                 =========================
+                */
 
-                await delay(2000)
+                else if (isUser) {
 
-                const response =
-                    await sock.sendMessage(
-                        result.jid,
-                        job.message
+                    const [result] =
+                        await sock.onWhatsApp(job.jid)
+
+                    console.log(
+                        'Lookup:',
+                        result
                     )
 
-                console.log(
-                    'Mensagem enviada:',
-                    response
-                )
+                    if (!result?.exists) {
+
+                        console.log(
+                            'Número não existe no WhatsApp'
+                        )
+
+                        continue
+                    }
+
+                    await sock.sendPresenceUpdate(
+                        'composing',
+                        result.jid
+                    )
+
+                    await delay(2000)
+
+                    const response =
+                        await sock.sendMessage(
+                            result.jid,
+                            job.message
+                        )
+
+                    console.log(
+                        'Mensagem enviada:',
+                        response
+                    )
+                }
+
+                /*
+                 =========================
+                 JID INVÁLIDO
+                 =========================
+                */
+
+                else {
+
+                    console.log(
+                        'JID inválido:',
+                        job.jid
+                    )
+                }
 
                 const randomDelay =
                     Math.floor(Math.random() * 5000) + 3000
