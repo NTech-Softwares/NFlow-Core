@@ -1,178 +1,203 @@
 async function updateNumberInputState() {
+  const numberInput = document.getElementById("number");
 
-    const numberInput =
-        document.getElementById('number');
+  const checkedGroups = document.querySelectorAll(".group-checkbox:checked");
 
-    const checkedGroups =
-        document.querySelectorAll(
-            '.group-checkbox:checked'
-        );
+  const hasSelectedGroups = checkedGroups.length > 0;
 
-    const hasSelectedGroups =
-        checkedGroups.length > 0;
+  if (hasSelectedGroups) {
+    numberInput.disabled = true;
 
-    if (hasSelectedGroups) {
+    numberInput.value = "";
 
-        numberInput.disabled = true;
+    numberInput.placeholder = "Desabilitado ao selecionar grupos";
+  } else {
+    numberInput.disabled = false;
 
-        numberInput.value = '';
-
-        numberInput.placeholder =
-            'Desabilitado ao selecionar grupos';
-
-    } else {
-
-        numberInput.disabled = false;
-
-        numberInput.placeholder =
-            '5585999999999';
-    }
+    numberInput.placeholder = "5585999999999";
+  }
 }
+
+/*
+ =========================
+ ENVIAR MENSAGEM
+ =========================
+*/
 
 async function sendMessage() {
-    const number = document.getElementById('number').value
-    const message = document.getElementById('message').value
-    const result = document.getElementById('result')
+  const number = document.getElementById("number").value;
 
-    result.innerText = 'Enviando...'
+  const message = document.getElementById("message").value;
 
-    try {
-        const response = await fetch(
-            '/whatsapp/send-message',
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    number,
-                    message
-                })
-            }
-        )
+  const image = document.getElementById("image").files[0];
 
-        const data = await response.json()
+  const result = document.getElementById("result");
 
-        if (data.success) {
-            result.innerText = 'Mensagem adicionada na fila com sucesso!'
-        } else {
-            result.innerText = 'Erro ao enviar mensagem'
-        }
+  result.innerText = "Enviando...";
 
-    } catch (error) {
-        result.innerText = 'Erro ao conectar com a API'
-        console.log(error)
-    }
-}
+  try {
+    const formData = new FormData();
 
-async function listGroups() {
-    const groups = document.getElementById('groups');
-    groups.innerHTML = '';
+    formData.append("number", number);
 
-    const resultGroup = document.getElementById('resultGroup')
-    resultGroup.innerText = 'Listando...'
+    formData.append("message", message);
 
-    try {
-        const response = await fetch(
-            '/whatsapp/list-groups',
-            {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            }
-        )
-
-        const data = await response.json()
-
-        if (data.success) {
-            resultGroup.innerText = 'Download de lista de grupos concluido...'
-        } else {
-            resultGroup.innerText = 'Erro ao listar grupos'
-        }
-
-        data.array.forEach(group => {
-            const groupItem = document.createElement('div');
-            groupItem.classList.add('group-item');
-            groupItem.innerHTML =
-                `<div class="group-left">
-                        <input
-                            type="checkbox"
-                            class="group-checkbox"
-                            value="${group.id}"
-                        >
-                        <div class="group-info">
-                            <span class="group-name">
-                                ${group.name}
-                            </span>
-                            <span class="group-members">
-                                ${group.participants} participantes
-                            </span>
-                        </div>
-                    </div>`;
-
-            const checkbox = groupItem.querySelector('.group-checkbox');
-
-            checkbox.addEventListener(
-                'change',
-                updateNumberInputState
-            );
-
-            groups.appendChild(groupItem);
-        });
-
-    } catch (error) {
-        resultGroup.innerText = 'Erro ao conectar com a API'
-        console.log(error)
+    if (image) {
+      formData.append("image", image);
     }
 
-}
-
-async function toggleSelectAll() {
-
-    const checkboxes =
-        document.querySelectorAll('.group-checkbox');
-
-    const allChecked =
-        [...checkboxes].every(cb => cb.checked);
-
-    checkboxes.forEach(cb => {
-        cb.checked = !allChecked;
+    const response = await fetch("/whatsapp/send-message", {
+      method: "POST",
+      body: formData,
     });
 
-    updateNumberInputState();
+    const data = await response.json();
+
+    if (data.success) {
+      result.innerText = "Mensagem adicionada na fila com sucesso!";
+    } else {
+      result.innerText = "Erro ao enviar mensagem";
+    }
+  } catch (error) {
+    result.innerText = "Erro ao conectar com a API";
+
+    console.log(error);
+  }
 }
 
-async function sendCampaign() {
-    const selectedGroups =
-        [...document.querySelectorAll('.group-checkbox:checked')]
-            .map(cb => cb.value)
-    const result = document.getElementById('result')
+/*
+ =========================
+ LISTAR GRUPOS
+ =========================
+*/
 
-    result.innerText = 'Enviando Campanha...'
+async function listGroups() {
+  const groups = document.getElementById("groups");
 
-    try {
-        const response = await fetch('/whatsapp/send-campaign', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                groups: selectedGroups,
-                message: document.getElementById('message').value
-            })
-        })
+  groups.innerHTML = "";
 
-        const data = await response.json()
+  const resultGroup = document.getElementById("resultGroup");
 
-        if (data?.success) {
-            result.innerText = 'Campanha adicionada na fila com sucesso!'
-        } else {
-            result.innerText = 'Erro ao enviar campanha'
-        }
+  resultGroup.innerText = "Listando...";
 
-    } catch (error) {
-        result.innerText = 'Erro ao conectar com a API'
-        console.log(error)
+  try {
+    const response = await fetch("/whatsapp/list-groups", {
+      method: "GET",
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      resultGroup.innerText = "Download de lista de grupos concluído...";
+    } else {
+      resultGroup.innerText = "Erro ao listar grupos";
     }
+
+    data.array.forEach((group) => {
+      const groupItem = document.createElement("div");
+
+      groupItem.classList.add("group-item");
+
+      groupItem.innerHTML = `
+        <div class="group-left">
+
+          <input
+            type="checkbox"
+            class="group-checkbox"
+            value="${group.id}"
+          >
+
+          <div class="group-info">
+
+            <span class="group-name">
+              ${group.name}
+            </span>
+
+            <span class="group-members">
+              ${group.participants} participantes
+            </span>
+
+          </div>
+
+        </div>
+        `;
+
+      const checkbox = groupItem.querySelector(".group-checkbox");
+
+      checkbox.addEventListener("change", updateNumberInputState);
+
+      groups.appendChild(groupItem);
+    });
+  } catch (error) {
+    resultGroup.innerText = "Erro ao conectar com a API";
+
+    console.log(error);
+  }
+}
+
+/*
+ =========================
+ SELECIONAR TODOS
+ =========================
+*/
+
+async function toggleSelectAll() {
+  const checkboxes = document.querySelectorAll(".group-checkbox");
+
+  const allChecked = [...checkboxes].every((cb) => cb.checked);
+
+  checkboxes.forEach((cb) => {
+    cb.checked = !allChecked;
+  });
+
+  updateNumberInputState();
+}
+
+/*
+ =========================
+ ENVIAR CAMPANHA
+ =========================
+*/
+
+async function sendCampaign() {
+  const selectedGroups = [
+    ...document.querySelectorAll(".group-checkbox:checked"),
+  ].map((cb) => cb.value);
+
+  const image = document.getElementById("image").files[0];
+
+  const result = document.getElementById("result");
+
+  result.innerText = "Enviando Campanha...";
+
+  try {
+    const formData = new FormData();
+
+    selectedGroups.forEach((group) => {
+      formData.append("groups", group);
+    });
+
+    formData.append("message", document.getElementById("message").value);
+
+    if (image) {
+      formData.append("image", image);
+    }
+
+    const response = await fetch("/whatsapp/send-campaign", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      result.innerText = "Campanha adicionada na fila com sucesso!";
+    } else {
+      result.innerText = "Erro ao enviar campanha";
+    }
+  } catch (error) {
+    result.innerText = "Erro ao conectar com a API";
+
+    console.log(error);
+  }
 }

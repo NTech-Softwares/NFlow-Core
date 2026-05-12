@@ -17,7 +17,8 @@
         <p class="status">Conectado</p>
     </div>
 
-    <div class="card" style="display: flex; flex-direction: column; gap: 12px; justify-content: center; align-items: stretch;">
+    <div class="card"
+        style="display: flex; flex-direction: column; gap: 12px; justify-content: center; align-items: stretch;">
         <div class="groups-container">
 
             <div class="groups-header">
@@ -51,6 +52,11 @@
             <textarea id="message" placeholder="Digite sua mensagem"></textarea>
         </div>
 
+        <div class="form-group">
+            <label>Imagem</label>
+            <input type="file" id="image" accept="image/*">
+        </div>
+
         <div style="display: flex; flex-direction: row; gap: 20px; justify-content: flex-start; align-items: center;">
             <button onclick="sendMessage()">
                 Enviar Mensagem
@@ -66,4 +72,5 @@
 
     <script src="/js/dashboard.js"></script>
 </body>
+
 </html>

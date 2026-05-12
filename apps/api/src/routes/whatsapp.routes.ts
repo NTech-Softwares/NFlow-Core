@@ -1,88 +1,136 @@
-import { Router } from 'express'
-import { messageQueue } from '../../../../shared/queue/messageQueue'
+import { Router } from "express";
 
-import { getGroups } from '../../../../providers/whatsapp/baileys/services/groups.service'
-import { logger } from '../../../../shared/utils/logger'
+import { messageQueue } from "../../../../shared/queue/messageQueue";
 
-const router = Router()
+import { getGroups } from "../../../../providers/whatsapp/baileys/services/groups.service";
 
-router.get('/list-groups', async (req, res) => {
-    try {
-        const grupos = await getGroups()
+import { upload } from "../../../../shared/middlewares/upload";
 
-        return res.json({
-            success: true,
-            array: grupos
-        })
-    } catch (error) {
-        return res.status(500).json({
-            error: 'Erro ao listar grupos'
-        })
-    }
-})
+const router = Router();
 
-router.post('/send-message', (req, res) => {
+/*
+ =========================
+ LISTAR GRUPOS
+ =========================
+*/
 
-    const { number, message } = req.body
-
-    if (!number || !message) {
-        return res.status(400).json({
-            success: false,
-            error: 'Número e mensagem são obrigatórios'
-        })
-    }
-
-    const formattedNumber = number.replace(/\D/g, '')
-
-    messageQueue.push({
-        jid: `${formattedNumber}@s.whatsapp.net`,
-        message: {
-            text: message
-        }
-    })
-
-    console.log('Mensagem adicionada na fila')
+router.get("/list-groups", async (req, res) => {
+  try {
+    const grupos = await getGroups();
 
     return res.json({
-        success: true
-    })
-})
+      success: true,
+      array: grupos,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: "Erro ao listar grupos",
+    });
+  }
+});
 
-router.post('/send-campaign', (req, res) => {
-    const { groups, message } = req.body
+/*
+ =========================
+ ENVIAR MENSAGEM
+ =========================
+*/
 
-    if (!groups?.length || !message) {
-        return res.status(400).json({
-            success: false,
-            error: 'Selecione pelo menos um grupo e uma mensagem'
-        })
-    }
-
+router.post("/send-message", upload.single("image"), (req, res) => {
     try {
-        groups.forEach((groupId: string) => {
-            messageQueue.push({
-                jid: groupId,
-                message: {
-                    text: message
-                }
-            })
-        })
+      const { number, message } = req.body;
 
-        console.log(
-            `${groups.length} mensagens adicionadas na fila`
-        )
+      const image = req.file;
 
-        return res.json({
-            success: true,
-            totalGroups: groups.length
-        })
-    } catch (err) {
-        console.log(err)
-        return res.status(500).json({
-            success: false,
-            error: 'Erro ao enviar campanha'
-        })
+      if (!number || !message) {
+        return res.status(400).json({
+          success: false,
+          error: "Número e mensagem são obrigatórios",
+        });
+      }
+
+      const formattedNumber = number.replace(/\D/g, "");
+
+      messageQueue.push({
+        jid: `${formattedNumber}@s.whatsapp.net`,
+
+        imagePath: image?.path,
+
+        message: {
+          text: message,
+        },
+      });
+
+      console.log("Mensagem adicionada na fila");
+
+      return res.json({
+        success: true,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        error: "Erro ao enviar mensagem",
+      });
     }
-})
+  },
+);
 
-export default router
+/*
+ =========================
+ ENVIAR CAMPANHA
+ =========================
+*/
+
+router.post("/send-campaign", upload.single("image"), (req, res) => {
+    try {
+      let { groups, message } = req.body;
+
+      const image = req.file;
+
+      /*
+       =========================
+       TRANSFORMA EM ARRAY
+       =========================
+      */
+
+      if (typeof groups === "string") {
+        groups = [groups];
+      }
+
+      if (!groups?.length || !message) {
+        return res.status(400).json({
+          success: false,
+          error: "Selecione grupos e uma mensagem",
+        });
+      }
+
+      groups.forEach((groupId: string) => {
+        messageQueue.push({
+          jid: groupId,
+          imagePath: image?.path,
+          message: {
+            text: message,
+          },
+        });
+      });
+
+      console.log(`${groups.length} mensagens adicionadas na fila`);
+
+      return res.json({
+        success: true,
+        totalGroups: groups.length,
+      });
+    } catch (error) {
+      console.log(error);
+
+      return res.status(500).json({
+        success: false,
+        error: "Erro ao enviar campanha",
+      });
+    }
+  },
+);
+
+export default router;

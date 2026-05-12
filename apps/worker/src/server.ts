@@ -1,39 +1,72 @@
-import { messageQueue } from '../../../shared/queue/messageQueue'
-import { getWhatsapp } from '../../../providers/whatsapp/baileys/client'
+import { messageQueue }
+from '../../../shared/queue/messageQueue';
+
+import { getWhatsapp }
+from '../../../providers/whatsapp/baileys/client';
+
+import { QueueJob }
+from '../../../shared/types/QueueJob';
 
 function delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms))
+
+    return new Promise(resolve =>
+        setTimeout(resolve, ms)
+    );
 }
 
 export async function startWorker() {
 
-    console.log('Worker iniciado')
+    console.log('Worker iniciado');
 
     while (true) {
 
         if (messageQueue.length > 0) {
 
-            const job = messageQueue.shift()
+            const job =
+                messageQueue.shift();
 
-            if (!job) continue
+            if (!job) continue;
 
-            const sock = getWhatsapp()
+            const sock =
+                getWhatsapp();
 
             try {
 
                 console.log(
                     'Processando job:',
                     job
-                )
+                );
 
                 const isGroup =
-                    job.jid.endsWith('@g.us')
+                    job.jid.endsWith('@g.us');
 
                 const isLid =
-                    job.jid.endsWith('@lid')
+                    job.jid.endsWith('@lid');
 
                 const isUser =
-                    job.jid.endsWith('@s.whatsapp.net')
+                    job.jid.endsWith('@s.whatsapp.net');
+
+                /*
+                 =========================
+                 PAYLOAD DA MENSAGEM
+                 =========================
+                */
+
+                const messagePayload =
+                    job.imagePath
+                        ? {
+                            image: {
+                                url: job.imagePath
+                            },
+
+                            caption:
+                                job.message.text
+                        }
+
+                        : {
+                            text:
+                                job.message.text
+                        };
 
                 /*
                  =========================
@@ -46,20 +79,20 @@ export async function startWorker() {
                     await sock.sendPresenceUpdate(
                         'composing',
                         job.jid
-                    )
+                    );
 
-                    await delay(2000)
+                    await delay(2000);
 
                     const response =
                         await sock.sendMessage(
                             job.jid,
-                            job.message
-                        )
+                            messagePayload
+                        );
 
                     console.log(
                         'Mensagem enviada:',
                         response
-                    )
+                    );
                 }
 
                 /*
@@ -71,39 +104,41 @@ export async function startWorker() {
                 else if (isUser) {
 
                     const [result] =
-                        await sock.onWhatsApp(job.jid)
+                        await sock.onWhatsApp(
+                            job.jid
+                        );
 
                     console.log(
                         'Lookup:',
                         result
-                    )
+                    );
 
                     if (!result?.exists) {
 
                         console.log(
                             'Número não existe no WhatsApp'
-                        )
+                        );
 
-                        continue
+                        continue;
                     }
 
                     await sock.sendPresenceUpdate(
                         'composing',
                         result.jid
-                    )
+                    );
 
-                    await delay(2000)
+                    await delay(2000);
 
                     const response =
                         await sock.sendMessage(
                             result.jid,
-                            job.message
-                        )
+                            messagePayload
+                        );
 
                     console.log(
                         'Mensagem enviada:',
                         response
-                    )
+                    );
                 }
 
                 /*
@@ -117,23 +152,31 @@ export async function startWorker() {
                     console.log(
                         'JID inválido:',
                         job.jid
-                    )
+                    );
                 }
 
-                const randomDelay =
-                    Math.floor(Math.random() * 5000) + 3000
+                /*
+                 =========================
+                 DELAY ANTI-SPAM
+                 =========================
+                */
 
-                await delay(randomDelay)
+                const randomDelay =
+                    Math.floor(
+                        Math.random() * 5000
+                    ) + 3000;
+
+                await delay(randomDelay);
 
             } catch (error) {
 
                 console.log(
                     'Erro ao enviar mensagem:',
                     error
-                )
+                );
             }
         }
 
-        await delay(1000)
+        await delay(1000);
     }
 }
