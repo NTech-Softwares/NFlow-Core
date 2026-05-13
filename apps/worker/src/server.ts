@@ -1,182 +1,112 @@
-import { messageQueue }
-from '../../../shared/queue/messageQueue';
+import { messageQueue } from "../../../shared/queue/messageQueue";
 
-import { getWhatsapp }
-from '../../../providers/whatsapp/baileys/client';
+import { getWhatsapp } from "../../../providers/whatsapp/baileys/client";
 
-import { QueueJob }
-from '../../../shared/types/QueueJob';
+import { QueueJob } from "../../../shared/types/QueueJob";
+import { logger } from "../../../shared/utils/logger";
 
 function delay(ms: number) {
-
-    return new Promise(resolve =>
-        setTimeout(resolve, ms)
-    );
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function startWorker() {
+  logger.info("Worker iniciado");
 
-    console.log('Worker iniciado');
+  while (true) {
+    if (messageQueue.length > 0) {
+      const job = messageQueue.shift();
 
-    while (true) {
+      if (!job) continue;
 
-        if (messageQueue.length > 0) {
+      const sock = getWhatsapp();
 
-            const job =
-                messageQueue.shift();
+      try {
+        logger.info(`Processando job ----> ${job}`);
 
-            if (!job) continue;
+        const isGroup = job.jid.endsWith("@g.us");
 
-            const sock =
-                getWhatsapp();
+        const isLid = job.jid.endsWith("@lid");
 
-            try {
+        const isUser = job.jid.endsWith("@s.whatsapp.net");
 
-                console.log(
-                    'Processando job:',
-                    job
-                );
-
-                const isGroup =
-                    job.jid.endsWith('@g.us');
-
-                const isLid =
-                    job.jid.endsWith('@lid');
-
-                const isUser =
-                    job.jid.endsWith('@s.whatsapp.net');
-
-                /*
+        /*
                  =========================
                  PAYLOAD DA MENSAGEM
                  =========================
                 */
 
-                const messagePayload =
-                    job.imagePath
-                        ? {
-                            image: {
-                                url: job.imagePath
-                            },
+        const messagePayload = job.imagePath
+          ? {
+              image: {
+                url: job.imagePath,
+              },
 
-                            caption:
-                                job.message.text
-                        }
+              caption: job.message.text,
+            }
+          : {
+              text: job.message.text,
+            };
 
-                        : {
-                            text:
-                                job.message.text
-                        };
-
-                /*
+        /*
                  =========================
                  GRUPOS E LIDS
                  =========================
                 */
 
-                if (isGroup || isLid) {
+        if (isGroup || isLid) {
+          await sock.sendPresenceUpdate("composing", job.jid);
 
-                    await sock.sendPresenceUpdate(
-                        'composing',
-                        job.jid
-                    );
+          await delay(2000);
 
-                    await delay(2000);
+          const response = await sock.sendMessage(job.jid, messagePayload);
 
-                    const response =
-                        await sock.sendMessage(
-                            job.jid,
-                            messagePayload
-                        );
-
-                    console.log(
-                        'Mensagem enviada:',
-                        response
-                    );
-                }
-
-                /*
+          logger.info(`Mensagem enviada: ${response}`);
+        } else if (isUser) {
+          /*
                  =========================
                  USUÁRIOS
                  =========================
                 */
+          const [result] = await sock.onWhatsApp(job.jid);
 
-                else if (isUser) {
+          logger.info(`Lookup: ${result}`);
 
-                    const [result] =
-                        await sock.onWhatsApp(
-                            job.jid
-                        );
+          if (!result?.exists) {
+            console.log("Número não existe no WhatsApp");
 
-                    console.log(
-                        'Lookup:',
-                        result
-                    );
+            continue;
+          }
 
-                    if (!result?.exists) {
+          await sock.sendPresenceUpdate("composing", result.jid);
 
-                        console.log(
-                            'Número não existe no WhatsApp'
-                        );
+          await delay(2000);
 
-                        continue;
-                    }
+          const response = await sock.sendMessage(result.jid, messagePayload);
 
-                    await sock.sendPresenceUpdate(
-                        'composing',
-                        result.jid
-                    );
-
-                    await delay(2000);
-
-                    const response =
-                        await sock.sendMessage(
-                            result.jid,
-                            messagePayload
-                        );
-
-                    console.log(
-                        'Mensagem enviada:',
-                        response
-                    );
-                }
-
-                /*
+          logger.info(`Mensagem enviada: ${response}`);
+        } else {
+          /*
                  =========================
                  JID INVÁLIDO
                  =========================
                 */
+          console.log("JID inválido:", job.jid);
+        }
 
-                else {
-
-                    console.log(
-                        'JID inválido:',
-                        job.jid
-                    );
-                }
-
-                /*
+        /*
                  =========================
                  DELAY ANTI-SPAM
                  =========================
                 */
 
-                const randomDelay =
-                    Math.floor(
-                        Math.random() * 5000
-                    ) + 3000;
+        const randomDelay = Math.floor(Math.random() * 5000) + 3000;
 
-                await delay(randomDelay);
-
-            } catch (error) {
-
-                console.log(
-                    'Erro ao enviar mensagem:',
-                    error
-                );
-            }
-        }
-
-        await delay(1000);
+        await delay(randomDelay);
+      } catch (error) {
+        logger.error(`ERRO AO ENVIAR MENSAGEM: ${error}`);
+      }
     }
+
+    await delay(1000);
+  }
 }

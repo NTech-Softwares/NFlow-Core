@@ -5,16 +5,29 @@ import { messageQueue } from "../../../../shared/queue/messageQueue";
 import { getGroups } from "../../../../providers/whatsapp/baileys/services/groups.service";
 
 import { upload } from "../../../../shared/middlewares/upload";
+import { authMiddleware } from "../../../../shared/middlewares/authMiddleware";
+import { sessionState } from "../../../../providers/whatsapp/baileys/state/sessionState";
 
 const router = Router();
+
+/*
+ =========================
+ VERIFICAR STATUS
+ =========================
+*/
+router.get("/status", authMiddleware, (req, res) => {
+  return res.json({
+    status: sessionState.status,
+    qr: sessionState.qr,
+  });
+});
 
 /*
  =========================
  LISTAR GRUPOS
  =========================
 */
-
-router.get("/list-groups", async (req, res) => {
+router.get("/list-groups", authMiddleware, async (req, res) => {
   try {
     const grupos = await getGroups();
 
@@ -35,8 +48,11 @@ router.get("/list-groups", async (req, res) => {
  ENVIAR MENSAGEM
  =========================
 */
-
-router.post("/send-message", upload.single("image"), (req, res) => {
+router.post(
+  "/send-message",
+  authMiddleware,
+  upload.single("image"),
+  (req, res) => {
     try {
       const { number, message } = req.body;
 
@@ -82,8 +98,11 @@ router.post("/send-message", upload.single("image"), (req, res) => {
  ENVIAR CAMPANHA
  =========================
 */
-
-router.post("/send-campaign", upload.single("image"), (req, res) => {
+router.post(
+  "/send-campaign",
+  authMiddleware,
+  upload.single("image"),
+  (req, res) => {
     try {
       let { groups, message } = req.body;
 

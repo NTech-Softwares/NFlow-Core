@@ -1,5 +1,17 @@
+const token =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6Im1sZXdpbiIsImlhdCI6MTc3ODcwMzM1MCwiZXhwIjoxNzc4NzA2OTUwfQ.tv56hZg9t60XH-xRGrFAQt5oU9KqdV_YhYb9qL9if0Y";
+
+let list_groups = false;
+
+if (!list_groups) {
+  listGroups();
+  list_groups = true;
+}
+
 async function updateNumberInputState() {
   const numberInput = document.getElementById("number");
+  const sendMsgBtn = document.getElementById("sendMessage");
+  const sendCpmgBtn = document.getElementById("sendCampaign");
 
   const checkedGroups = document.querySelectorAll(".group-checkbox:checked");
 
@@ -7,14 +19,23 @@ async function updateNumberInputState() {
 
   if (hasSelectedGroups) {
     numberInput.disabled = true;
-
     numberInput.value = "";
-
     numberInput.placeholder = "Desabilitado ao selecionar grupos";
+
+    sendMsgBtn.disabled = true;
+    sendMsgBtn.style.backgroundColor = "#096315";
+
+    sendCpmgBtn.disabled = false;
+    sendCpmgBtn.style.backgroundColor = "#18eb35";
   } else {
     numberInput.disabled = false;
-
     numberInput.placeholder = "5585999999999";
+
+    sendMsgBtn.disabled = false;
+    sendMsgBtn.style.backgroundColor = "#18eb35";
+
+    sendCpmgBtn.disabled = true;
+    sendCpmgBtn.style.backgroundColor = "#096315";
   }
 }
 
@@ -48,6 +69,9 @@ async function sendMessage() {
 
     const response = await fetch("/whatsapp/send-message", {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     });
 
@@ -83,6 +107,9 @@ async function listGroups() {
   try {
     const response = await fetch("/whatsapp/list-groups", {
       method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const data = await response.json();
@@ -185,6 +212,9 @@ async function sendCampaign() {
 
     const response = await fetch("/whatsapp/send-campaign", {
       method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
       body: formData,
     });
 

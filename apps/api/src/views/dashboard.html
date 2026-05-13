@@ -1,76 +1,85 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NFlow Dashboard</title>
-    <link rel="stylesheet" href="/css/dashboard.css">
-</head>
+    <link rel="stylesheet" href="/css/dashboard.css" />
+  </head>
 
-<body>
+  <body>
+    <div class="container">
+      <h1>NFlow Dashboard</h1>
 
-    <h1>NFlow Dashboard</h1>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="card">
+            <h2>Status do WhatsApp</h2>
+            <p class="status">Conectado</p>
+          </div>
+        </div>
 
-    <div class="card">
-        <h2>Status do WhatsApp</h2>
-        <p class="status">Conectado</p>
-    </div>
-
-    <div class="card"
-        style="display: flex; flex-direction: column; gap: 12px; justify-content: center; align-items: stretch;">
-        <div class="groups-container">
-
-            <div class="groups-header">
+        <div class="col-lg-6 col-md-12 col-sm-12">
+          <div class="card d-flex flex-column gap-1">
+            <div class="groups-container">
+              <div class="groups-header">
                 <h3>Grupos</h3>
 
                 <button class="select-all-btn" onclick="toggleSelectAll()">
-                    Selecionar Todos
+                  Selecionar Todos
                 </button>
+              </div>
+
+              <div id="groups" class="groups-list"></div>
             </div>
 
-            <div id="groups" class="groups-list"></div>
+            <button onclick="listGroups()">Listar Grupos</button>
 
-        </div>
-        <button onclick="listGroups()">
-            Listar Grupos
-        </button>
-
-        <p id="resultGroup"></p>
-    </div>
-
-    <div class="card">
-        <h2>Enviar Mensagem</h2>
-
-        <div class="form-group">
-            <label>Número</label>
-            <input type="text" id="number" placeholder="5585999999999">
+            <p id="resultGroup"></p>
+          </div>
         </div>
 
-        <div class="form-group">
-            <label>Mensagem</label>
-            <textarea id="message" placeholder="Digite sua mensagem"></textarea>
-        </div>
+        <div class="col-lg-5 col-md-12 col-sm-12">
+          <div class="card">
+            <h2>Enviar Mensagem</h2>
 
-        <div class="form-group">
-            <label>Imagem</label>
-            <input type="file" id="image" accept="image/*">
-        </div>
+            <div class="form-group">
+              <label>Número</label>
 
-        <div style="display: flex; flex-direction: row; gap: 20px; justify-content: flex-start; align-items: center;">
-            <button onclick="sendMessage()">
+              <input type="text" id="number" placeholder="5585999999999" />
+            </div>
+
+            <div class="form-group">
+              <label>Mensagem</label>
+
+              <textarea
+                id="message"
+                placeholder="Digite sua mensagem"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>Imagem</label>
+
+              <input type="file" id="image" accept="image/*" />
+            </div>
+
+            <div class="d-flex gap-2 mobile-column">
+              <button id="sendMessage" onclick="sendMessage()">
                 Enviar Mensagem
-            </button>
+              </button>
 
-            <button onclick="sendCampaign()">
+              <button id="sendCampaign" onclick="sendCampaign()">
                 Enviar Campanha
-            </button>
-        </div>
+              </button>
+            </div>
 
-        <p id="result"></p>
+            <p id="result"></p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="/js/dashboard.js"></script>
-</body>
-
+  </body>
 </html>

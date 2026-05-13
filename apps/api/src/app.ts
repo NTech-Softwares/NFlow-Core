@@ -6,13 +6,16 @@ import whatsappRoutes from "./routes/whatsapp.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import path from "path";
 
+import authRoutes from "../../../modules/auth/auth.routes";
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static(path.join(__dirname, "public")));
+app.use("/auth", authRoutes);
 
+app.use(express.static(path.join(__dirname, "public")));
 app.use("/uploads", express.static("uploads"));
 
 app.use("/whatsapp", whatsappRoutes);

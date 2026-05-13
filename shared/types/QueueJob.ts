@@ -1,9 +1,7 @@
-type QueueMessage = {
+export type QueueJob = {
   jid: string;
   imagePath?: string;
   message: {
     text: string;
   };
 };
-
-export const messageQueue: QueueMessage[] = [];

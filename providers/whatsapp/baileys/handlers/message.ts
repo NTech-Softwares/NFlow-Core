@@ -2,146 +2,127 @@ import { FormattedMessage } from "../../../../shared/utils/message";
 import { messageQueue } from "../../../../shared/queue/messageQueue";
 import { messages } from "../templates/messages";
 
-const MessageHandler = (
-    message: FormattedMessage
-) => {
+const MessageHandler = (message: FormattedMessage) => {
+  const content = message.content?.toLowerCase();
 
-    const content =
-        message.content?.toLowerCase();
-
-    /*
+  /*
      =========================
      MENU PRINCIPAL
      =========================
     */
 
-    if (
-        content === 'oi' ||
-        content === 'olá' ||
-        content === 'ola'
-    ) {
+  if (content === "oi" || content === "olá" || content === "ola") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.welcome,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.welcome
-            }
-        })
-        
-        return
-    }
+    return;
+  }
 
-    /*
+  /*
     =========================
     VOLTAR AO MENU
     =========================
     */
 
-    if (
-        content === '0' ||
-        content === 'menu' ||
-        content === 'voltar'
-    ) {
+  if (content === "0" || content === "menu" || content === "voltar") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.welcome,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.welcome
-            }
-        })
+    return;
+  }
 
-        return
-    }
-
-    /*
+  /*
      =========================
      CURSOS
      =========================
     */
 
-    if (content === '1') {
+  if (content === "1") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.courses,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.courses
-            }
-        })
+    return;
+  }
 
-        return
-    }
-
-    /*
+  /*
      =========================
      AUTOMAÇÃO
      =========================
     */
 
-    if (content === '2') {
+  if (content === "2") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.automation,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.automation
-            }
-        })
+    return;
+  }
 
-        return
-    }
-
-    /*
+  /*
      =========================
      WEB
      =========================
     */
 
-    if (content === '3') {
+  if (content === "3") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.web,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.web
-            }
-        })
+    return;
+  }
 
-        return
-    }
-
-    /*
+  /*
      =========================
      MOBILE
      =========================
     */
 
-    if (content === '4') {
+  if (content === "4") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.mobile,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.mobile
-            }
-        })
+    return;
+  }
 
-        return
-    }
-
-    /*
+  /*
      =========================
      ATENDENTE
      =========================
     */
 
-    if (content === '5') {
+  if (content === "5") {
+    messageQueue.push({
+      jid: message.key.remoteJid!,
+      message: {
+        text: messages.attendant,
+      },
+    });
 
-        messageQueue.push({
-            jid: message.key.remoteJid!,
-            message: {
-                text: messages.attendant
-            }
-        })
-
-        return
-    }
-}
+    return;
+  }
+};
 
 export default MessageHandler;
