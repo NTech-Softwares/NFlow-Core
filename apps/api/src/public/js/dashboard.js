@@ -1,11 +1,34 @@
-const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJlbWFpbCI6Im1sZXdpbiIsImlhdCI6MTc3ODcwMzM1MCwiZXhwIjoxNzc4NzA2OTUwfQ.tv56hZg9t60XH-xRGrFAQt5oU9KqdV_YhYb9qL9if0Y";
+const token = localStorage.getItem("token");
+loginHandle();
+
+getStatus();
 
 let list_groups = false;
 
 if (!list_groups) {
   listGroups();
   list_groups = true;
+}
+
+async function loginHandle() {
+  if (!token) {
+    window.location.href = "/dashboard/login";
+  }
+}
+
+async function getStatus() {
+  const status = document.getElementById("status");
+  const response = await fetch("/status", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = await response.json();
+  status.innerText = data.whatsapp || "Erro";
+  console.log("-----------------------------------------");
+  console.log(data);
 }
 
 async function updateNumberInputState() {

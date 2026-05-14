@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 
-import { sessionState } from "../../providers/whatsapp/baileys/state/sessionState";
+import { sessionState } from "../../../../providers/whatsapp/baileys/state/sessionState";
 
-import { getGroups } from "../../providers/whatsapp/baileys/services/groups.service";
+import { getGroups } from "../../../../providers/whatsapp/baileys/services/groups.service";
 
-import { messageQueue } from "../../shared/queue/messageQueue";
+import { messageQueue } from "../../../../shared/queue/messageQueue";
 
 /*
  =========================

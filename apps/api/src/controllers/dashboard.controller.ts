@@ -18,4 +18,10 @@ export class DashboardController {
 
     return res.sendFile(filePath);
   }
+
+  static login(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "login.html");
+
+    return res.sendFile(filePath);
+  }
 }
