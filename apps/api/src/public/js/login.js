@@ -1,19 +1,22 @@
 async function login() {
-  const username = document.getElementById("username").value;
+  const email = document.getElementById("username").value;
   const password = document.getElementById("password").value;
+  const status = document.getElementById("status");
 
-  const response = await fetch("http://localhost:3000/auth/login", {
+  const response = await fetch("/auth/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      email: username,
+      email,
       password,
     }),
   });
 
   const data = await response.json();
+  alert(data);
+  status.innerText = data;
 
   if (response.ok) {
     // salva token
@@ -23,5 +26,6 @@ async function login() {
     window.location.href = "/dashboard/teste";
   } else {
     alert(data.message);
+    console.log(data.message);
   }
 }

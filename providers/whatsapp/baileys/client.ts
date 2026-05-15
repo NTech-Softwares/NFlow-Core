@@ -1,4 +1,4 @@
-import P from "pino";
+import P, { pino } from "pino";
 import makeWASocket, {
   Browsers,
   useMultiFileAuthState,
@@ -55,6 +55,8 @@ export const startWhatsapp = async (): Promise<WASocket> => {
       printQRInTerminal: false,
       version: USE_LASTEST_VERSION ? version : undefined,
       defaultQueryTimeoutMs: 0,
+      //Torna o Baileys Silencioso - Menos logs
+      logger: pino({ level: "silent" }),
     });
 
     // @ts-ignore
