@@ -25,6 +25,12 @@ export class DashboardController {
     return res.sendFile(filePath);
   }
 
+  static wizard(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "create-flow.html");
+
+    return res.sendFile(filePath);
+  }
+
   static login(req: Request, res: Response) {
     const filePath = path.resolve(__dirname, "..", "views", "login.html");
 

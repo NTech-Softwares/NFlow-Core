@@ -12,9 +12,38 @@
   <body>
     <div class="container">
       <div class="page-header">
-        <h1 class="page-title">Flows</h1>
+        <div class="title-group">
+          <h1 class="page-title">Flows</h1>
+          <p class="page-subtitle">Visualização dos fluxos de atendimento</p>
+        </div>
 
-        <p class="page-subtitle">Visualização dos fluxos de atendimento</p>
+        <button
+          type="button"
+          class="btn-add-flow"
+          onclick="window.location.href = '/criar-flow'"
+          style="
+            background-color: #18eb35;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 5px;
+          "
+          onmouseover="
+            this.style.backgroundColor = '#13c72b';
+            this.style.boxShadow = '0 0 12px rgba(24, 235, 53, 0.4)';
+          "
+          onmouseout="
+            this.style.backgroundColor = '#18eb35';
+            this.style.boxShadow = 'none';
+          "
+        >
+          + Novo Fluxo
+        </button>
       </div>
 
       <div id="flows" class="flows-grid"></div>

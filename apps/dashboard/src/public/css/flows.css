@@ -36,7 +36,34 @@ body {
 ========================= */
 
 .page-header {
-  margin-bottom: 30px;
+  display: flex; /* Coloca o title-group e o botão lado a lado */
+  justify-content: space-between; /* Joga os textos para a esquerda e o botão para a direita */
+  align-items: flex-start; /* Alinha o botão pelo topo do título (ou 'center' se preferir tudo centralizado) */
+  margin-bottom: 30px; /* Mantém o seu espaçamento inferior intacto */
+}
+
+/* Garante que o título e o subtítulo continuem um embaixo do outro */
+.title-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Estilo padrão do seu botão */
+.btn-add-flow {
+  background-color: #18eb35;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-flow:hover {
+  background-color: #13c72b;
+  box-shadow: 0 0 12px rgba(24, 235, 53, 0.4);
 }
 
 .page-title {

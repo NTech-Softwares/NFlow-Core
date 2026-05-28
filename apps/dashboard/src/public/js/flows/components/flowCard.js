@@ -10,7 +10,7 @@ function createFlowHTML(flow) {
         <div class="flow-header-left">
 
           <div
-            class="flow-collapse"
+            class="flow-collapse collapsed"
             id="collapse-${flow.id}"
           >
             ▼
@@ -29,7 +29,7 @@ function createFlowHTML(flow) {
       </div>
 
       <div
-        class="flow-body"
+        class="flow-body collapsed"
         id="flow-body-${flow.id}"
       >
 

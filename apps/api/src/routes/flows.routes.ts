@@ -6,6 +6,8 @@ import {
   getFlows,
   getFlowById,
   getFlowsTree,
+  addFlow,
+  removeFlow,
 } from "../controllers/flows.controller";
 
 const router = Router();
@@ -16,19 +18,16 @@ const router = Router();
  =========================
 */
 
-/*
- LISTA TODOS OS FLOWS
-*/
+//LISTA TODOS OS FLOWS
 router.get("/", authMiddleware, getFlows);
 
-/*
- ESTRUTURA SIMPLIFICADA
-*/
+//ESTRUTURA SIMPLIFICADA
 router.get("/tree", authMiddleware, getFlowsTree);
 
-/*
- FLOW ESPECÍFICO
-*/
+router.post("/addflow", authMiddleware, addFlow);
+router.post("/removeFlow", authMiddleware, removeFlow);
+
+//FLOW ESPECÍFICO
 router.get("/:flowId", authMiddleware, getFlowById);
 
 export default router;

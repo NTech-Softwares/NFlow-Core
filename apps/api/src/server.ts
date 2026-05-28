@@ -10,8 +10,7 @@ async function bootstrap() {
   startWorker();
 
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(process.env.JWT_SECRET);
-    console.log(`🚀 API running on port ${PORT}`);
+    console.log(`🚀 API running on port 0.0.0.0:${PORT}`);
   });
 }
 

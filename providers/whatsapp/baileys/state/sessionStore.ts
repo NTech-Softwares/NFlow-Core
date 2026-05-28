@@ -8,6 +8,7 @@ type StackItem = {
 type Session = {
   currentFlow: string;
   currentStep: string;
+  welcome: boolean;
 
   stack: StackItem[];
 };
@@ -20,6 +21,7 @@ export function getSession(user: string) {
     sessions.set(user, {
       currentFlow: "main",
       currentStep: "menu",
+      welcome: false,
 
       stack: [],
     });

@@ -10,7 +10,7 @@ import makeWASocket, {
 import qrcode from "qrcode-terminal";
 import { Boom } from "@hapi/boom";
 import { logger } from "../../../shared/utils/logger";
-import { FormattedMessage, getMessage } from "../../../shared/utils/message";
+import { getMessage } from "../../../shared/utils/message";
 import MessageHandler from "./handlers/messageHandler";
 import { sessionState } from "./state/connectionState";
 
@@ -33,9 +33,7 @@ export const startWhatsapp = async (): Promise<WASocket> => {
 
   try {
     const { state, saveCreds } = await useMultiFileAuthState("auth");
-
     const { version, isLatest } = await fetchLatestWaWebVersion({});
-
     if (USE_LASTEST_VERSION) {
       logger.info(
         `Versão atual do WaWeb: ${version.join(".")} | ${
@@ -54,18 +52,25 @@ export const startWhatsapp = async (): Promise<WASocket> => {
           : Browsers.appropriate("Desktop"),
       printQRInTerminal: false,
       version: USE_LASTEST_VERSION ? version : undefined,
-      defaultQueryTimeoutMs: 0,
+      defaultQueryTimeoutMs: 60000,
       //Torna o Baileys Silencioso - Menos logs
       logger: pino({ level: "silent" }),
+      generateHighQualityLinkPreview: false,
     });
 
     // @ts-ignore
     if (CONNECTION_TYPE === "NUMBER" && !sock.authState.creds.registered) {
       try {
-        const code = await sock.requestPairingCode(PHONE_NUMBER);
-        logger.info(`Código de Pareamento: ${code}`);
+        setTimeout(async () => {
+          if (sock) {
+            const code = await sock.requestPairingCode(PHONE_NUMBER);
+            logger.info(
+              `\n========================================\n\nCódigo de Pareamento: \n\n  ${code}\n\n========================================`,
+            );
+          }
+        }, 1000);
       } catch (error) {
-        logger.error("Erro ao obter o código.");
+        logger.error("Erro ao obter o código de pareamento.");
       }
     }
 
@@ -79,6 +84,9 @@ export const startWhatsapp = async (): Promise<WASocket> => {
         if (qr) {
           sessionState.status = "QRCODE";
           sessionState.qr = qr;
+          if (CONNECTION_TYPE === "QR") {
+            qrcode.generate(qr, { small: true });
+          }
         }
 
         if (connection === "connecting") {
@@ -88,188 +96,144 @@ export const startWhatsapp = async (): Promise<WASocket> => {
         if (connection === "open") {
           sessionState.status = "CONNECTED";
           sessionState.qr = null;
+          reconnectAttempts = 0;
+          isStarting = false; // Permite novas inicializações futuras se cair
+          logger.info("Bot Conectado com Sucesso!");
         }
 
         if (connection === "close") {
           sessionState.status = "DISCONNECTED";
-        }
+          logger.error("Conexão fechada");
 
-        switch (connection) {
-          case "close":
-            logger.error("Conexão fechada");
-            // Remover o bot/deletar dados se necessário
-            const shouldReconnect =
-              (lastDisconnect?.error as Boom)?.output?.statusCode !==
-              DisconnectReason.loggedOut;
+          const statusCode = (lastDisconnect?.error as Boom)?.output
+            ?.statusCode;
+          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
-            if (shouldReconnect) {
-              reconnectAttempts++;
+          if (shouldReconnect) {
+            reconnectAttempts++;
 
-              if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
-                logger.error("Máximo de tentativas atingido");
-                return;
-              }
-
-              logger.warn(`Tentando reconectar (${reconnectAttempts})...`);
-
-              setTimeout(() => {
-                startWhatsapp();
-              }, 3000);
-            }
-            break;
-          case "open":
-            reconnectAttempts = 0;
-            logger.info("Bot Conectado");
-            break;
-        }
-
-        // @ts-ignore
-        if (qr !== undefined && CONNECTION_TYPE === "QR") {
-          qrcode.generate(qr, { small: true });
-        }
-      },
-    );
-
-    sock.ev.on(
-      "messages.upsert",
-      async ({ messages }: { messages: WAMessage[] }) => {
-        for (const message of messages) {
-          try {
-            /*
-            =========================
-            IGNORA EVENTOS VAZIOS
-            =========================
-            */
-
-            if (!message.message) {
-              logger.warn("Mensagem ignorada: sem conteúdo");
-              continue;
-            }
-
-            /*
-            =========================
-            IGNORA MENSAGENS DO BOT
-            =========================
-            */
-
-            if (message.key.fromMe) {
-              logger.warn(
-                `Mensagem ignorada: fromMe -> ${message.key.remoteJid}`,
+            if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+              logger.error(
+                "Máximo de tentativas de reconexão atingido. Pare a aplicação.",
               );
-
-              continue;
+              isStarting = false;
+              return;
             }
 
-            /*
-            =========================
-            IGNORA STATUS
-            =========================
-            */
+            logger.warn(
+              `Tentando reconectar (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) em 5s...`,
+            );
 
-            const jid = message.key.remoteJid;
-
-            if (!jid) {
-              logger.warn("Mensagem ignorada: sem JID");
-              continue;
-            }
-
-            const isGroup = jid.endsWith("@g.us");
-
-            const isStatus = jid === "status@broadcast";
-
-            if (isGroup || isStatus) {
-              logger.warn(`Mensagem ignorada: ${jid}`);
-              continue;
-            }
-
-            /*
-            =========================
-            IGNORA EVENTOS INTERNOS MD
-            =========================
-            */
-
-            if (message.message.protocolMessage) {
-              logger.warn(`ProtocolMessage ignorada -> ${jid}`);
-              continue;
-            }
-
-            if (message.message.reactionMessage) {
-              logger.warn(`ReactionMessage ignorada -> ${jid}`);
-              continue;
-            }
-
-            // @ts-ignore
-            if (message.message.pollUpdateMessage) {
-              logger.warn(`PollUpdate ignorada -> ${jid}`);
-              continue;
-            }
-
-            if (message.messageStubType) {
-              logger.warn(`StubMessage ignorada -> ${jid}`);
-              continue;
-            }
-
-            /*
-            =========================
-            FORMATA MENSAGEM
-            =========================
-            */
-
-            // @ts-ignore
-            const formattedMessage: FormattedMessage | undefined =
-              getMessage(message);
-
-            if (!formattedMessage) {
-              logger.warn(`Mensagem inválida -> ${jid}`);
-              continue;
-            }
-
-            /*
-            =========================
-            IGNORA SEM TEXTO
-            =========================
-            */
-
-            if (!formattedMessage.content) {
-              logger.warn(`Mensagem sem texto -> ${jid}`);
-              continue;
-            }
-
-            /*
-            =========================
-            LOG DA MENSAGEM
-            =========================
-            */
-
-            logger.info(`
-            =========================
-            NOVA MENSAGEM
-            =========================
-            JID: ${jid}
-            FROM_ME: ${message.key.fromMe}
-            CONTEÚDO: ${formattedMessage.content}
-            =========================
-            `);
-
-            /*
-            =========================
-            PROCESSA FLOW
-            =========================
-            */
-
-            await MessageHandler(formattedMessage);
-          } catch (error) {
-            logger.error(`Erro ao processar mensagem: ${error}`);
+            setTimeout(() => {
+              isStarting = false; // Libera o semáforo para a tentativa ocorrer
+              startWhatsapp();
+            }, 5000);
+          } else {
+            logger.error(
+              "Desconectado permanentemente (Sessão Encerrada/Deslogada).",
+            );
+            isStarting = false;
           }
         }
       },
     );
 
+    sock.ev.on("messages.upsert", async ({ messages, type }) => {
+      // Ignorar mensagens de histórico antigas (carregamento inicial)
+      if (type !== "notify") return;
+
+      for (const message of messages) {
+        try {
+          // Ignorar mensagens vazias
+          if (!message.message) continue;
+
+          // Ignorar mensagens enviadas pelo próprio bot
+          if (message.key.fromMe) continue;
+
+          /*
+            =========================
+            IGNORA STATUS
+            =========================
+            */
+
+          const jid = message.key.remoteJid;
+
+          // Ignorar mensagens sem JID - Por enquanto é pra ficar assim
+          if (!jid) {
+            logger.warn("Mensagem sem JID foi ignorada!");
+            continue;
+          }
+
+          // Filtros de chat
+          const isGroup = jid.endsWith("@g.us");
+          const isStatus = jid === "status@broadcast";
+          if (isGroup || isStatus) continue;
+
+          // Filtros de eventos de sistema internos
+          if (message.messageStubType) continue;
+
+          // Tratamento para eventos internos e mensagens editadas
+          if (message.message.protocolMessage) continue;
+
+          if (
+            message.message.reactionMessage ||
+            message.message.pollUpdateMessage
+          ) {
+            continue;
+          }
+
+          /*
+          =========================
+          FORMATA MENSAGEM
+          =========================
+          */
+
+          const formattedMessage = getMessage(message);
+
+          // ignora mensagens inválidas ou vazias
+          if (!formattedMessage || !formattedMessage.content) {
+            logger.warn(`Mensagem inválida ou sem texto -> ${jid}`);
+            continue;
+          }
+
+          /*
+          =========================
+          LOG DA MENSAGEM
+          =========================
+          */
+
+          logger.info(`
+            =========================
+            NOVA MENSAGEM PRIVADA
+            =========================
+            JID: ${jid}
+            PUSHNAME: ${formattedMessage.pushName || "Desconhecido"}
+            FROM_ME: ${message.key.fromMe}
+            CONTEÚDO: ${formattedMessage.content}
+            =========================
+            `);
+
+          /*
+          =========================
+          PROCESSA FLOW
+          =========================
+          */
+
+          await MessageHandler(formattedMessage);
+        } catch (error) {
+          logger.error(`Erro ao processar mensagem: ${error}`);
+        }
+      }
+    });
+
     // Salvar as credenciais de autenticação
     sock.ev.on("creds.update", saveCreds);
     return sock;
-  } finally {
+  } catch (error) {
     isStarting = false;
+    // @ts-ignore
+    logger.error("Erro fatal ao iniciar o WhatsApp:", error);
+    throw error;
   }
 };
 
@@ -277,6 +241,5 @@ export function getWhatsapp() {
   if (!sock) {
     throw new Error("WhatsApp não iniciado");
   }
-
   return sock;
 }

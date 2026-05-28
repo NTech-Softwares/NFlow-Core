@@ -1,0 +1,114 @@
+import * as fs from "fs";
+import * as path from "path";
+import {
+  getFlows,
+  updateRegistry,
+} from "../../../../providers/whatsapp/baileys/engine/flowRegistry";
+import { Flow } from "../../../../providers/whatsapp/baileys/flows/types/flowTypes";
+
+// Caminho absoluto para o arquivo oficial de dados que serve de persistência/backup local
+const caminhoBackupJson = path.resolve(
+  __dirname,
+  "../../../../providers/whatsapp/baileys/flows/data/flows.json",
+);
+
+/**
+ * Cria um novo fluxo de automação, injeta seu passo inicial com mensagem e o armazena.
+ * A alteração é aplicada imediatamente em memória RAM e persistida no arquivo físico.
+ * * @param flowId - Identificador exclusivo do fluxo (ex: 'suporte', 'vendas').
+ * @param initialStep - O nome do estágio inicial do fluxo (padrão: "inicio").
+ * @param stepMessage - O menu de opções ou texto explicativo pertencente ao passo inicial.
+ * @returns Retorna o objeto do fluxo recém-criado em conformidade com a interface Flow.
+ * @throws {Error} Caso o flowId seja omitido, o fluxo já exista ou ocorra falha de I/O no disco.
+ */
+export async function addFlowJson(
+  flowId: string,
+  initialStep?: string,
+  stepMessage?: string,
+): Promise<Flow> {
+  try {
+    // [VALIDAÇÃO] Garante que o identificador do fluxo foi fornecido
+    if (!flowId) {
+      throw new Error("O ID do fluxo é obrigatório.");
+    }
+
+    // Define o nome do passo inicial utilizando o fallback padrão caso não seja enviado
+    const stepNome = initialStep || "inicio";
+
+    // 1. Captura o estado atual de todos os fluxos ativos direto da MEMÓRIA RAM
+    const todosOsFlows = { ...getFlows() };
+
+    // [VALIDAÇÃO] Impede a criação de fluxos duplicados com o mesmo ID
+    if (todosOsFlows[flowId]) {
+      throw new Error(`Um fluxo com o ID '${flowId}' já existe.`);
+    }
+
+    // 2. Monta a nova estrutura do fluxo com as saudações e o passo inicial parametrizados
+    const newFlow: Flow = {
+      id: flowId,
+      initialStep: stepNome,
+      steps: {
+        [stepNome]: {
+          id: stepNome,
+          message: [stepMessage || ""],
+          options: [], // Inicializa vazio para ser populado posteriormente via painel
+        },
+      },
+    };
+
+    // 3. Insere o novo objeto mapeando-o diretamente sob a chave do flowId
+    todosOsFlows[flowId] = newFlow;
+
+    // 4. Sincroniza a MEMÓRIA RAM para que o motor do chatbot e o painel operem as mudanças em tempo real
+    updateRegistry(todosOsFlows);
+
+    // 5. Registra de forma síncrona o backup físico formatado no disco (persistência)
+    fs.writeFileSync(
+      caminhoBackupJson,
+      JSON.stringify(todosOsFlows, null, 2),
+      "utf8",
+    );
+
+    return newFlow;
+  } catch (error: any) {
+    throw new Error(`[addFlowJson] Falha na operação: ${error.message}`);
+  }
+}
+
+/**
+ * Remove permanentemente um fluxo de automação do ecossistema.
+ * A remoção limpa o registro em memória viva e atualiza o arquivo de persistência física.
+ * * @param flowId - Identificador exclusivo do fluxo que será deletado.
+ * @throws {Error} Caso o flowId seja omitido, o fluxo não seja localizado ou ocorra erro de escrita.
+ */
+export async function removeFlowJson(flowId: string): Promise<void> {
+  try {
+    // [VALIDAÇÃO] Garante que o identificador do fluxo foi fornecido
+    if (!flowId) {
+      throw new Error("O ID do fluxo é obrigatório.");
+    }
+
+    // 1. Captura o estado atual de todos os fluxos ativos direto da MEMÓRIA RAM
+    const todosOsFlows = { ...getFlows() };
+
+    // [VALIDAÇÃO] Certifica que o fluxo de fato existe antes de iniciar a deleção
+    if (!todosOsFlows[flowId]) {
+      throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
+    }
+
+    // 2. Remove a propriedade correspondente ao fluxo de dentro do mapa de objetos
+    delete todosOsFlows[flowId];
+
+    // 3. Sincroniza a MEMÓRIA RAM (O motor do WhatsApp desvincula o fluxo instantaneamente)
+    updateRegistry(todosOsFlows);
+
+    // 4. Reescreve o arquivo de persistência física no disco com os dados atualizados
+    fs.writeFileSync(
+      caminhoBackupJson,
+      JSON.stringify(todosOsFlows, null, 2),
+      "utf8",
+    );
+  } catch (error: any) {
+    throw new Error(`[removeFlowJson] Falha na operação: ${error.message}`);
+  }
+}
