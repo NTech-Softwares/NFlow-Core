@@ -3,6 +3,12 @@ import { Request, Response } from "express";
 
 export class DashboardController {
   static index(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "dashboard.html");
+
+    return res.sendFile(filePath);
+  }
+
+  static teste(req: Request, res: Response) {
     const filePath = path.resolve(
       __dirname,
       "..",
@@ -13,8 +19,8 @@ export class DashboardController {
     return res.sendFile(filePath);
   }
 
-  static teste(req: Request, res: Response) {
-    const filePath = path.resolve(__dirname, "..", "views", "dashboard.html");
+  static flows(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "flows.html");
 
     return res.sendFile(filePath);
   }

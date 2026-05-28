@@ -1,9 +1,11 @@
+const API_URL = window.APP_CONFIG.API_URL;
+
 async function login() {
   const email = document.getElementById("username").value;
   const password = document.getElementById("password").value;
   const status = document.getElementById("status");
 
-  const response = await fetch("/auth/login", {
+  const response = await fetch(`${API_URL}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -23,7 +25,7 @@ async function login() {
     localStorage.setItem("token", data.token);
 
     // redireciona
-    window.location.href = "/dashboard/teste";
+    window.location.href = "/teste";
   } else {
     alert(data.message);
     console.log(data.message);

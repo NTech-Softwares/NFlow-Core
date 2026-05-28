@@ -1,9 +1,6 @@
 import { Request, Response } from "express";
-
-import { sessionState } from "../../../../providers/whatsapp/baileys/state/sessionState";
-
+import { sessionState } from "../../../../providers/whatsapp/baileys/state/connectionState";
 import { getGroups } from "../../../../providers/whatsapp/baileys/services/groups.service";
-
 import { messageQueue } from "../../../../shared/queue/messageQueue";
 
 /*
@@ -64,6 +61,13 @@ export async function sendMessage(req: Request, res: Response) {
 
     const formattedNumber = number.replace(/\D/g, "");
 
+    if (formattedNumber.length < 12) {
+      return res.status(400).json({
+        success: false,
+        error: "Número inválido",
+      });
+    }
+
     messageQueue.push({
       jid: `${formattedNumber}@s.whatsapp.net`,
 
@@ -74,7 +78,7 @@ export async function sendMessage(req: Request, res: Response) {
       },
     });
 
-    console.log("Mensagem adicionada na fila");
+    console.log(`Mensagem adicionada na fila -> ${formattedNumber}`);
 
     return res.json({
       success: true,

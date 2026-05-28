@@ -1,0 +1,359 @@
+{
+  "main": {
+    "id": "main",
+    "initialStep": "menu",
+    "steps": {
+      "menu": {
+        "id": "menu",
+        "message": [
+          "👋 Olá! Seja bem-vindo(a) ao nosso atendimento.",
+          "",
+          "Escolha uma das opções abaixo para continuar:",
+          "",
+          "1 - 🎓 Cursos e treinamentos",
+          "2 - 🌐 Criação de sites e landing pages",
+          "3 - 📱 Aplicativos Mobile ou Desktop",
+          "4 - 🤖 Automação de WhatsApp",
+          "5 - ⚙️ Automação de processos",
+          "6 - 💬 Consultoria personalizada",
+          "",
+          "Digite o número da opção desejada."
+        ],
+        "options": [
+          {
+            "key": "1",
+            "nextFlow": "cursos",
+            "nextStep": "inicio"
+          },
+
+          {
+            "key": "2",
+            "nextFlow": "web",
+            "nextStep": "inicio"
+          },
+
+          {
+            "key": "3",
+            "nextFlow": "mobile",
+            "nextStep": "inicio"
+          },
+
+          {
+            "key": "4",
+            "nextFlow": "whatsapp",
+            "nextStep": "inicio"
+          },
+
+          {
+            "key": "5",
+            "nextFlow": "automacao",
+            "nextStep": "inicio"
+          },
+
+          {
+            "key": "6",
+            "nextFlow": "consultoria",
+            "nextStep": "inicio"
+          }
+        ]
+      }
+    }
+  },
+  "cursos": {
+    "id": "cursos",
+    "initialStep": "inicio",
+    "steps": {
+      "inicio": {
+        "id": "inicio",
+        "message": [
+          "🎓 Bem-vindo à área de cursos.",
+          "",
+          "Estamos felizes em ver o seu interesse em aprender uma nova profissão, hobby ou desenvolver novas habilidades para o mercado.",
+          "",
+          "Escolha uma das opções abaixo:",
+          "",
+          "1 - Desenvolvimento Web para iniciantes",
+          "2 - Desenvolvimento Mobile para iniciantes",
+          "3 - Desenvolvimento Back-end",
+          "4 - Desenvolvimento Front-end",
+          "0 - Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "1",
+            "nextStep": "webIniciantes"
+          },
+
+          {
+            "key": "2",
+            "nextStep": "mobileIniciantes"
+          },
+
+          {
+            "key": "3",
+            "nextStep": "backend"
+          },
+
+          {
+            "key": "4",
+            "nextStep": "frontend"
+          },
+
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+
+      "webIniciantes": {
+        "id": "webIniciantes",
+        "message": [
+          "🌐 Desenvolvimento Web para Iniciantes",
+          "",
+          "Aprenda os fundamentos do desenvolvimento web moderno.",
+          "",
+          "📚 Conteúdo:",
+          "• HTML5",
+          "• CSS3",
+          "• JavaScript",
+          "• Git e GitHub",
+          "• Projetos práticos",
+          "",
+          "⏱ Carga horária: 14 horas",
+          "🎯 Nível: Iniciante",
+          "",
+          "voltar - para o início",
+          "0 - Voltar"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+
+      "mobileIniciantes": {
+        "id": "mobileIniciantes",
+        "message": [
+          "📱 Desenvolvimento Mobile para Iniciantes",
+          "",
+          "Aprenda a criar aplicativos modernos para Android e iOS.",
+          "",
+          "📚 Conteúdo:",
+          "• React Native",
+          "• Componentes",
+          "• Navegação",
+          "• Consumo de APIs",
+          "• Publicação de aplicativos",
+          "",
+          "⏱ Carga horária: 14 horas",
+          "🎯 Nível: Intermediário",
+          "",
+          "voltar - para o início",
+          "0 - Voltar"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+
+      "backend": {
+        "id": "backend",
+        "message": [
+          "⚙️ Desenvolvimento Back-end",
+          "",
+          "Aprenda a construir APIs e sistemas robustos para aplicações modernas.",
+          "",
+          "📚 Conteúdo:",
+          "• Node.js",
+          "• TypeScript",
+          "• APIs REST",
+          "• PostgreSQL",
+          "• Autenticação JWT",
+          "• Arquitetura de projetos",
+          "",
+          "⏱ Carga horária: 24 horas",
+          "🎯 Nível: Intermediário",
+          "",
+          "voltar - para o início",
+          "0 - Voltar"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+
+      "frontend": {
+        "id": "frontend",
+        "message": [
+          "🎨 Desenvolvimento Front-end",
+          "",
+          "Aprenda a criar interfaces modernas, responsivas e profissionais.",
+          "",
+          "📚 Conteúdo:",
+          "• HTML e CSS avançado",
+          "• JavaScript moderno",
+          "• React",
+          "• Consumo de APIs",
+          "• Responsividade",
+          "• UI/UX básico",
+          "",
+          "⏱ Carga horária: 24 horas",
+          "🎯 Nível: Intermediário",
+          "",
+          "voltar - para o início",
+          "0 - Voltar"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  },
+  "web": {
+    "id": "web",
+    "initialStep": "inicio",
+    "steps": {
+      "inicio": {
+        "id": "inicio",
+        "message": [
+          "🌐 Criação de Sites e Landing Pages",
+          "",
+          "Aqui você pode solicitar:",
+          "• Sites institucionais",
+          "• Landing pages de alta conversão",
+          "• Blogs e portais",
+          "",
+          "Em breve conteúdo completo...",
+          "",
+          "0 - Voltar ao menu principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  },
+  "mobile": {
+    "id": "mobile",
+    "initialStep": "inicio",
+    "steps": {
+      "inicio": {
+        "id": "inicio",
+        "message": [
+          "📱 Aplicativos Mobile e Desktop",
+          "",
+          "Criamos soluções para:",
+          "• Android",
+          "• iOS",
+          "• Desktop (Electron)",
+          "",
+          "Em breve conteúdo completo...",
+          "",
+          "0 - Voltar ao menu principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  },
+  "whatsapp": {
+    "id": "whatsapp",
+    "initialStep": "inicio",
+    "steps": {
+      "inicio": {
+        "id": "inicio",
+        "message": [
+          "🤖 Automação de WhatsApp",
+          "",
+          "Soluções com:",
+          "• Bots inteligentes",
+          "• Atendimento automático",
+          "• Fluxos conversacionais",
+          "",
+          "Em breve conteúdo completo...",
+          "",
+          "0 - Voltar ao menu principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  },
+  "automacao": {
+    "id": "automacao",
+    "initialStep": "inicio",
+    "steps": {
+      "inicio": {
+        "id": "inicio",
+        "message": [
+          "⚙️ Automação de Processos",
+          "",
+          "Automatizamos:",
+          "• Sistemas internos",
+          "• Fluxos de vendas",
+          "• Integrações API",
+          "",
+          "Em breve conteúdo completo...",
+          "",
+          "0 - Voltar ao menu principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  },
+  "consultoria": {
+    "id": "consultoria",
+    "initialStep": "inicio",
+    "steps": {
+      "inicio": {
+        "id": "inicio",
+        "message": [
+          "💬 Consultoria Personalizada",
+          "",
+          "Te ajudamos com:",
+          "• Arquitetura de sistemas",
+          "• Escalabilidade",
+          "• Projetos completos",
+          "",
+          "Em breve conteúdo completo...",
+          "",
+          "0 - Voltar ao menu principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  }
+}

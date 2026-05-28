@@ -3,7 +3,7 @@ import { app } from "./app";
 import { startWhatsapp } from "../../../providers/whatsapp/baileys/client";
 import { startWorker } from "../../worker/src/server";
 
-const PORT = 3000;
+const PORT = 3333;
 
 async function bootstrap() {
   await startWhatsapp();

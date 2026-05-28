@@ -1,39 +1,108 @@
+const API_URL = window.APP_CONFIG.API_URL;
+
 const token = localStorage.getItem("token");
-loginHandle();
 
-getStatus();
+init();
 
-let list_groups = false;
+async function init() {
+  const authenticated = await loginHandle();
 
-if (!list_groups) {
-  listGroups();
-  list_groups = true;
-}
+  if (!authenticated) {
+    return;
+  }
 
-async function loginHandle() {
-  if (!token) {
-    window.location.href = "/dashboard/login";
+  await getStatus();
+
+  let list_groups = false;
+
+  if (!list_groups) {
+    await listGroups();
+
+    list_groups = true;
   }
 }
 
+/*
+ =========================
+ AUTENTICAÇÃO
+ =========================
+*/
+
+async function loginHandle() {
+  if (!token) {
+    window.location.href = "/login";
+
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      localStorage.removeItem("token");
+
+      window.location.href = "/login";
+
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    localStorage.removeItem("token");
+
+    window.location.href = "/login";
+
+    return false;
+  }
+}
+
+/*
+ =========================
+ STATUS
+ =========================
+*/
+
 async function getStatus() {
   const status = document.getElementById("status");
-  const response = await fetch("/status", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
 
-  const data = await response.json();
-  status.innerText = data.whatsapp || "Erro";
-  console.log("-----------------------------------------");
-  console.log(data);
+  try {
+    const response = await fetch(`${API_URL}/status`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    status.innerText = data.whatsapp || "Erro";
+
+    console.log("-----------------------------------------");
+
+    console.log(data);
+  } catch (error) {
+    status.innerText = "Erro";
+
+    console.log(error);
+  }
 }
+
+/*
+ =========================
+ INPUT STATE
+ =========================
+*/
 
 async function updateNumberInputState() {
   const numberInput = document.getElementById("number");
+
   const sendMsgBtn = document.getElementById("sendMessage");
+
   const sendCpmgBtn = document.getElementById("sendCampaign");
 
   const checkedGroups = document.querySelectorAll(".group-checkbox:checked");
@@ -42,22 +111,29 @@ async function updateNumberInputState() {
 
   if (hasSelectedGroups) {
     numberInput.disabled = true;
+
     numberInput.value = "";
+
     numberInput.placeholder = "Desabilitado ao selecionar grupos";
 
     sendMsgBtn.disabled = true;
+
     sendMsgBtn.style.backgroundColor = "#096315";
 
     sendCpmgBtn.disabled = false;
+
     sendCpmgBtn.style.backgroundColor = "#18eb35";
   } else {
     numberInput.disabled = false;
+
     numberInput.placeholder = "5585999999999";
 
     sendMsgBtn.disabled = false;
+
     sendMsgBtn.style.backgroundColor = "#18eb35";
 
     sendCpmgBtn.disabled = true;
+
     sendCpmgBtn.style.backgroundColor = "#096315";
   }
 }
@@ -90,7 +166,7 @@ async function sendMessage() {
       formData.append("image", image);
     }
 
-    const response = await fetch("/whatsapp/send-message", {
+    const response = await fetch(`${API_URL}/whatsapp/send-message`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -128,7 +204,7 @@ async function listGroups() {
   resultGroup.innerText = "Listando...";
 
   try {
-    const response = await fetch("/whatsapp/list-groups", {
+    const response = await fetch(`${API_URL}/whatsapp/list-groups`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -170,7 +246,7 @@ async function listGroups() {
           </div>
 
         </div>
-        `;
+      `;
 
       const checkbox = groupItem.querySelector(".group-checkbox");
 
@@ -233,7 +309,7 @@ async function sendCampaign() {
       formData.append("image", image);
     }
 
-    const response = await fetch("/whatsapp/send-campaign", {
+    const response = await fetch(`${API_URL}/whatsapp/send-campaign`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

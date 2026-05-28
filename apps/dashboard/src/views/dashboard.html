@@ -9,7 +9,35 @@
 
   <body>
     <div class="container">
-      <h1>NFlow Dashboard</h1>
+      <div
+        style="
+          justify-self: stretch;
+          display: flex;
+          flex-direction: row;
+          justify-content: space-between;
+        "
+      >
+        <h1>NFlow Dashboard</h1>
+        <div
+          style="
+            height: 100%;
+            padding: 10px;
+            border-radius: 24px;
+            background-color: #18eb35;
+          "
+        >
+          <a
+            style="
+              align-self: center;
+              text-decoration: none;
+              color: black;
+              font-weight: bold;
+            "
+            href="/flows"
+            >Bot de atendimento</a
+          >
+        </div>
+      </div>
 
       <div class="row">
         <div class="col-lg-12">
@@ -39,7 +67,7 @@
           </div>
         </div>
 
-        <div class="col-lg-5 col-md-12 col-sm-12">
+        <div class="col-lg-6 col-md-12 col-sm-12">
           <div class="card">
             <h2>Enviar Mensagem</h2>
 
@@ -79,7 +107,7 @@
         </div>
       </div>
     </div>
-
+    <script src="/js/config.js"></script>
     <script src="/js/dashboard.js"></script>
   </body>
 </html>

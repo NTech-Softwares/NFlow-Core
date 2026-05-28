@@ -11,8 +11,8 @@ import qrcode from "qrcode-terminal";
 import { Boom } from "@hapi/boom";
 import { logger } from "../../../shared/utils/logger";
 import { FormattedMessage, getMessage } from "../../../shared/utils/message";
-import MessageHandler from "./handlers/message";
-import { sessionState } from "./state/sessionState";
+import MessageHandler from "./handlers/messageHandler";
+import { sessionState } from "./state/connectionState";
 
 const CONNECTION_TYPE = "QR"; // "NUMBER" (se quiser usar o número para login)
 const PHONE_NUMBER = "556892000000"; // +55 (68) 9200-0000 -> 556892000000 (formato para número)
@@ -130,23 +130,140 @@ export const startWhatsapp = async (): Promise<WASocket> => {
       },
     );
 
-    sock.ev.on("messages.upsert", ({ messages }: { messages: WAMessage[] }) => {
-      for (let index = 0; index < messages.length; index++) {
-        const message = messages[index];
+    sock.ev.on(
+      "messages.upsert",
+      async ({ messages }: { messages: WAMessage[] }) => {
+        for (const message of messages) {
+          try {
+            /*
+            =========================
+            IGNORA EVENTOS VAZIOS
+            =========================
+            */
 
-        const isGroup = message.key.remoteJid?.endsWith("@g.us");
-        const isStatus = message.key.remoteJid === "status@broadcast";
+            if (!message.message) {
+              logger.warn("Mensagem ignorada: sem conteúdo");
+              continue;
+            }
 
-        if (isGroup || isStatus) continue;
+            /*
+            =========================
+            IGNORA MENSAGENS DO BOT
+            =========================
+            */
 
-        // @ts-ignore
-        const formattedMessage: FormattedMessage | undefined =
-          getMessage(message);
-        if (formattedMessage !== undefined) {
-          MessageHandler(formattedMessage);
+            if (message.key.fromMe) {
+              logger.warn(
+                `Mensagem ignorada: fromMe -> ${message.key.remoteJid}`,
+              );
+
+              continue;
+            }
+
+            /*
+            =========================
+            IGNORA STATUS
+            =========================
+            */
+
+            const jid = message.key.remoteJid;
+
+            if (!jid) {
+              logger.warn("Mensagem ignorada: sem JID");
+              continue;
+            }
+
+            const isGroup = jid.endsWith("@g.us");
+
+            const isStatus = jid === "status@broadcast";
+
+            if (isGroup || isStatus) {
+              logger.warn(`Mensagem ignorada: ${jid}`);
+              continue;
+            }
+
+            /*
+            =========================
+            IGNORA EVENTOS INTERNOS MD
+            =========================
+            */
+
+            if (message.message.protocolMessage) {
+              logger.warn(`ProtocolMessage ignorada -> ${jid}`);
+              continue;
+            }
+
+            if (message.message.reactionMessage) {
+              logger.warn(`ReactionMessage ignorada -> ${jid}`);
+              continue;
+            }
+
+            // @ts-ignore
+            if (message.message.pollUpdateMessage) {
+              logger.warn(`PollUpdate ignorada -> ${jid}`);
+              continue;
+            }
+
+            if (message.messageStubType) {
+              logger.warn(`StubMessage ignorada -> ${jid}`);
+              continue;
+            }
+
+            /*
+            =========================
+            FORMATA MENSAGEM
+            =========================
+            */
+
+            // @ts-ignore
+            const formattedMessage: FormattedMessage | undefined =
+              getMessage(message);
+
+            if (!formattedMessage) {
+              logger.warn(`Mensagem inválida -> ${jid}`);
+              continue;
+            }
+
+            /*
+            =========================
+            IGNORA SEM TEXTO
+            =========================
+            */
+
+            if (!formattedMessage.content) {
+              logger.warn(`Mensagem sem texto -> ${jid}`);
+              continue;
+            }
+
+            /*
+            =========================
+            LOG DA MENSAGEM
+            =========================
+            */
+
+            logger.info(`
+            =========================
+            NOVA MENSAGEM
+            =========================
+            JID: ${jid}
+            FROM_ME: ${message.key.fromMe}
+            CONTEÚDO: ${formattedMessage.content}
+            =========================
+            `);
+
+            /*
+            =========================
+            PROCESSA FLOW
+            =========================
+            */
+
+            await MessageHandler(formattedMessage);
+          } catch (error) {
+            logger.error(`Erro ao processar mensagem: ${error}`);
+          }
         }
-      }
-    });
+      },
+    );
 
     // Salvar as credenciais de autenticação
     sock.ev.on("creds.update", saveCreds);

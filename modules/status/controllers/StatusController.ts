@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import { sessionState } from "../../../providers/whatsapp/baileys/state/sessionState";
+import { sessionState } from "../../../providers/whatsapp/baileys/state/connectionState";
 // ajuste o caminho conforme sua estrutura
 
 class StatusController {
