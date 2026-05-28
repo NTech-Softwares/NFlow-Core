@@ -28,10 +28,9 @@ function createOptionHTML(flow, step, option) {
 
         </div>
         <div class="option-arrow">
-          →
         </div>
         
-        <div class="option-arrow">
+        <div class="option-arrow no-arrow">
           ↩ <span class="page-subtitle" style="padding: 0 12px 0 12px;">Voltar para o Início</span> 
         </div>
 
@@ -62,7 +61,6 @@ function createOptionHTML(flow, step, option) {
       </div>
 
       <div class="option-arrow">
-        →
       </div>
 
       <div class="option-right">

@@ -233,7 +233,6 @@ body {
 
 .tree-step {
   padding: 18px 0;
-
   border-bottom: 1px solid #222;
 }
 
@@ -515,16 +514,23 @@ body {
    OPTION ARROW
 ========================= */
 
-.option-arrow {
+/* Modificado para usar o ::after */
+.option-arrow::after {
+  content: "→";
   color: #18eb35;
-
   font-size: 18px;
   font-weight: bold;
+}
 
+.option-arrow.no-arrow::after {
+  content: "";
+}
+
+/* Mantemos a div controlando o posicionamento flex normalmente */
+.option-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 0 2px;
 }
 
@@ -534,7 +540,11 @@ body {
 
 @media (max-width: 768px) {
   .container {
-    padding: 20px;
+    padding: 2px;
+  }
+
+  .page-header {
+    flex-direction: column;
   }
 
   .page-title {
@@ -551,12 +561,12 @@ body {
   }
 
   .tree-options {
-    margin-left: 16px;
+    margin-left: 8px;
   }
 
   .tree-option {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .option-right {
@@ -567,5 +577,16 @@ body {
   .step-select {
     width: 100%;
     min-width: unset;
+  }
+
+  /* No mobile, alteramos o content do ::after para a seta para baixo */
+  .option-arrow::after {
+    content: "↓";
+  }
+
+  /* Margem extra pro mobile pro input não colar na seta 
+     e a seta não colar no select de baixo */
+  .option-arrow {
+    margin: 8px 0;
   }
 }
