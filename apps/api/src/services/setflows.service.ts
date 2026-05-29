@@ -51,7 +51,12 @@ export async function addFlowJson(
         [stepNome]: {
           id: stepNome,
           message: [stepMessage || ""],
-          options: [], // Inicializa vazio para ser populado posteriormente via painel
+          options: [
+            {
+              key: "0",
+              back: true,
+            },
+          ], // Inicializa vazio para ser populado posteriormente via painel (opção 0 é padrão)
         },
       },
     };
@@ -110,5 +115,59 @@ export async function removeFlowJson(flowId: string): Promise<void> {
     );
   } catch (error: any) {
     throw new Error(`[removeFlowJson] Falha na operação: ${error.message}`);
+  }
+}
+
+/**
+ * Atualiza a mensagem de um step específico dentro de um fluxo existente.
+ * Sincroniza em tempo real na memória RAM e persiste no disco.
+ * * @param flowId - ID do fluxo onde o passo está alocado.
+ * @param stepId - ID do passo que terá a mensagem modificada.
+ * @param newMessage - O novo texto da mensagem (enviado com \n do textarea).
+ */
+export async function updateStepMessageJson(
+  flowId: string,
+  stepId: string,
+  newMessage: string,
+): Promise<void> {
+  try {
+    if (!flowId || !stepId) {
+      throw new Error("ID do fluxo e ID do step são obrigatórios.");
+    }
+
+    // 1. Captura o estado atual de todos os fluxos ativos direto da MEMÓRIA RAM
+    const todosOsFlows = { ...getFlows() };
+
+    // [VALIDAÇÃO] Certifica que o fluxo existe
+    if (!todosOsFlows[flowId]) {
+      throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
+    }
+
+    // [VALIDAÇÃO] Certifica que o step existe dentro desse fluxo
+    if (!todosOsFlows[flowId].steps || !todosOsFlows[flowId].steps[stepId]) {
+      throw new Error(`O step '${stepId}' não existe no fluxo '${flowId}'.`);
+    }
+
+    // 2. Trata a mensagem: divide de volta em um array de linhas caso contenha quebras de linha
+    // Isso preserva o formato original do seu JSON.
+    const messageArray =
+      typeof newMessage === "string" ? newMessage.split("\n") : [""];
+
+    // 3. Atualiza o objeto específico na estrutura
+    todosOsFlows[flowId].steps[stepId].message = messageArray;
+
+    // 4. Sincroniza a MEMÓRIA RAM para efeito imediato no robô
+    updateRegistry(todosOsFlows);
+
+    // 5. Registra de forma síncrona o backup físico formatado no disco
+    fs.writeFileSync(
+      caminhoBackupJson,
+      JSON.stringify(todosOsFlows, null, 2),
+      "utf8",
+    );
+  } catch (error: any) {
+    throw new Error(
+      `[updateStepMessageJson] Falha na operação: ${error.message}`,
+    );
   }
 }

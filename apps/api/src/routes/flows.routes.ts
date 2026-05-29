@@ -8,6 +8,7 @@ import {
   getFlowsTree,
   addFlow,
   removeFlow,
+  updateStepMessage,
 } from "../controllers/flows.controller";
 
 const router = Router();
@@ -26,6 +27,8 @@ router.get("/tree", authMiddleware, getFlowsTree);
 
 router.post("/addflow", authMiddleware, addFlow);
 router.post("/removeFlow", authMiddleware, removeFlow);
+
+router.post("/update-message", authMiddleware, updateStepMessage);
 
 //FLOW ESPECÍFICO
 router.get("/:flowId", authMiddleware, getFlowById);

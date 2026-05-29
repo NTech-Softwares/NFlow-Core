@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Conectar WhatsApp</title>
+    <link rel="stylesheet" href="/css/qr-code.css" />
+  </head>
+  <body>
+    <div class="qr-page">
+      <div class="qr-card card">
+        <div class="card-header">
+          <h1>Conectar WhatsApp</h1>
+          <p class="subtitle">
+            Instancie sua sessão no NTech Flow escaneando o código abaixo.
+          </p>
+        </div>
+
+        <div class="status-container">
+          <span id="status-dot" class="status-dot pulsing"></span>
+          <span id="connection-status" class="status-text"
+            >Aguardando QR Code...</span
+          >
+        </div>
+
+        <div class="qr-wrapper">
+          <div class="qr-box" id="qr-box">
+            <div class="spinner"></div>
+          </div>
+        </div>
+
+        <div class="instructions">
+          <h3>Como conectar:</h3>
+          <ol>
+            <li>Abra o <strong>WhatsApp</strong> no seu celular.</li>
+            <li>
+              Toque em <strong>Configurações</strong> ou nos
+              <strong>três pontos</strong> do menu.
+            </li>
+            <li>
+              Selecione <strong>Aparelhos conectados</strong> e vá em
+              <strong>Conectar um aparelho</strong>.
+            </li>
+            <li>Aponte a câmera para esta tela para ler o código QR.</li>
+          </ol>
+        </div>
+
+        <div class="qr-actions">
+          <button type="button" id="btn-refresh" onclick="gerarNovoQrCode()">
+            Atualizar QR Code
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/flows/auth.js"></script>
+    <script src="/js/flows/qr-handler.js"></script>
+  </body>
+</html>

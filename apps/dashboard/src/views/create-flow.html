@@ -9,14 +9,14 @@
   <body>
     <div class="container">
       <div class="card wizard-card">
-        <div id="step-1" class="wizard-step active flex-column">
+        <div id="step-1" class="wizard-step active">
           <div class="progress-indicator">Etapa 1 de 3</div>
           <h1>Novo Fluxo</h1>
           <p class="subtitle">
             Defina o Nome exclusivo para este fluxo de atendimento.
           </p>
 
-          <div class="form-group w-100">
+          <div class="form-group">
             <label for="flow-id">Nome do Fluxo</label>
             <input
               type="text"
@@ -26,21 +26,21 @@
             />
           </div>
 
-          <div class="d-flex justify-center w-100" style="margin-top: 10px">
-            <button type="button" class="w-100" onclick="proximaEtapa()">
+          <div class="wizard-actions">
+            <button type="button" onclick="proximaEtapa()">
               Avançar &rarr;
             </button>
           </div>
         </div>
 
-        <div id="step-2" class="wizard-step flex-column">
+        <div id="step-2" class="wizard-step">
           <div class="progress-indicator">Etapa 2 de 3</div>
           <h1>Passo Inicial</h1>
           <p class="subtitle">
             Determine o nome do primeiro passo dentro deste fluxo.
           </p>
 
-          <div class="form-group w-100">
+          <div class="form-group">
             <label for="initial-step">Nome do Passo Inicial</label>
             <input
               type="text"
@@ -51,24 +51,21 @@
             />
           </div>
 
-          <div
-            class="d-flex justify-between w-100 gap-2"
-            style="margin-top: 10px"
-          >
+          <div class="wizard-actions split">
             <button
               type="button"
-              class="btn-secondary col-lg-6"
+              class="btn-secondary"
               onclick="etapaAnterior()"
             >
               &larr; Voltar
             </button>
-            <button type="button" class="col-lg-6" onclick="proximaEtapa()">
+            <button type="button" onclick="proximaEtapa()">
               Avançar &rarr;
             </button>
           </div>
         </div>
 
-        <div id="step-3" class="wizard-step flex-column">
+        <div id="step-3" class="wizard-step">
           <div class="progress-indicator">Etapa 3 de 3</div>
           <h1>Mensagem do Passo</h1>
           <p class="subtitle">
@@ -76,7 +73,7 @@
             Passo específico.
           </p>
 
-          <div class="form-group w-100">
+          <div class="form-group">
             <label for="step-message">Mensagem Inicial do Passo</label>
             <textarea
               id="step-message"
@@ -84,18 +81,15 @@
             ></textarea>
           </div>
 
-          <div
-            class="d-flex justify-between w-100 gap-2"
-            style="margin-top: 10px"
-          >
+          <div class="wizard-actions split">
             <button
               type="button"
-              class="btn-secondary col-lg-6"
+              class="btn-secondary"
               onclick="etapaAnterior()"
             >
               &larr; Voltar
             </button>
-            <button type="button" class="col-lg-6" onclick="concluirWizard()">
+            <button type="button" onclick="concluirWizard()">
               Concluir e Salvar
             </button>
           </div>

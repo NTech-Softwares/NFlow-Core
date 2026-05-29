@@ -8,13 +8,8 @@ export class DashboardController {
     return res.sendFile(filePath);
   }
 
-  static teste(req: Request, res: Response) {
-    const filePath = path.resolve(
-      __dirname,
-      "..",
-      "views",
-      "dashboard_old.html",
-    );
+  static qrCode(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "qr-code.html");
 
     return res.sendFile(filePath);
   }

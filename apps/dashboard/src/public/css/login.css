@@ -1,12 +1,17 @@
 /* =========================
-       RESET
-    ========================= */
-
+   RESET & BASE (Mobile Default)
+========================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 body {
@@ -16,303 +21,161 @@ body {
 }
 
 /* =========================
-       CONTAINER
-    ========================= */
-
-.container {
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-/* =========================
-       GRID SYSTEM
-    ========================= */
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  width: 100%;
-}
-
-.row > * {
-  min-width: 0;
-}
-
-/* =========================
-       DESKTOP
-    ========================= */
-
-.col-lg-1 {
-  flex: 0 0 calc(8.333% - 20px);
-}
-.col-lg-2 {
-  flex: 0 0 calc(16.666% - 20px);
-}
-.col-lg-3 {
-  flex: 0 0 calc(25% - 20px);
-}
-.col-lg-4 {
-  flex: 0 0 calc(33.333% - 20px);
-}
-.col-lg-5 {
-  flex: 0 0 calc(41.666% - 20px);
-}
-.col-lg-6 {
-  flex: 0 0 calc(50% - 10px);
-}
-.col-lg-7 {
-  flex: 0 0 calc(58.333% - 20px);
-}
-.col-lg-8 {
-  flex: 0 0 calc(66.666% - 20px);
-}
-.col-lg-9 {
-  flex: 0 0 calc(75% - 20px);
-}
-.col-lg-10 {
-  flex: 0 0 calc(83.333% - 20px);
-}
-.col-lg-11 {
-  flex: 0 0 calc(91.666% - 20px);
-}
-.col-lg-12 {
-  flex: 0 0 100%;
-}
-
-/* =========================
-       TABLET
-    ========================= */
-
-@media (max-width: 992px) {
-  .col-md-1 {
-    flex: 0 0 calc(8.333% - 20px);
-  }
-  .col-md-2 {
-    flex: 0 0 calc(16.666% - 20px);
-  }
-  .col-md-3 {
-    flex: 0 0 calc(25% - 20px);
-  }
-  .col-md-4 {
-    flex: 0 0 calc(33.333% - 20px);
-  }
-  .col-md-5 {
-    flex: 0 0 calc(41.666% - 20px);
-  }
-  .col-md-6 {
-    flex: 0 0 calc(50% - 10px);
-  }
-  .col-md-7 {
-    flex: 0 0 calc(58.333% - 20px);
-  }
-  .col-md-8 {
-    flex: 0 0 calc(66.666% - 20px);
-  }
-  .col-md-9 {
-    flex: 0 0 calc(75% - 20px);
-  }
-  .col-md-10 {
-    flex: 0 0 calc(83.333% - 20px);
-  }
-  .col-md-11 {
-    flex: 0 0 calc(91.666% - 20px);
-  }
-  .col-md-12 {
-    flex: 0 0 100%;
-  }
-}
-
-/* =========================
-       MOBILE
-    ========================= */
-
-@media (max-width: 680px) {
-  .col-sm-1 {
-    flex: 0 0 calc(8.333% - 20px);
-  }
-  .col-sm-2 {
-    flex: 0 0 calc(16.666% - 20px);
-  }
-  .col-sm-3 {
-    flex: 0 0 calc(25% - 20px);
-  }
-  .col-sm-4 {
-    flex: 0 0 calc(33.333% - 20px);
-  }
-  .col-sm-5 {
-    flex: 0 0 calc(41.666% - 20px);
-  }
-  .col-sm-6 {
-    flex: 0 0 calc(50% - 10px);
-  }
-  .col-sm-7 {
-    flex: 0 0 calc(58.333% - 20px);
-  }
-  .col-sm-8 {
-    flex: 0 0 calc(66.666% - 20px);
-  }
-  .col-sm-9 {
-    flex: 0 0 calc(75% - 20px);
-  }
-  .col-sm-10 {
-    flex: 0 0 calc(83.333% - 20px);
-  }
-  .col-sm-11 {
-    flex: 0 0 calc(91.666% - 20px);
-  }
-  .col-sm-12 {
-    flex: 0 0 100%;
-  }
-}
-
-/* =========================
-       FLEX UTILITIES
-    ========================= */
-
-.d-flex {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.align-center {
-  align-items: center;
-}
-
-.w-100 {
-  width: 100%;
-}
-
-/* =========================
-       CARD
-    ========================= */
-
-.card {
-  background: #171717;
-  border: 1px solid #2a2a2a;
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 20px 40px rgba(0, 0, 0, 0.4);
-}
-
-/* =========================
-       LOGIN
-    ========================= */
-
+   LAYOUT & ESTRUTURA
+========================= */
 .login-page {
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 20px;
+  padding: 20px; /* Margem de segurança em telas pequenas */
+}
+
+.card {
+  background: #171717;
+  border: 1px solid #262626;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 .login-card {
   width: 100%;
-  max-width: 430px;
+  max-width: 420px; /* Largura ideal para leitura e ergonomia */
+  display: flex;
+  flex-direction: column;
 }
 
+/* =========================
+   ELEMENTOS DE MARCA
+========================= */
 .logo {
-  width: 70px;
-  height: 70px;
-  border-radius: 18px;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
   background: #18eb35;
   display: flex;
   justify-content: center;
   align-items: center;
   color: black;
-  font-size: 28px;
-  font-weight: bold;
+  font-size: 26px;
+  font-weight: 800;
   margin-bottom: 24px;
-  box-shadow: 0 0 30px rgba(24, 235, 53, 0.25);
+  box-shadow: 0 0 30px rgba(24, 235, 53, 0.2);
 }
 
 h1 {
   color: #18eb35;
-  margin-bottom: 10px;
-  font-size: 32px;
+  margin-bottom: 8px;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  color: #999;
-  margin-bottom: 30px;
+  color: #a0a0a0;
+  margin-bottom: 24px;
+  font-size: 14px;
   line-height: 1.5;
 }
 
-/* =========================
-       FORM
-    ========================= */
+/* Elemento de status dinâmico do JS */
+.status-message {
+  font-size: 14px;
+  text-align: center;
+  margin-top: 12px;
+  min-height: 20px; /* Evita que o layout quebre ou "pule" quando o erro aparecer */
+  color: #ff4a4a; /* Cor padrão de erro (pode ser alterada via JS se necessário) */
+}
 
+/* =========================
+   FORMULÁRIO & INPUTS
+========================= */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 18px;
+  width: 100%;
 }
 
 label {
   color: #cfcfcf;
   font-size: 14px;
+  font-weight: 600;
 }
 
 input {
-  background: #111;
-  border: 1px solid #333;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 14px;
   color: white;
   outline: none;
   font-size: 15px;
-  transition: 0.2s;
+  width: 100%;
+  transition: all 0.2s ease;
 }
 
 input:focus {
   border-color: #18eb35;
-  box-shadow: 0 0 0 4px rgba(24, 235, 53, 0.08);
+  box-shadow: 0 0 0 3px rgba(24, 235, 53, 0.08);
 }
 
 /* =========================
-       BUTTON
-    ========================= */
-
+   BOTÕES & AÇÕES
+========================= */
 button {
   width: 100%;
   background: #18eb35;
   color: black;
   border: none;
   border-radius: 10px;
-  padding: 15px;
+  padding: 14px;
   font-size: 16px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
-  margin-top: 10px;
+  transition: all 0.2s ease;
+  margin-top: 8px;
 }
 
 button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(24, 235, 53, 0.2);
+  background-color: #13c72b;
+}
+
+/* Ajuste fino para o clique no mobile */
+button:active {
+  transform: scale(0.98);
 }
 
 .footer-text {
   text-align: center;
-  color: #777;
-  font-size: 14px;
+  color: #666;
+  font-size: 13px;
   margin-top: 24px;
 }
 
 .footer-text a {
   color: #18eb35;
   text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.footer-text a:hover {
+  color: #13c72b;
+  text-transform: none;
+}
+
+/* ===================================================
+   PROGRESSIVE ENHANCEMENT (Telas Maiores)
+=================================================== */
+@media (min-width: 480px) {
+  .card {
+    padding: 36px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
 }

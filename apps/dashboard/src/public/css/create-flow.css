@@ -1,185 +1,150 @@
 /* =========================
-  RESET & BASE
+   RESET & BASE (Mobile Default)
 ========================= */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 body {
   background: #0f0f0f;
   color: white;
   min-height: 100vh;
-  padding: 40px;
+  padding: 16px; /* Bordas confortáveis no celular */
+  display: flex;
+  align-items: center; /* Centraliza o card verticalmente na tela */
+  justify-content: center;
 }
 
-/* =========================
-           CONTAINER & GRID
-       ========================= */
 .container {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  width: 100%;
-}
-
-.col-lg-6 {
-  flex: 0 0 calc(50% - 10px);
-}
-.col-lg-12 {
-  flex: 0 0 100%;
-}
-
-@media (max-width: 992px) {
-  .col-md-12 {
-    flex: 0 0 100%;
-  }
 }
 
 /* =========================
-           UTILITIES
-       ========================= */
-.d-flex {
-  display: flex;
-}
-.flex-column {
-  flex-direction: column;
-}
-.justify-center {
-  justify-content: center;
-}
-.align-center {
-  align-items: center;
-}
-.justify-between {
-  justify-content: space-between;
-}
-.w-100 {
-  width: 100%;
-}
-.gap-2 {
-  gap: 20px;
-}
-
-/* =========================
-           TITLES & SUBTITLES
-       ========================= */
-h1 {
-  color: #18eb35;
-  margin-bottom: 10px;
-  font-size: 32px;
-}
-
-.subtitle {
-  color: #999;
-  margin-bottom: 30px;
-  line-height: 1.5;
-}
-
-/* =========================
-           CARD & WIZARD STYLES
-       ========================= */
+   CARD & WIZARD STRUCTURE
+========================= */
 .card {
   background: #171717;
-  border: 1px solid #2a2a2a;
+  border: 1px solid #262626;
   border-radius: 16px;
-  padding: 32px;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 20px 40px rgba(0, 0, 0, 0.4);
+  padding: 24px; /* Menor no mobile para economizar espaço */
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
 }
 
 .wizard-card {
-  max-width: 550px;
   width: 100%;
-  margin: 40px auto;
+  max-width: 100%; /* Ocupa a tela inteira por padrão no mobile */
+  margin: 0 auto;
 }
 
-/* Controle de visibilidade das etapas */
+/* Controle nativo de exibição das etapas */
 .wizard-step {
   display: none;
+  flex-direction: column;
 }
 
 .wizard-step.active {
   display: flex;
 }
 
-/* Indicador de progresso (Ex: Etapa 1 de 3) */
+/* Indicadores de texto */
 .progress-indicator {
-  color: #777;
-  font-size: 14px;
-  margin-bottom: 20px;
+  color: #666;
+  font-size: 12px;
+  margin-bottom: 12px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  font-weight: 600;
+}
+
+h1 {
+  color: #18eb35;
+  margin-bottom: 8px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.subtitle {
+  color: #a0a0a0;
+  margin-bottom: 24px;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* =========================
-           FORM ELEMENTS
-       ========================= */
+   FORM ELEMENTS
+========================= */
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
 label {
   color: #cfcfcf;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 input,
 textarea {
-  background: #111;
-  border: 1px solid #333;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 14px;
   color: white;
   outline: none;
   font-size: 15px;
   width: 100%;
-  transition: 0.2s;
+  transition: all 0.2s ease;
 }
 
 input:focus,
 textarea:focus {
   border-color: #18eb35;
-  box-shadow: 0 0 0 4px rgba(24, 235, 53, 0.08);
+  box-shadow: 0 0 0 3px rgba(24, 235, 53, 0.08);
 }
 
 textarea {
   resize: vertical;
-  min-height: 120px;
+  min-height: 140px;
+  line-height: 1.5;
 }
 
 /* =========================
-           BUTTONS
-       ========================= */
+   BUTTONS & ACTIONS
+========================= */
 button {
   background: #18eb35;
   color: black;
   border: none;
   border-radius: 10px;
   padding: 14px 24px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(24, 235, 53, 0.2);
+  background-color: #13c72b;
 }
 
 button.btn-secondary {
@@ -192,5 +157,42 @@ button.btn-secondary:hover {
   background: #222;
   border-color: #444;
   color: white;
-  box-shadow: none;
+}
+
+/* Container de ações do Wizard */
+.wizard-actions {
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* Comportamento de botões paralelos (Voltar e Avançar) */
+.wizard-actions.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Divide meio a meio perfeitamente em qualquer tela */
+  gap: 12px;
+}
+
+/* ===================================================
+   PROGRESSIVE ENHANCEMENT (Telas Maiores / Desktop)
+=================================================== */
+@media (min-width: 576px) {
+  body {
+    padding: 40px;
+  }
+
+  .card {
+    padding: 32px;
+  }
+
+  .wizard-card {
+    max-width: 550px; /* Limita o tamanho máximo para não esticar no monitor */
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  .subtitle {
+    font-size: 15px;
+  }
 }

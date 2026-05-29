@@ -13,29 +13,35 @@
         <div class="logo">N</div>
 
         <h1>Login</h1>
-
         <p class="subtitle">
           Entre na sua conta para acessar o painel da plataforma.
         </p>
 
         <form>
           <div class="form-group">
-            <label>Usuário</label>
-            <input id="username" type="text" placeholder="Digite seu usuário" />
+            <label for="username">Usuário</label>
+            <input
+              id="username"
+              type="text"
+              placeholder="Digite seu usuário"
+              autocomplete="username"
+            />
           </div>
 
           <div class="form-group">
-            <label>Senha</label>
+            <label for="password">Senha</label>
             <input
               id="password"
               type="password"
               placeholder="Digite sua senha"
+              autocomplete="current-password"
             />
           </div>
 
           <button onclick="login()" type="button">Entrar</button>
         </form>
-        <p class="subtitle" id="status"></p>
+
+        <p class="status-message" id="status"></p>
 
         <div class="footer-text">
           Esqueceu sua senha?
@@ -43,6 +49,7 @@
         </div>
       </div>
     </div>
+
     <script src="/js/config.js"></script>
     <script src="/js/login.js"></script>
   </body>

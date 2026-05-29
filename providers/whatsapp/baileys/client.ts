@@ -9,6 +9,7 @@ import makeWASocket, {
 } from "@whiskeysockets/baileys";
 import qrcode from "qrcode-terminal";
 import { Boom } from "@hapi/boom";
+import fs from "fs"; // <-- Importado para gerenciar a exclusão da pasta de credenciais
 import { logger } from "../../../shared/utils/logger";
 import { getMessage } from "../../../shared/utils/message";
 import MessageHandler from "./handlers/messageHandler";
@@ -17,6 +18,7 @@ import { sessionState } from "./state/connectionState";
 const CONNECTION_TYPE = "QR"; // "NUMBER" (se quiser usar o número para login)
 const PHONE_NUMBER = "556892000000"; // +55 (68) 9200-0000 -> 556892000000 (formato para número)
 const USE_LASTEST_VERSION = true;
+const AUTH_FOLDER = "auth"; // Mapeado em variável para facilitar a manutenção
 
 let sock: WASocket | null = null;
 
@@ -32,7 +34,7 @@ export const startWhatsapp = async (): Promise<WASocket> => {
   isStarting = true;
 
   try {
-    const { state, saveCreds } = await useMultiFileAuthState("auth");
+    const { state, saveCreds } = await useMultiFileAuthState(AUTH_FOLDER);
     const { version, isLatest } = await fetchLatestWaWebVersion({});
     if (USE_LASTEST_VERSION) {
       logger.info(
@@ -129,10 +131,39 @@ export const startWhatsapp = async (): Promise<WASocket> => {
               startWhatsapp();
             }, 5000);
           } else {
-            logger.error(
-              "Desconectado permanentemente (Sessão Encerrada/Deslogada).",
+            // =========================================================================
+            // TRATAMENTO DE DESCONEXÃO PERMANENTE (LOGGED OUT)
+            // =========================================================================
+            logger.warn(
+              "Desconectado permanentemente do dispositivo. Limpando sessão antiga e gerando novo QR Code...",
             );
+
+            // Força a remoção segura da pasta de autenticação antiga (e seus tokens inválidos)
+            try {
+              if (fs.existsSync(AUTH_FOLDER)) {
+                fs.rmSync(AUTH_FOLDER, { recursive: true, force: true });
+                logger.info(
+                  `Pasta de credenciais '${AUTH_FOLDER}' limpa com sucesso.`,
+                );
+              }
+            } catch (err) {
+              logger.error(
+                "Erro crítico ao tentar remover pastas de autenticação:",
+                err,
+              );
+            }
+
+            // Reseta controles de estado global para permitir uma nova inicialização limpa
+            reconnectAttempts = 0;
             isStarting = false;
+
+            // Dá um delay curto de 2 segundos para garantir o I/O do HD e reinicia o fluxo do QR Code
+            setTimeout(() => {
+              logger.info(
+                "Reiniciando o serviço do WhatsApp para exibição de novo QR...",
+              );
+              startWhatsapp();
+            }, 2000);
           }
         }
       },
@@ -150,15 +181,9 @@ export const startWhatsapp = async (): Promise<WASocket> => {
           // Ignorar mensagens enviadas pelo próprio bot
           if (message.key.fromMe) continue;
 
-          /*
-            =========================
-            IGNORA STATUS
-            =========================
-            */
-
           const jid = message.key.remoteJid;
 
-          // Ignorar mensagens sem JID - Por enquanto é pra ficar assim
+          // Ignorar mensagens sem JID
           if (!jid) {
             logger.warn("Mensagem sem JID foi ignorada!");
             continue;
@@ -182,12 +207,6 @@ export const startWhatsapp = async (): Promise<WASocket> => {
             continue;
           }
 
-          /*
-          =========================
-          FORMATA MENSAGEM
-          =========================
-          */
-
           const formattedMessage = getMessage(message);
 
           // ignora mensagens inválidas ou vazias
@@ -195,12 +214,6 @@ export const startWhatsapp = async (): Promise<WASocket> => {
             logger.warn(`Mensagem inválida ou sem texto -> ${jid}`);
             continue;
           }
-
-          /*
-          =========================
-          LOG DA MENSAGEM
-          =========================
-          */
 
           logger.info(`
             =========================
@@ -212,12 +225,6 @@ export const startWhatsapp = async (): Promise<WASocket> => {
             CONTEÚDO: ${formattedMessage.content}
             =========================
             `);
-
-          /*
-          =========================
-          PROCESSA FLOW
-          =========================
-          */
 
           await MessageHandler(formattedMessage);
         } catch (error) {

@@ -22,7 +22,9 @@ export async function getFlowsTreeService() {
       steps: Object.values(flow.steps || {}).map((step: any) => ({
         id: step.id,
 
-        messagePreview: step.message?.[0] || "",
+        message: Array.isArray(step.message)
+          ? step.message.join("\n")
+          : step.message || "",
 
         options:
           step.options?.map((option: any) => ({

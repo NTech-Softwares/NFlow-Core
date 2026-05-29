@@ -7,7 +7,12 @@ import {
   getFlowsTreeService,
 } from "../services/getFlows.service";
 import { Flow } from "../../../../providers/whatsapp/baileys/flows/types/flowTypes";
-import { addFlowJson, removeFlowJson } from "../services/setflows.service";
+import {
+  addFlowJson,
+  removeFlowJson,
+  updateStepMessageJson,
+} from "../services/setflows.service";
+import { STATUS_EXPIRY_SECONDS } from "@whiskeysockets/baileys";
 
 /*
  =========================
@@ -125,6 +130,42 @@ export async function removeFlow(req: Request, res: Response) {
     // Se o serviço disser que o fluxo não existe, este catch vai avisar exatamente isso no Thunder Client
     return res.status(400).json({
       error: error.message || "Erro ao remover fluxo.",
+    });
+  }
+}
+
+/*
+ =========================
+ Edita Mensagem
+ =========================
+*/
+export async function updateStepMessage(req: Request, res: Response) {
+  try {
+    // Mantive req.body para não quebrar seus testes atuais, mas mudei a validação do status
+    const { flowId, stepId, newMessage } = req.body;
+
+    if (!flowId)
+      return res
+        .status(400)
+        .json({ error: "O flowId é obrigatório no corpo da requisição." });
+
+    if (!stepId)
+      return res
+        .status(400)
+        .json({ error: "O stepId é obrigatório no corpo da requisição." });
+
+    if (!newMessage) return res.status(400).json({ error: "Não há mensagem." });
+
+    await updateStepMessageJson(flowId, stepId, newMessage);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Mensagem atualizada com sucesso.",
+    });
+  } catch (error: any) {
+    // Se o serviço disser que o fluxo não existe, este catch vai avisar exatamente isso no Thunder Client
+    return res.status(400).json({
+      error: error.message || "Erro ao atualizar mensagem.",
     });
   }
 }

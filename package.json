@@ -4,7 +4,7 @@
   "description": "Serviço de orquestação de campanhas/comunicação",
   "main": "index.js",
   "scripts": {
-    "dev:api": "ts-node-dev --respawn --transpile-only --ignore-watch providers/whatsapp/baileys/flows/data/flows.json apps/api/src/server.ts",
+    "dev:api": "ts-node-dev --respawn --transpile-only --ignore-watch providers/whatsapp/baileys/flows/data/flows.json --ignore-watch auth apps/api/src/server.ts",
     "dev:worker": "ts-node-dev --respawn --transpile-only apps/worker/src/server.ts",
     "dev:dashboard": "ts-node-dev --respawn --transpile-only apps/dashboard/src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

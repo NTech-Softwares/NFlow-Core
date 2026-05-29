@@ -48,6 +48,43 @@
 
       <div id="flows" class="flows-grid"></div>
     </div>
+
+    <div id="message-edit-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>✏️ Editar Mensagem</h3>
+          <button
+            type="button"
+            class="btn-close-modal"
+            onclick="closeEditModal()"
+          >
+            ✕
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-instruction">
+            Altere o texto enviado pelo bot neste estágio do fluxo:
+          </p>
+          <textarea
+            id="modal-message-input"
+            rows="8"
+            placeholder="Digite a mensagem do bot..."
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modal-cancel"
+            onclick="closeEditModal()"
+          >
+            Cancelar
+          </button>
+          <button type="button" id="btn-modal-save" class="btn-modal-save">
+            Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
     <script src="/js/config.js"></script>
 
     <script src="/js/flows/auth.js"></script>

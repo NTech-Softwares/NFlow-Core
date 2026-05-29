@@ -1,420 +1,265 @@
 /* =========================
-   RESET
+   RESET & BASE (Mobile Default)
 ========================= */
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
 }
 
 body {
   background: #0f0f0f;
   color: white;
   min-height: 100vh;
-  padding: 40px;
+  padding: 16px; /* Ajuste seguro para as bordas do celular */
 }
-
-/* =========================
-   CONTAINER
-========================= */
 
 .container {
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
 }
 
 /* =========================
-   GRID SYSTEM
+   HEADER (Mobile-First)
 ========================= */
+.page-header {
+  display: flex;
+  flex-direction: column; /* Empilhado no mobile */
+  gap: 14px;
+  margin-bottom: 24px;
+  align-items: stretch;
+}
 
+.page-header h1 {
+  color: #18eb35;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+/* Link de navegação estilizado como badge robusto */
+.nav-link-badge {
+  background-color: #18eb35;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.nav-link-badge:hover {
+  background-color: #13c72b;
+  box-shadow: 0 0 12px rgba(24, 235, 53, 0.3);
+}
+
+.nav-link-badge a {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  font-size: 14px;
+  display: block;
+}
+
+/* =========================
+   GRID SYSTEM (Mobile-First)
+========================= */
 .row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex-direction: column; /* Tudo vira bloco vertical de 100% por padrão */
+  gap: 16px;
   width: 100%;
 }
 
-.row > * {
-  min-width: 0;
-}
-
-/* =========================
-   DESKTOP
-========================= */
-
-.col-lg-1 {
-  flex: 0 0 calc(8.333% - 20px);
-}
-
-.col-lg-2 {
-  flex: 0 0 calc(16.666% - 20px);
-}
-
-.col-lg-3 {
-  flex: 0 0 calc(25% - 20px);
-}
-
-.col-lg-4 {
-  flex: 0 0 calc(33.333% - 20px);
-}
-
-.col-lg-5 {
-  flex: 0 0 calc(41.666% - 20px);
-}
-
-.col-lg-6 {
-  flex: 0 0 calc(50% - 10px);
-}
-
-.col-lg-7 {
-  flex: 0 0 calc(58.333% - 20px);
-}
-
-.col-lg-8 {
-  flex: 0 0 calc(66.666% - 20px);
-}
-
-.col-lg-9 {
-  flex: 0 0 calc(75% - 20px);
-}
-
-.col-lg-10 {
-  flex: 0 0 calc(83.333% - 20px);
-}
-
-.col-lg-11 {
-  flex: 0 0 calc(91.666% - 20px);
-}
-
-.col-lg-12 {
+.col-12 {
   flex: 0 0 100%;
-}
-
-/* =========================
-   TABLET
-========================= */
-
-@media (max-width: 992px) {
-  .col-md-1 {
-    flex: 0 0 calc(8.333% - 20px);
-  }
-
-  .col-md-2 {
-    flex: 0 0 calc(16.666% - 20px);
-  }
-
-  .col-md-3 {
-    flex: 0 0 calc(25% - 20px);
-  }
-
-  .col-md-4 {
-    flex: 0 0 calc(33.333% - 20px);
-  }
-
-  .col-md-5 {
-    flex: 0 0 calc(41.666% - 20px);
-  }
-
-  .col-md-6 {
-    flex: 0 0 calc(50% - 10px);
-  }
-
-  .col-md-7 {
-    flex: 0 0 calc(58.333% - 20px);
-  }
-
-  .col-md-8 {
-    flex: 0 0 calc(66.666% - 20px);
-  }
-
-  .col-md-9 {
-    flex: 0 0 calc(75% - 20px);
-  }
-
-  .col-md-10 {
-    flex: 0 0 calc(83.333% - 20px);
-  }
-
-  .col-md-11 {
-    flex: 0 0 calc(91.666% - 20px);
-  }
-
-  .col-md-12 {
-    flex: 0 0 100%;
-  }
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 680px) {
-  .col-sm-1 {
-    flex: 0 0 calc(8.333% - 20px);
-  }
-
-  .col-sm-2 {
-    flex: 0 0 calc(16.666% - 20px);
-  }
-
-  .col-sm-3 {
-    flex: 0 0 calc(25% - 20px);
-  }
-
-  .col-sm-4 {
-    flex: 0 0 calc(33.333% - 20px);
-  }
-
-  .col-sm-5 {
-    flex: 0 0 calc(41.666% - 20px);
-  }
-
-  .col-sm-6 {
-    flex: 0 0 calc(50% - 10px);
-  }
-
-  .col-sm-7 {
-    flex: 0 0 calc(58.333% - 20px);
-  }
-
-  .col-sm-8 {
-    flex: 0 0 calc(66.666% - 20px);
-  }
-
-  .col-sm-9 {
-    flex: 0 0 calc(75% - 20px);
-  }
-
-  .col-sm-10 {
-    flex: 0 0 calc(83.333% - 20px);
-  }
-
-  .col-sm-11 {
-    flex: 0 0 calc(91.666% - 20px);
-  }
-
-  .col-sm-12 {
-    flex: 0 0 100%;
-  }
-}
-
-/* =========================
-   FLEX UTILITIES
-========================= */
-
-.d-flex {
-  display: flex;
-}
-
-.flex-column {
-  flex-direction: column;
-}
-
-.flex-row {
-  flex-direction: row;
-}
-
-.justify-between {
-  justify-content: space-between;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.justify-start {
-  justify-content: flex-start;
-}
-
-.align-center {
-  align-items: center;
-}
-
-.align-start {
-  align-items: flex-start;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
-}
-
-/* =========================
-   GAP UTILITIES
-========================= */
-
-.gap-1 {
-  gap: 10px;
-}
-
-.gap-2 {
-  gap: 20px;
-}
-
-.gap-3 {
-  gap: 30px;
-}
-
-/* =========================
-   WIDTH
-========================= */
-
-.w-100 {
   width: 100%;
 }
 
 /* =========================
-   BACKGROUNDS
+   CARD & STATUS
 ========================= */
-
-.bg-dark {
-  background: #171717;
-}
-
-.bg-light-dark {
-  background: #1d1d1d;
-}
-
-/* =========================
-   CARD
-========================= */
-
 .card {
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  justify-content: space-between;
   background: #171717;
-  border: 1px solid #2a2a2a;
+  border: 1px solid #262626;
   border-radius: 16px;
-  padding: 24px;
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.02),
-    0 20px 40px rgba(0, 0, 0, 0.4);
+  padding: 20px; /* Reduzido no mobile para ganhar tela */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.card h2 {
+  color: white;
+  font-size: 18px;
+  margin-bottom: 14px;
+  font-weight: 700;
+}
+
+.status-card {
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-card h2 {
+  margin-bottom: 0;
 }
 
 .status {
   color: #18eb35;
   font-weight: bold;
+  background: rgba(24, 235, 53, 0.08);
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(24, 235, 53, 0.2);
+  font-size: 14px;
 }
 
 /* =========================
-   TITLES
+   FORMS & INPUTS
 ========================= */
-
-h1 {
-  color: #18eb35;
-  margin-bottom: 20px;
-  font-size: 32px;
-}
-
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: white;
-}
-
-/* =========================
-   FORM
-========================= */
-
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 label {
-  color: #cfcfcf;
-  font-size: 14px;
+  color: #a0a0a0;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 input,
 textarea {
-  background: #111;
-  border: 1px solid #333;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
   border-radius: 10px;
   padding: 14px;
   color: white;
   outline: none;
   font-size: 15px;
   width: 100%;
-  transition: 0.2s;
+  transition: all 0.2s;
 }
 
 input:focus,
 textarea:focus {
   border-color: #18eb35;
-  box-shadow: 0 0 0 4px rgba(24, 235, 53, 0.08);
+  box-shadow: 0 0 0 3px rgba(24, 235, 53, 0.08);
+}
+
+.file-input {
+  padding: 10px;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 textarea {
   resize: vertical;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 input:disabled,
 textarea:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
-  background: #222;
+  background: #1a1a1a;
+  border-color: #222;
 }
 
 /* =========================
-   BUTTON
+   BUTTONS
 ========================= */
-
 button {
   background: #18eb35;
   color: black;
   border: none;
   border-radius: 10px;
   padding: 14px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: bold;
   cursor: pointer;
-  transition: 0.2s;
+  transition: all 0.2s ease;
+  width: 100%; /* Botões cheios no mobile para clique fácil */
 }
 
-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(24, 235, 53, 0.2);
+button:hover:not(:disabled) {
+  background-color: #13c72b;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #262626;
+  color: white;
+  border: 1px solid #333;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #333;
+}
+
+.btn-group {
+  display: flex;
+  gap: 12px;
+  width: 100%;
 }
 
 /* =========================
-   GROUPS
+   WHATSAPP GROUPS WIDGET
 ========================= */
-
 .groups-container {
-  margin-top: 20px;
-  border: 1px solid #2a2a2a;
-  border-radius: 16px;
+  margin-bottom: 14px;
+  border: 1px solid #262626;
+  border-radius: 12px;
   overflow: hidden;
-  background: #111;
+  background: #0d0d0d;
 }
 
 .groups-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 16px;
-  background: #181818;
-  border-bottom: 1px solid #2a2a2a;
+  padding: 12px 14px;
+  background: #141414;
+  border-bottom: 1px solid #262626;
 }
 
 .groups-header h3 {
   color: #18eb35;
-  font-size: 16px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.select-all-btn {
+  background: transparent;
+  border: 1px solid rgba(24, 235, 53, 0.4);
+  color: #18eb35;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 6px;
+  width: auto;
+}
+
+.select-all-btn:hover {
+  background: #18eb35;
+  color: black;
 }
 
 .groups-list {
-  max-height: 350px;
+  max-height: 300px;
   overflow-y: auto;
 }
 
@@ -422,19 +267,19 @@ button:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  border-bottom: 1px solid #222;
-  transition: 0.2s;
+  padding: 12px 14px;
+  border-bottom: 1px solid #1a1a1a;
 }
 
-.group-item:hover {
-  background: #1b1b1b;
+.group-item:last-child {
+  border-bottom: none;
 }
 
 .group-left {
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
 }
 
 .group-info {
@@ -444,53 +289,102 @@ button:hover {
 
 .group-name {
   color: white;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
 }
 
 .group-members {
-  color: #999;
-  font-size: 13px;
+  color: #7f7f7f;
+  font-size: 12px;
+  margin-top: 2px;
 }
 
 .group-checkbox {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   accent-color: #18eb35;
+  cursor: pointer;
 }
 
-.select-all-btn {
-  background: transparent;
-  border: 1px solid #18eb35;
-  color: #18eb35;
-  padding: 8px 12px;
+/* Feedback textual da API */
+.result-feedback {
+  margin-top: 12px;
   font-size: 13px;
-  border-radius: 8px;
-}
-
-.select-all-btn:hover {
-  background: #18eb35;
-  color: black;
+  color: #a0a0a0;
+  text-align: center;
 }
 
 /* =========================
-   RESPONSIVE HELPERS
+   UTILITIES & RESPONSIVE HELPER
 ========================= */
+.d-flex {
+  display: flex;
+}
+.flex-column {
+  flex-direction: column;
+}
+.gap-2 {
+  gap: 16px;
+}
 
-@media (max-width: 768px) {
+.mobile-column {
+  flex-direction: column; /* Força empilhamento dos botões de ação no mobile */
+}
+
+/* =webkit-scrollbar personalizado para manter o tema neon */
+.groups-list::-webkit-scrollbar {
+  width: 6px;
+}
+.groups-list::-webkit-scrollbar-track {
+  background: #0d0d0d;
+}
+.groups-list::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 999px;
+}
+.groups-list::-webkit-scrollbar-thumb:hover {
+  background: #18eb35;
+}
+
+/* ===================================================
+   PROGRESSIVE ENHANCEMENT (Desktop - Mínimo de 992px)
+=================================================== */
+@media (min-width: 992px) {
   body {
-    padding: 20px;
+    padding: 40px;
   }
 
-  .mobile-column {
-    flex-direction: column;
+  .page-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-size: 36px;
+  }
+
+  .nav-link-badge {
+    padding: 10px 20px;
+  }
+
+  .row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  /* Divisão perfeita em duas colunas na Web */
+  .col-lg-6 {
+    flex: 0 0 calc(50% - 8px);
+    width: calc(50% - 8px);
   }
 
   .card {
-    padding: 20px;
+    padding: 24px;
   }
 
-  h1 {
-    font-size: 26px;
+  .mobile-column {
+    flex-direction: row; /* Coloca os botões de ação lado a lado no monitor */
   }
 }

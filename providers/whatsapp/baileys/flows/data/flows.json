@@ -71,7 +71,9 @@
           "2 - Desenvolvimento Mobile para iniciantes",
           "3 - Desenvolvimento Back-end",
           "4 - Desenvolvimento Front-end",
-          "0 - Voltar ao Menu Principal"
+          "0 - Voltar ao Menu Principal",
+          "",
+          "Digite o número da opção desejada."
         ],
         "options": [
           {
@@ -340,19 +342,6 @@
             "back": true
           }
         ]
-      }
-    }
-  },
-  "aloalo": {
-    "id": "aloalo",
-    "initialStep": "inicio",
-    "steps": {
-      "inicio": {
-        "id": "inicio",
-        "message": [
-          "inicio"
-        ],
-        "options": []
       }
     }
   }

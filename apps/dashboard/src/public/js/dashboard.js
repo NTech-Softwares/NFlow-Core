@@ -1,5 +1,4 @@
 const API_URL = window.APP_CONFIG.API_URL;
-
 const token = localStorage.getItem("token");
 
 init();
@@ -11,13 +10,17 @@ async function init() {
     return;
   }
 
-  await getStatus();
+  // Verifica o status do WhatsApp. Se não estiver pronto/conectado, aborta e redireciona
+  const whatsappConnected = await getStatus();
+  if (!whatsappConnected) {
+    window.location.href = "/qr";
+    return;
+  }
 
   let list_groups = false;
 
   if (!list_groups) {
     await listGroups();
-
     list_groups = true;
   }
 }
@@ -27,11 +30,9 @@ async function init() {
  AUTENTICAÇÃO
  =========================
 */
-
 async function loginHandle() {
   if (!token) {
     window.location.href = "/login";
-
     return false;
   }
 
@@ -45,50 +46,64 @@ async function loginHandle() {
 
     if (!response.ok) {
       localStorage.removeItem("token");
-
       window.location.href = "/login";
-
       return false;
     }
 
     return true;
   } catch (error) {
     localStorage.removeItem("token");
-
     window.location.href = "/login";
-
     return false;
   }
 }
 
 /*
  =========================
- STATUS
+ STATUS (Atualizado para retornar booleano)
  =========================
 */
-
 async function getStatus() {
-  const status = document.getElementById("status");
+  const statusElement = document.getElementById("status");
 
   try {
-    const response = await fetch(`${API_URL}/status`, {
+    // Utiliza o endpoint padronizado do ecossistema
+    const response = await fetch(`${API_URL}/whatsapp/status`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
+    if (!response.ok) {
+      throw new Error(`Erro HTTP: ${response.status}`);
+    }
+
     const data = await response.json();
 
-    status.innerText = data.whatsapp || "Erro";
+    // Normaliza o status vindo do backend
+    const estado = data.status ? data.status.toLowerCase() : "unknown";
+
+    // Injeta o texto legível na sua UI se o elemento existir na tela
+    if (statusElement) {
+      statusElement.innerText = data.status || "DISCONNECTED";
+    }
 
     console.log("-----------------------------------------");
+    console.log("WhatsApp Status Data:", data);
 
-    console.log(data);
+    // Retorna verdadeiro SOMENTE se estiver pronto para uso
+    if (estado === "open" || estado === "connected" || estado === "connected") {
+      return true;
+    }
+
+    return false;
   } catch (error) {
-    status.innerText = "Erro";
-
-    console.log(error);
+    if (statusElement) {
+      statusElement.innerText = "Erro";
+    }
+    console.log("Erro ao obter status do WhatsApp:", error);
+    return false;
   }
 }
 
@@ -97,43 +112,27 @@ async function getStatus() {
  INPUT STATE
  =========================
 */
-
 async function updateNumberInputState() {
   const numberInput = document.getElementById("number");
-
   const sendMsgBtn = document.getElementById("sendMessage");
-
   const sendCpmgBtn = document.getElementById("sendCampaign");
-
   const checkedGroups = document.querySelectorAll(".group-checkbox:checked");
-
   const hasSelectedGroups = checkedGroups.length > 0;
 
   if (hasSelectedGroups) {
     numberInput.disabled = true;
-
     numberInput.value = "";
-
     numberInput.placeholder = "Desabilitado ao selecionar grupos";
-
     sendMsgBtn.disabled = true;
-
     sendMsgBtn.style.backgroundColor = "#096315";
-
     sendCpmgBtn.disabled = false;
-
     sendCpmgBtn.style.backgroundColor = "#18eb35";
   } else {
     numberInput.disabled = false;
-
     numberInput.placeholder = "5585999999999";
-
     sendMsgBtn.disabled = false;
-
     sendMsgBtn.style.backgroundColor = "#18eb35";
-
     sendCpmgBtn.disabled = true;
-
     sendCpmgBtn.style.backgroundColor = "#096315";
   }
 }
@@ -143,23 +142,17 @@ async function updateNumberInputState() {
  ENVIAR MENSAGEM
  =========================
 */
-
 async function sendMessage() {
   const number = document.getElementById("number").value;
-
   const message = document.getElementById("message").value;
-
   const image = document.getElementById("image").files[0];
-
   const result = document.getElementById("result");
 
   result.innerText = "Enviando...";
 
   try {
     const formData = new FormData();
-
     formData.append("number", number);
-
     formData.append("message", message);
 
     if (image) {
@@ -183,7 +176,6 @@ async function sendMessage() {
     }
   } catch (error) {
     result.innerText = "Erro ao conectar com a API";
-
     console.log(error);
   }
 }
@@ -193,15 +185,14 @@ async function sendMessage() {
  LISTAR GRUPOS
  =========================
 */
-
 async function listGroups() {
   const groups = document.getElementById("groups");
+  if (!groups) return; // Evita quebra se a tela não possuir o container
 
   groups.innerHTML = "";
-
   const resultGroup = document.getElementById("resultGroup");
 
-  resultGroup.innerText = "Listando...";
+  if (resultGroup) resultGroup.innerText = "Listando...";
 
   try {
     const response = await fetch(`${API_URL}/whatsapp/list-groups`, {
@@ -214,49 +205,41 @@ async function listGroups() {
     const data = await response.json();
 
     if (data.success) {
-      resultGroup.innerText = "Download de lista de grupos concluído...";
+      if (resultGroup)
+        resultGroup.innerText = "Download de lista de grupos concluído...";
     } else {
-      resultGroup.innerText = "Erro ao listar grupos";
+      if (resultGroup) resultGroup.innerText = "Erro ao listar grupos";
     }
 
-    data.array.forEach((group) => {
-      const groupItem = document.createElement("div");
-
-      groupItem.classList.add("group-item");
-
-      groupItem.innerHTML = `
-        <div class="group-left">
-
-          <input
-            type="checkbox"
-            class="group-checkbox"
-            value="${group.id}"
-          >
-
-          <div class="group-info">
-
-            <span class="group-name">
-              ${group.name}
-            </span>
-
-            <span class="group-members">
-              ${group.participants} participantes
-            </span>
-
+    if (data.array && Array.isArray(data.array)) {
+      data.array.forEach((group) => {
+        const groupItem = document.createElement("div");
+        groupItem.classList.add("group-item");
+        groupItem.innerHTML = `
+          <div class="group-left">
+            <input
+              type="checkbox"
+              class="group-checkbox"
+              value="${group.id}"
+            >
+            <div class="group-info">
+              <span class="group-name">
+                ${group.name}
+              </span>
+              <span class="group-members">
+                ${group.participants} participantes
+              </span>
+            </div>
           </div>
+        `;
 
-        </div>
-      `;
-
-      const checkbox = groupItem.querySelector(".group-checkbox");
-
-      checkbox.addEventListener("change", updateNumberInputState);
-
-      groups.appendChild(groupItem);
-    });
+        const checkbox = groupItem.querySelector(".group-checkbox");
+        checkbox.addEventListener("change", updateNumberInputState);
+        groups.appendChild(groupItem);
+      });
+    }
   } catch (error) {
-    resultGroup.innerText = "Erro ao conectar com a API";
-
+    if (resultGroup) resultGroup.innerText = "Erro ao conectar com a API";
     console.log(error);
   }
 }
@@ -266,10 +249,8 @@ async function listGroups() {
  SELECIONAR TODOS
  =========================
 */
-
 async function toggleSelectAll() {
   const checkboxes = document.querySelectorAll(".group-checkbox");
-
   const allChecked = [...checkboxes].every((cb) => cb.checked);
 
   checkboxes.forEach((cb) => {
@@ -284,21 +265,18 @@ async function toggleSelectAll() {
  ENVIAR CAMPANHA
  =========================
 */
-
 async function sendCampaign() {
   const selectedGroups = [
     ...document.querySelectorAll(".group-checkbox:checked"),
   ].map((cb) => cb.value);
 
   const image = document.getElementById("image").files[0];
-
   const result = document.getElementById("result");
 
   result.innerText = "Enviando Campanha...";
 
   try {
     const formData = new FormData();
-
     selectedGroups.forEach((group) => {
       formData.append("groups", group);
     });
@@ -326,7 +304,6 @@ async function sendCampaign() {
     }
   } catch (error) {
     result.innerText = "Erro ao conectar com a API";
-
     console.log(error);
   }
 }

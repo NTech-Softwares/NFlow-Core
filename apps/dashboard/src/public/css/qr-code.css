@@ -1,0 +1,259 @@
+/* =========================
+   RESET & BASE (Mobile First)
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+}
+
+body {
+  background: #0f0f0f;
+  color: white;
+  min-height: 100vh;
+}
+
+/* =========================
+   LAYOUT & CONTAINER
+========================= */
+.qr-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.card {
+  background: #171717;
+  border: 1px solid #262626;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.qr-card {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* =========================
+   HEADER & CRONÔMETRO/STATUS
+========================= */
+h1 {
+  color: #18eb35;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+/* Badge de Status Oval Clean */
+.status-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  padding: 10px 18px;
+  border-radius: 30px;
+  margin-bottom: 24px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e1b12c; /* Amarelo enquanto espera processar */
+  transition: all 0.3s ease;
+}
+
+/* Animação pulsante para quando estiver aguardando leitura */
+.status-dot.pulsing {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* Classes utilitárias para o seu script manipular o estado do nó */
+.status-dot.connected {
+  background: #18eb35;
+  animation: none;
+  box-shadow: 0 0 10px rgba(24, 235, 53, 0.6);
+}
+
+.status-dot.disconnected {
+  background: #ff4a4a;
+  animation: none;
+}
+
+.status-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #cfcfcf;
+}
+
+/* =========================
+   QR CODE WRAPPER (Scanner Safe)
+========================= */
+.qr-wrapper {
+  width: 100%;
+  max-width: 260px;
+  aspect-ratio: 1 / 1;
+  background: white; /* Obrigatório para a câmera do WhatsApp ler os contrastes */
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+  box-shadow: 0 0 30px rgba(24, 235, 53, 0.05);
+}
+
+.qr-box {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Spinner animado enquanto o backend não envia a string do QR */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #18eb35;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* =========================
+   INSTRUÇÕES (Card Interno)
+========================= */
+.instructions {
+  text-align: left;
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+.instructions h3 {
+  font-size: 14px;
+  color: #18eb35;
+  margin-bottom: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.instructions ol {
+  padding-left: 16px;
+  color: #a3a3a3;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.instructions strong {
+  color: white;
+}
+
+/* =========================
+   BOTÕES
+========================= */
+.qr-actions {
+  width: 100%;
+}
+
+button {
+  width: 100%;
+  background: #18eb35;
+  color: black;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: #13c72b;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* =========================
+   KEYFRAMES (Animações)
+========================= */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ===================================================
+   PROGRESSIVE ENHANCEMENT (Desktop)
+=================================================== */
+@media (min-width: 480px) {
+  .card {
+    padding: 36px;
+  }
+
+  h1 {
+    font-size: 30px;
+  }
+
+  .qr-wrapper {
+    max-width: 280px; /* Um pouco maior no desktop se houver espaço */
+  }
+}

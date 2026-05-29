@@ -25,7 +25,7 @@ async function login() {
     localStorage.setItem("token", data.token);
 
     // redireciona
-    window.location.href = "/teste";
+    window.location.href = "/";
   } else {
     alert(data.message);
     console.log(data.message);
