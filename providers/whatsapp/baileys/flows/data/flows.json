@@ -1,10 +1,12 @@
 {
   "main": {
     "id": "main",
+    "name": "Menu Principal",
     "initialStep": "menu",
     "steps": {
       "menu": {
         "id": "menu",
+        "name": "Menu Inicial",
         "message": [
           "👋 Olá! Seja bem-vindo(a) ao nosso atendimento.",
           "",
@@ -56,10 +58,12 @@
   },
   "cursos": {
     "id": "cursos",
+    "name": "Cursos",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
         "id": "inicio",
+        "name": "Menu Inicial",
         "message": [
           "🎓 Bem-vindo à área de cursos.",
           "",
@@ -100,6 +104,7 @@
       },
       "webIniciantes": {
         "id": "webIniciantes",
+        "name": "Web Iniciantes",
         "message": [
           "🌐 Desenvolvimento Web para Iniciantes",
           "",
@@ -127,6 +132,7 @@
       },
       "mobileIniciantes": {
         "id": "mobileIniciantes",
+        "name": "Mobile Iniciantes",
         "message": [
           "📱 Desenvolvimento Mobile para Iniciantes",
           "",
@@ -154,6 +160,7 @@
       },
       "backend": {
         "id": "backend",
+        "name": "Introdução a BackEnd",
         "message": [
           "⚙️ Desenvolvimento Back-end",
           "",
@@ -182,6 +189,7 @@
       },
       "frontend": {
         "id": "frontend",
+        "name": "Introdução a FrontEnd",
         "message": [
           "🎨 Desenvolvimento Front-end",
           "",
@@ -212,10 +220,12 @@
   },
   "web": {
     "id": "web",
+    "name": "Orçamento Web",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
         "id": "inicio",
+        "name": "Menu Inicial",
         "message": [
           "🌐 Criação de Sites e Landing Pages",
           "",
@@ -239,10 +249,12 @@
   },
   "mobile": {
     "id": "mobile",
+    "name": "Orçamento Mobile",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
         "id": "inicio",
+        "name": "Menu Inicial",
         "message": [
           "📱 Aplicativos Mobile e Desktop",
           "",
@@ -266,10 +278,12 @@
   },
   "whatsapp": {
     "id": "whatsapp",
+    "name": "Automação de Whatsapp",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
         "id": "inicio",
+        "name": "Menu Inicial",
         "message": [
           "🤖 Automação de WhatsApp",
           "",
@@ -293,10 +307,12 @@
   },
   "automacao": {
     "id": "automacao",
+    "name": "Automação de Processos",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
         "id": "inicio",
+        "name": "Menu Inicial",
         "message": [
           "⚙️ Automação de Processos",
           "",
@@ -320,10 +336,12 @@
   },
   "consultoria": {
     "id": "consultoria",
+    "name": "Consultoria",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
         "id": "inicio",
+        "name": "Menu Inicial",
         "message": [
           "💬 Consultoria Personalizada",
           "",

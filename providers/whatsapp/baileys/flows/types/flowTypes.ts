@@ -11,6 +11,8 @@ export type FlowOption = {
 export type FlowStep = {
   id: string;
 
+  name: string;
+
   message: string[];
 
   options?: FlowOption[];
@@ -18,6 +20,8 @@ export type FlowStep = {
 
 export type Flow = {
   id: string;
+
+  name: string;
 
   initialStep: string;
 

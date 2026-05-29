@@ -14,6 +14,8 @@
     Helvetica,
     Arial,
     sans-serif;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -152,33 +154,86 @@ body {
   padding-bottom: 0;
 }
 
-/* =========================
-   TREE STEPS & MESSAGES (WhatsApp Preview)
-========================= */
+/* ===================================================
+   TREE STEPS & MESSAGES (WhatsApp Preview - Step Isolation)
+=================================================== */
 .tree-step {
-  padding: 20px 0;
-  border-bottom: 1px solid #222;
+  background: #1c1c1c;
+  border: 1px solid #282828;
+  border-left: 3px solid #18eb35;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: border-color 0.2s ease;
+}
+
+.tree-step:hover {
+  border-color: #383838;
+  border-left-color: #1cfc3b;
 }
 
 .tree-step:last-child {
-  border-bottom: none;
+  margin-bottom: 4px;
 }
 
 .tree-step-header {
+  cursor: pointer; /* Indica que toda a área do header do Step é clicável */
+  user-select: none;
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Garante que ID fique na esquerda e botão na direita */
+  justify-content: space-between;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #262626;
+}
+
+.tree-step-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Ícone do collapse do Step */
+.step-collapse {
+  color: #18eb35;
+  font-size: 11px;
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+
+.step-collapse.collapsed {
+  transform: rotate(
+    -90deg
+  ); /* Rotaciona a seta para a esquerda quando fechado */
+}
+
+/* Transição do corpo interno do Step */
+.tree-step-content {
+  overflow: hidden;
+  max-height: 5000px; /* Alto o suficiente para conter o preview e as opções */
+  opacity: 1;
+  transition:
+    max-height 0.25s ease-in-out,
+    opacity 0.2s ease;
+}
+
+.tree-step-content.collapsed {
+  max-height: 0 !important;
+  opacity: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
 }
 
 .step-tag {
   font-size: 9px;
   background: #2a2a2a;
   color: #a0a0a0;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 4px;
-  margin-right: 4px;
+  margin-right: 6px;
 }
 
 .tree-step-id {
@@ -210,7 +265,7 @@ body {
 
 /* Caixa da mensagem expansível */
 .step-message-box {
-  max-height: 1000px; /* Alto o suficiente para textos grandes */
+  max-height: 1000px;
   overflow: hidden;
   transition:
     max-height 0.3s ease-in-out,
@@ -223,7 +278,7 @@ body {
   margin-bottom: 0;
 }
 
-/* Wrapper para controlar o posicionamento absoluto do botão */
+/* Wrapper para controlar o positioning absoluto do botão */
 .whatsapp-preview-wrapper {
   position: relative;
   width: 100%;
@@ -232,17 +287,16 @@ body {
 /* Simulador visual do Balão do WhatsApp Web Escuro */
 .whatsapp-preview {
   background: #0b141a;
-  border: 1px solid #222;
+  border: 1px solid #262626;
   border-radius: 10px;
   padding: 14px;
-  padding-bottom: 40px !important; /* Espaço para o botão absoluto não cobrir texto */
+  padding-bottom: 40px !important;
   color: #e9edef;
-  font-family:
-    "Courier New", Courier, monospace; /* Mantém os espaçamentos e quebras identados */
+  font-family: "Courier New", Courier, monospace;
   white-space: pre-wrap;
   line-height: 1.5;
   font-size: 14px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 /* Estilização do Botão de Editar */
@@ -250,8 +304,8 @@ body {
   position: absolute;
   bottom: 10px;
   right: 10px;
-  background: #202c33; /* Fundo cinza escuro sutil */
-  color: #18eb35; /* Texto verde padrão do seu sistema */
+  background: #202c33;
+  color: #18eb35;
   border: 1px solid #3b4a54;
   padding: 6px 12px;
   border-radius: 6px;
@@ -262,10 +316,9 @@ body {
   align-items: center;
   gap: 4px;
   transition: all 0.2s ease;
-  opacity: 0.7; /* Levemente transparente por padrão */
+  opacity: 0.7;
 }
 
-/* Efeito de Hover no próprio botão */
 .btn-edit-message:hover {
   opacity: 1;
   background: #18eb35;
@@ -273,19 +326,52 @@ body {
   box-shadow: 0 0 10px rgba(24, 235, 53, 0.4);
 }
 
-/* O botão fica totalmente visível quando passamos o mouse no wrapper */
 .whatsapp-preview-wrapper:hover .btn-edit-message {
   opacity: 1;
   border-color: #18eb35;
 }
 
+/* ===================================================
+   INTERACTIVE OPTIONS (Modern Human Design - Mobile First)
+=================================================== */
+.tree-options-header-zone {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #222;
+  padding-bottom: 8px;
+}
+
 .tree-options-title {
   font-size: 11px;
-  color: #555;
+  color: #666;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
+  letter-spacing: 0.8px;
   font-weight: bold;
+}
+
+/* Botão dinâmico "+ Adicionar Opção" */
+.btn-add-option-trigger {
+  background: rgba(24, 235, 53, 0.06);
+  border: 1px dashed rgba(24, 235, 53, 0.3);
+  color: #18eb35;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.btn-add-option-trigger:hover {
+  background: rgba(24, 235, 53, 0.15);
+  border-style: solid;
+  border-color: #18eb35;
+  box-shadow: 0 0 8px rgba(24, 235, 53, 0.2);
 }
 
 .tree-options {
@@ -295,80 +381,148 @@ body {
   gap: 12px;
 }
 
-/* =========================
-   INTERACTIVE OPTIONS (Mobile Default)
-========================= */
+/* Container de Linha de Opção Modernizada */
 .tree-option {
   display: flex;
-  flex-direction: column; /* Alinhamento vertical natural em telas pequenas */
-  align-items: stretch;
+  flex-direction: column;
   gap: 12px;
-  background: #0d0d0d;
-  border: 1px solid #202020;
+  background: #141414;
+  border: 1px solid #222;
   border-radius: 12px;
   padding: 14px;
+  margin-bottom: 4px;
+  transition: all 0.2s ease;
 }
 
-.option-left {
-  display: flex;
-  align-items: center;
-  width: 100%;
+.tree-option:hover {
+  border-color: #333;
+  background: #161616;
 }
 
-.option-key-input {
-  width: 100%; /* Input numérico expande totalmente no mobile */
-  background: #141414;
-  border: 1px solid #2a2a2a;
+/* Badge Numérica de Opção (Círculo Verde Estilizado) */
+.option-badge {
+  background: rgba(24, 235, 53, 0.1);
+  border: 1px solid #18eb35;
   color: #18eb35;
-  border-radius: 8px;
-  padding: 4px;
-  outline: none;
-  font-size: 15px;
-  font-weight: bold;
-  text-align: center;
-}
-
-.option-arrow {
-  display: flex;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px 0;
-}
-
-.option-arrow::after {
-  content: "↓"; /* Seta para baixo por padrão no mobile */
-  color: #18eb35;
-  font-size: 18px;
   font-weight: bold;
+  font-size: 15px;
 }
 
-.option-arrow.no-arrow::after {
-  content: "";
+.option-badge-zero {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #555;
+  color: #aaa;
 }
 
-.option-right {
+/* Textos de conexão humana */
+.option-connector-text {
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.option-human-text {
+  color: #aaa;
+  font-size: 14px;
+}
+
+.option-left-side {
   display: flex;
-  flex-direction: column; /* Selects empilhados no mobile */
-  gap: 10px;
-  width: 100%;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
+.option-right-side {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+/* Selects Integrados */
 .flow-select,
 .step-select {
-  width: 100%;
-  background: #141414;
+  flex: 1;
+  min-width: 140px;
+  background: #0d0d0d;
   border: 1px solid #2a2a2a;
   color: #ffffff;
   border-radius: 8px;
-  padding: 4px;
+  padding: 8px 12px;
   outline: none;
   font-size: 14px;
-  height: 46px; /* Altura ideal de toque para dispositivos móveis */
+  height: 40px;
+  transition: border-color 0.2s;
 }
 
-.flow-select:disabled,
-.step-select:disabled {
-  opacity: 0.3;
+.flow-select:focus,
+.step-select:focus {
+  border-color: #18eb35;
+}
+
+.step-select-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.step-select-container.hidden {
+  display: none !important;
+}
+
+/* Botão de Engrenagem (Toggle Avançado) */
+.btn-toggle-step-select {
+  background: #222;
+  border: 1px solid #333;
+  color: #aaa;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-toggle-step-select:hover,
+.btn-toggle-step-select.active {
+  background: #333;
+  color: #fff;
+  border-color: #18eb35;
+}
+
+/* Botão Excluir Opção (X) */
+.btn-delete-option {
+  background: transparent;
+  border: none;
+  color: #444;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px;
+  transition: color 0.2s;
+}
+
+.btn-delete-option:hover {
+  color: #ff4a4a;
+}
+
+/* Customização para a Linha "Voltar" */
+.back-option {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.01);
+  flex-direction: row;
+  align-items: center;
 }
 
 .tree-empty {
@@ -558,41 +712,38 @@ body {
     padding: 20px;
   }
 
+  .tree-step {
+    padding: 20px;
+    margin-left: 8px; /* Recuo estrutural fino para sensação hierárquica no PC */
+  }
+
   .tree-options {
     margin-left: 16px;
   }
 
-  /* Retorna os elementos para o alinhamento horizontal lado a lado */
+  /* Distribuição horizontal harmoniosa e leitura fluida no desktop */
   .tree-option {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
+    padding: 10px 16px;
   }
 
-  .option-left {
+  .option-right-side {
     width: auto;
-  }
-
-  .option-key-input {
-    width: 70px;
-    padding: 12px; /* Ajuste que corrige a exibição no desktop */
-  }
-
-  .option-arrow::after {
-    content: "→"; /* Seta para a direita no computador */
-  }
-
-  .option-right {
-    flex-direction: row;
-    width: auto;
+    justify-content: flex-end;
+    flex: 1;
   }
 
   .flow-select,
   .step-select {
-    width: auto;
-    min-width: 180px;
-    padding: 12px;
-    height: auto; /* Adapta-se ao padding interno no desktop */
+    flex: none;
+    width: 180px;
+    height: auto;
+    padding: 10px 12px;
+  }
+
+  .step-select-container {
+    flex: none;
   }
 }

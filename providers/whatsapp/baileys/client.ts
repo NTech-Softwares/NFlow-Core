@@ -146,7 +146,7 @@ export const startWhatsapp = async (): Promise<WASocket> => {
                   `Pasta de credenciais '${AUTH_FOLDER}' limpa com sucesso.`,
                 );
               }
-            } catch (err) {
+            } catch (err ) {
               logger.error(
                 "Erro crítico ao tentar remover pastas de autenticação:",
                 err,

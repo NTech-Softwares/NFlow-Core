@@ -1,51 +1,70 @@
 function createStepHTML(flow, step) {
   const messageText = step.message || "<em>Sem mensagem configurada.</em>";
+  const optionsList = step.options || [];
 
   return `
     <div class="tree-step" id="step-container-${flow.id}-${step.id}">
       
-      <div class="tree-step-header">
-        <span class="step-indicator-line"></span>
-        <div class="tree-step-id">
-          <span class="step-tag">STEP</span> <strong>${step.id}</strong>
+      <div class="tree-step-header" onclick="toggleStep('${flow.id}', '${step.id}')">
+        <div class="tree-step-header-left">
+          <div class="step-collapse collapsed" id="step-collapse-${flow.id}-${step.id}">
+            ▼
+          </div>
+          <div class="tree-step-id">
+            <strong>${step.name}</strong>
+          </div>
         </div>
         
         <button 
           type="button" 
           class="btn-toggle-message"
-          onclick="toggleStepMessage('${flow.id}', '${step.id}')"
+          onclick="toggleStepMessage('${flow.id}', '${step.id}'); event.stopPropagation();"
           id="btn-msg-${flow.id}-${step.id}"
         >
           💬 Ocultar Mensagem ▲
         </button>
       </div>
 
-      <div class="step-message-box" id="msg-box-${flow.id}-${step.id}">
-        <div class="whatsapp-preview-wrapper">
-          <div class="whatsapp-preview">${messageText}</div>
-          
+      <div class="tree-step-content collapsed" id="step-content-${flow.id}-${step.id}">
+        <div class="step-message-box" id="msg-box-${flow.id}-${step.id}">
+          <div class="whatsapp-preview-wrapper">
+            <div class="whatsapp-preview">${messageText}</div>
+            
+            <button 
+              type="button" 
+              class="btn-edit-message"
+              data-flow="${flow.id}"
+              data-step="${step.id}"
+              onclick="handleEditMessage('${flow.id}', '${step.id}')"
+              title="Editar mensagem"
+            >
+              ✏️ Editar
+            </button>
+          </div>
+        </div>
+
+        <div class="tree-options-header-zone">
+          <div class="tree-options-title">Direcionamento de Opções</div>
           <button 
             type="button" 
-            class="btn-edit-message"
-            data-flow="${flow.id}"
-            data-step="${step.id}"
-            onclick="handleEditMessage('${flow.id}', '${step.id}')"
-            title="Editar mensagem"
+            class="btn-add-option-trigger" 
+            id="btn-add-opt-${flow.id}-${step.id}"
+            onclick="addOptionRow('${flow.id}', '${step.id}')"
+            ${optionsList.length >= 10 ? 'style="display: none;"' : ""}
           >
-            ✏️ Editar
+            + Adicionar Opção
           </button>
         </div>
-      </div>
 
-      <div class="tree-options-title">Direcionamento de Opções:</div>
-      <div class="tree-options">
-        ${
-          step.options?.length
-            ? step.options
-                .map((option) => createOptionHTML(flow, step, option))
-                .join("")
-            : createEmptyOptionHTML()
-        }
+        <div class="tree-options" id="options-list-${flow.id}-${step.id}">
+          ${
+            optionsList.length
+              ? optionsList
+                  .map((option) => createOptionHTML(flow, step, option))
+                  .join("")
+              : createEmptyOptionHTML()
+          }
+        </div>
       </div>
 
     </div>
@@ -68,13 +87,11 @@ function handleEditMessage(flowId, stepId) {
   const textarea = document.getElementById("modal-message-input");
   const saveBtn = document.getElementById("btn-modal-save");
 
-  // Localiza o container da mensagem atual gerada na tela
   const currentMessageElement = document.querySelector(
     `#msg-box-${flowId}-${stepId} .whatsapp-preview`,
   );
 
   if (currentMessageElement) {
-    // AJUSTE 1: Se o balão contiver o HTML de fallback, abre o textarea vazio
     if (
       currentMessageElement.innerHTML.includes(
         "<em>Sem mensagem configurada.</em>",
@@ -86,10 +103,8 @@ function handleEditMessage(flowId, stepId) {
     }
   }
 
-  // Exibe o card flutuante na tela
   modal.classList.remove("hidden");
 
-  // Atribui o clique dinamicamente para passar o valor limpo
   saveBtn.onclick = async () => {
     await saveMessageRoute(flowId, stepId, textarea.value.trim());
   };
@@ -112,7 +127,6 @@ async function saveMessageRoute(flowId, stepId, updatedText) {
   const token = localStorage.getItem("token");
   const saveBtn = document.getElementById("btn-modal-save");
 
-  // Feedback visual de carregamento
   const originalBtnText = saveBtn.innerHTML;
   saveBtn.innerHTML = "Salvando...";
   saveBtn.disabled = true;
@@ -135,13 +149,11 @@ async function saveMessageRoute(flowId, stepId, updatedText) {
       throw new Error(`Erro HTTP: ${response.status}`);
     }
 
-    // --- ATUALIZAÇÃO EM TEMPO REAL SEM RECARREGAR (DOM Manipulation) ---
     const targetPreviewDOM = document.querySelector(
       `#msg-box-${flowId}-${stepId} .whatsapp-preview`,
     );
 
     if (targetPreviewDOM) {
-      // AJUSTE 2: Se o usuário limpou o texto, recoloca o fallback visual
       if (!updatedText) {
         targetPreviewDOM.innerHTML = "<em>Sem mensagem configurada.</em>";
       } else {

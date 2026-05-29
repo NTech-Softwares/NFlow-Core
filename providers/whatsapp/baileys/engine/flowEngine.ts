@@ -80,7 +80,7 @@ export async function processFlow(user: string, content: string) {
   */
   // Se o usuário mandar um "Oi" ou se for a primeiríssima mensagem dele no sistema
   if (
-    ["oi", "ola", "olá", "hello", "eae"].includes(normalized) ||
+    ["oi", "ola", "olá", "hello", "tudo manero cumpade"].includes(normalized) ||
     !session.welcome
   ) {
     session.welcome = true; // Marca que o usuário já recebeu as boas-vindas

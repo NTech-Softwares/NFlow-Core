@@ -17,7 +17,7 @@ function createFlowHTML(flow) {
           </div>
 
           <div class="flow-name">
-            ${flow.id}
+            ${flow.name}
           </div>
 
         </div>

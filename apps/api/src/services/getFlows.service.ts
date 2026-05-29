@@ -17,10 +17,14 @@ export async function getFlowsTreeService() {
     return {
       id: flow.id,
 
+      name: flow.name,
+
       initialStep: flow.initialStep,
 
       steps: Object.values(flow.steps || {}).map((step: any) => ({
         id: step.id,
+
+        name: step.name,
 
         message: Array.isArray(step.message)
           ? step.message.join("\n")
