@@ -11,7 +11,7 @@ function createStepHTML(flow, step) {
             ▼
           </div>
           <div class="tree-step-id">
-            <strong>${step.name}</strong>
+            <strong>${step.name || step.id}</strong>
           </div>
         </div>
         
@@ -45,15 +45,6 @@ function createStepHTML(flow, step) {
 
         <div class="tree-options-header-zone">
           <div class="tree-options-title">Direcionamento de Opções</div>
-          <button 
-            type="button" 
-            class="btn-add-option-trigger" 
-            id="btn-add-opt-${flow.id}-${step.id}"
-            onclick="addOptionRow('${flow.id}', '${step.id}')"
-            ${optionsList.length >= 10 ? 'style="display: none;"' : ""}
-          >
-            + Adicionar Opção
-          </button>
         </div>
 
         <div class="tree-options" id="options-list-${flow.id}-${step.id}">
@@ -64,6 +55,27 @@ function createStepHTML(flow, step) {
                   .join("")
               : createEmptyOptionHTML()
           }
+        </div>
+
+        <div class="tree-options-actions">
+          <button 
+            type="button" 
+            class="btn-add-option-trigger" 
+            id="btn-add-opt-${flow.id}-${step.id}"
+            onclick="addOptionRow('${flow.id}', '${step.id}')"
+            ${optionsList.length >= 9 ? 'style="display: none;"' : ""}
+          >
+            + Adicionar Opção
+          </button>
+
+          <button 
+            type="button" 
+            class="btn-save-options-trigger" 
+            id="btn-save-opts-${flow.id}-${step.id}"
+            onclick="handleSaveStepOptions('${flow.id}', '${step.id}')"
+          >
+            💾 Atualizar Opções
+          </button>
         </div>
       </div>
 

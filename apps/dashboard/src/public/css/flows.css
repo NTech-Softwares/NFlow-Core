@@ -1,6 +1,6 @@
-/* =========================
-   RESET & BASE (Mobile Default)
-========================= */
+/* ===================================================
+   RESET & BASE (Mobile First)
+=================================================== */
 * {
   margin: 0;
   padding: 0;
@@ -20,9 +20,9 @@
 
 body {
   background: #0f0f0f;
-  color: white;
+  color: #ffffff;
   min-height: 100vh;
-  padding: 16px; /* Espaçamento confortável e seguro para celulares */
+  padding: 16px;
 }
 
 .container {
@@ -31,12 +31,25 @@ body {
   margin: 0 auto;
 }
 
-/* =========================
-   HEADER (Mobile Default)
-========================= */
+/* Componentização de Botões Comuns para Evitar Redundância */
+.btn-base {
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+/* ===================================================
+   HEADER
+=================================================== */
 .page-header {
   display: flex;
-  flex-direction: column; /* Elementos empilhados nativamente no celular */
+  flex-direction: column;
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -59,24 +72,24 @@ body {
   line-height: 1.4;
 }
 
-/* Botão vira bloco inteiro (Fácil de clicar com o polegar) */
 .btn-add-flow {
+  extend: .btn-base;
   background-color: #18eb35;
-  color: #000;
-  border: none;
+  color: #000000;
   border-radius: 10px;
-  padding: 14px 24px; /* Área de toque aumentada */
+  padding: 14px 24px;
   font-size: 15px;
   font-weight: bold;
-  cursor: pointer;
   width: 100%;
-  text-align: center;
-  transition: all 0.2s ease;
+}
+.btn-add-flow:hover {
+  background: #13c72b;
+  box-shadow: 0 0 12px rgba(24, 235, 53, 0.3);
 }
 
-/* =========================
+/* ===================================================
    FLOWS LIST & CARDS
-========================= */
+=================================================== */
 .flows-grid {
   display: flex;
   flex-direction: column;
@@ -109,13 +122,16 @@ body {
   min-width: 0;
 }
 
-.flow-collapse {
+.flow-collapse,
+.step-collapse {
   color: #18eb35;
   font-size: 12px;
   transition: transform 0.2s ease;
+  display: inline-block;
 }
 
-.flow-collapse.collapsed {
+.flow-collapse.collapsed,
+.step-collapse.collapsed {
   transform: rotate(-90deg);
 }
 
@@ -141,9 +157,9 @@ body {
   padding: 12px;
   overflow: hidden;
   transition:
-    max-height 0.25s ease,
+    max-height 0.25s ease-in-out,
     opacity 0.2s ease;
-  max-height: 10000px;
+  max-height: 20000px;
   opacity: 1;
 }
 
@@ -155,7 +171,7 @@ body {
 }
 
 /* ===================================================
-   TREE STEPS & MESSAGES (WhatsApp Preview - Step Isolation)
+   TREE STEPS & MESSAGES (WhatsApp Preview)
 =================================================== */
 .tree-step {
   background: #1c1c1c;
@@ -165,7 +181,6 @@ body {
   padding: 16px;
   margin-bottom: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  transition: border-color 0.2s ease;
 }
 
 .tree-step:hover {
@@ -178,7 +193,7 @@ body {
 }
 
 .tree-step-header {
-  cursor: pointer; /* Indica que toda a área do header do Step é clicável */
+  cursor: pointer;
   user-select: none;
   display: flex;
   align-items: center;
@@ -195,28 +210,14 @@ body {
   gap: 12px;
 }
 
-/* Ícone do collapse do Step */
-.step-collapse {
-  color: #18eb35;
-  font-size: 11px;
-  transition: transform 0.2s ease;
-  display: inline-block;
-}
-
-.step-collapse.collapsed {
-  transform: rotate(
-    -90deg
-  ); /* Rotaciona a seta para a esquerda quando fechado */
-}
-
-/* Transição do corpo interno do Step */
 .tree-step-content {
   overflow: hidden;
-  max-height: 5000px; /* Alto o suficiente para conter o preview e as opções */
+  max-height: 8000px; /* Margem segura expansível para sub-itens */
   opacity: 1;
   transition:
     max-height 0.25s ease-in-out,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    padding 0.2s ease;
 }
 
 .tree-step-content.collapsed {
@@ -242,7 +243,6 @@ body {
   font-size: 15px;
 }
 
-/* Botão de Toggle da Mensagem do Bot */
 .btn-toggle-message {
   min-width: 170px;
   background: transparent;
@@ -263,7 +263,6 @@ body {
   background: rgba(24, 235, 53, 0.05);
 }
 
-/* Caixa da mensagem expansível */
 .step-message-box {
   max-height: 1000px;
   overflow: hidden;
@@ -278,19 +277,16 @@ body {
   margin-bottom: 0;
 }
 
-/* Wrapper para controlar o positioning absoluto do botão */
 .whatsapp-preview-wrapper {
   position: relative;
   width: 100%;
 }
 
-/* Simulador visual do Balão do WhatsApp Web Escuro */
 .whatsapp-preview {
   background: #0b141a;
   border: 1px solid #262626;
   border-radius: 10px;
-  padding: 14px;
-  padding-bottom: 40px !important;
+  padding: 14px 14px 40px 14px;
   color: #e9edef;
   font-family: "Courier New", Courier, monospace;
   white-space: pre-wrap;
@@ -299,7 +295,6 @@ body {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
-/* Estilização do Botão de Editar */
 .btn-edit-message {
   position: absolute;
   bottom: 10px;
@@ -319,20 +314,20 @@ body {
   opacity: 0.7;
 }
 
-.btn-edit-message:hover {
-  opacity: 1;
-  background: #18eb35;
-  color: #000000;
-  box-shadow: 0 0 10px rgba(24, 235, 53, 0.4);
-}
-
+.btn-edit-message:hover,
 .whatsapp-preview-wrapper:hover .btn-edit-message {
   opacity: 1;
   border-color: #18eb35;
 }
 
+.btn-edit-message:hover {
+  background: #18eb35;
+  color: #000000;
+  box-shadow: 0 0 10px rgba(24, 235, 53, 0.4);
+}
+
 /* ===================================================
-   INTERACTIVE OPTIONS (Modern Human Design - Mobile First)
+   INTERACTIVE OPTIONS & BASE ACTIONS
 =================================================== */
 .tree-options-header-zone {
   display: flex;
@@ -351,37 +346,12 @@ body {
   font-weight: bold;
 }
 
-/* Botão dinâmico "+ Adicionar Opção" */
-.btn-add-option-trigger {
-  background: rgba(24, 235, 53, 0.06);
-  border: 1px dashed rgba(24, 235, 53, 0.3);
-  color: #18eb35;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s ease;
-}
-
-.btn-add-option-trigger:hover {
-  background: rgba(24, 235, 53, 0.15);
-  border-style: solid;
-  border-color: #18eb35;
-  box-shadow: 0 0 8px rgba(24, 235, 53, 0.2);
-}
-
 .tree-options {
-  margin-left: 0px; /* Sem recuo exagerado no mobile */
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-/* Container de Linha de Opção Modernizada */
 .tree-option {
   display: flex;
   flex-direction: column;
@@ -390,7 +360,6 @@ body {
   border: 1px solid #222;
   border-radius: 12px;
   padding: 14px;
-  margin-bottom: 4px;
   transition: all 0.2s ease;
 }
 
@@ -399,7 +368,6 @@ body {
   background: #161616;
 }
 
-/* Badge Numérica de Opção (Círculo Verde Estilizado) */
 .option-badge {
   background: rgba(24, 235, 53, 0.1);
   border: 1px solid #18eb35;
@@ -420,7 +388,6 @@ body {
   color: #aaa;
 }
 
-/* Textos de conexão humana */
 .option-connector-text {
   color: #666;
   font-size: 13px;
@@ -432,7 +399,8 @@ body {
   font-size: 14px;
 }
 
-.option-left-side {
+.option-left-side,
+.option-right-side {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -440,14 +408,9 @@ body {
 }
 
 .option-right-side {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   width: 100%;
-  flex-wrap: wrap;
 }
 
-/* Selects Integrados */
 .flow-select,
 .step-select {
   flex: 1;
@@ -457,7 +420,6 @@ body {
   color: #ffffff;
   border-radius: 8px;
   padding: 8px 12px;
-  outline: none;
   font-size: 14px;
   height: 40px;
   transition: border-color 0.2s;
@@ -480,7 +442,6 @@ body {
   display: none !important;
 }
 
-/* Botão de Engrenagem (Toggle Avançado) */
 .btn-toggle-step-select {
   background: #222;
   border: 1px solid #333;
@@ -502,7 +463,6 @@ body {
   border-color: #18eb35;
 }
 
-/* Botão Excluir Opção (X) */
 .btn-delete-option {
   background: transparent;
   border: none;
@@ -517,7 +477,6 @@ body {
   color: #ff4a4a;
 }
 
-/* Customização para a Linha "Voltar" */
 .back-option {
   border-style: dashed;
   background: rgba(255, 255, 255, 0.01);
@@ -532,8 +491,68 @@ body {
   font-style: italic;
 }
 
+/* NOVO: Zona Inferior de Ações Agrupadas Lado a Lado */
+.tree-options-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed #262626;
+}
+
+.btn-add-option-trigger {
+  background: rgba(24, 235, 53, 0.06);
+  border: 1px dashed rgba(24, 235, 53, 0.3);
+  color: #18eb35;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  height: 40px;
+}
+
+.btn-add-option-trigger:hover {
+  background: rgba(24, 235, 53, 0.15);
+  border-style: solid;
+  border-color: #18eb35;
+  box-shadow: 0 0 8px rgba(24, 235, 53, 0.2);
+}
+
+.btn-save-options-trigger {
+  background: #18eb35;
+  color: #000000;
+  border: none;
+  padding: 0 20px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  height: 40px;
+  transition:
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.btn-save-options-trigger:hover {
+  background: #13be2a;
+  box-shadow: 0 0 12px rgba(24, 235, 53, 0.25);
+}
+
+.btn-save-options-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* ===================================================
-   VIEW: MESSAGE-EDIT (Card Flutuante / Modal)
+   MODAL OVERLAY & CARDS
 =================================================== */
 .modal-overlay {
   position: fixed;
@@ -542,12 +561,11 @@ body {
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(4px); /* Desfoque de fundo */
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  transition: opacity 0.2s ease;
 }
 
 .modal-overlay.hidden {
@@ -596,17 +614,14 @@ body {
   color: #666;
   font-size: 18px;
   cursor: pointer;
-  transition: color 0.2s;
 }
 
 .btn-close-modal:hover {
   color: #ff4a4a;
 }
-
 .modal-body {
   padding: 20px;
 }
-
 .modal-instruction {
   color: #8f8f8f;
   font-size: 13px;
@@ -615,7 +630,7 @@ body {
 
 #modal-message-input {
   width: 100%;
-  background: #0b141a; /* Caixa interna simulando o WhatsApp */
+  background: #0b141a;
   color: #e9edef;
   border: 1px solid #2a2a2a;
   border-radius: 8px;
@@ -624,8 +639,6 @@ body {
   font-size: 14px;
   line-height: 1.5;
   resize: vertical;
-  outline: none;
-  transition: border-color 0.2s;
 }
 
 #modal-message-input:focus {
@@ -651,14 +664,12 @@ body {
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
 }
 
 .btn-modal-cancel:hover {
   background: #222;
   color: #fff;
 }
-
 .btn-modal-save {
   background: #18eb35;
   color: #000;
@@ -668,60 +679,49 @@ body {
   font-weight: 700;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
 }
-
 .btn-modal-save:hover {
   background: #13c72b;
   box-shadow: 0 0 12px rgba(24, 235, 53, 0.3);
 }
 
 /* ===================================================
-   PROGRESSIVE ENHANCEMENT (Desktop - Mínimo 769px)
+   RESPONSIVE & DESKTOP ENHANCEMENT (Mínimo 769px)
 =================================================== */
 @media (min-width: 769px) {
   body {
     padding: 40px;
   }
-
   .page-header {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
   }
-
   .page-title {
     font-size: 36px;
   }
-
   .btn-add-flow {
-    width: auto; /* Retorna ao tamanho fixo no PC */
+    width: auto;
     padding: 10px 20px;
     font-size: 14px;
   }
-
   .flow-header {
     padding: 22px;
   }
-
   .flow-name {
     font-size: 22px;
   }
-
   .flow-body {
     padding: 20px;
   }
-
   .tree-step {
     padding: 20px;
-    margin-left: 8px; /* Recuo estrutural fino para sensação hierárquica no PC */
+    margin-left: 8px;
   }
-
   .tree-options {
     margin-left: 16px;
   }
 
-  /* Distribuição horizontal harmoniosa e leitura fluida no desktop */
   .tree-option {
     flex-direction: row;
     align-items: center;

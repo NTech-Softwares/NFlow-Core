@@ -218,3 +218,97 @@ function deleteOptionRoute(flowId, stepId, optionKey, buttonElement) {
     if (addBtn) addBtn.style.display = "inline-flex";
   }
 }
+
+/**
+ * Varre o DOM do Step atual, extrai os valores dos inputs/selects e salva na API.
+ */
+async function handleSaveStepOptions(flowId, stepId) {
+  const token = localStorage.getItem("token");
+  const saveBtn = document.getElementById(`btn-save-opts-${flowId}-${stepId}`);
+  const container = document.getElementById(`options-list-${flowId}-${stepId}`);
+
+  // Captura todas as linhas de opções do step (exceto a mensagem vazia)
+  const optionRows = container.querySelectorAll(".tree-option");
+  const payloadOptions = [];
+
+  optionRows.forEach((row) => {
+    const key = row.getAttribute("data-option");
+
+    // Tratamento para a opção fixa de voltar (Key 0)
+    if (key === "0" || row.classList.contains("back-option")) {
+      payloadOptions.push({
+        key: "0",
+        nextFlow: null,
+        nextStep: null,
+        goToStep: null,
+        back: true,
+      });
+      return;
+    }
+
+    // Captura os seletores para opções customizadas
+    const flowSelect = row.querySelector(".flow-select");
+    const stepSelect = row.querySelector(".step-select");
+
+    const nextFlow = flowSelect ? flowSelect.value || null : null;
+    let nextStep = stepSelect ? stepSelect.value || null : null;
+
+    // Se o select de step estiver escondido (não ativo), consideramos o padrão "inicio"
+    const stepContainer = row.querySelector(`.step-select-container`);
+    if (stepContainer && stepContainer.classList.contains("hidden")) {
+      nextStep = "inicio";
+    }
+
+    payloadOptions.push({
+      key: key,
+      nextFlow: nextFlow,
+      nextStep: nextStep,
+      goToStep: null,
+      back: false,
+    });
+  });
+
+  const originalText = saveBtn.innerHTML;
+  saveBtn.innerHTML = "Salvando Opções...";
+  saveBtn.disabled = true;
+
+  try {
+    // Consome o novo endpoint que criamos no controller
+    const response = await fetch(`${API_URL}/flows/update-options`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        flowId: flowId,
+        stepId: stepId,
+        newOptions: payloadOptions,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+    }
+
+    // Atualiza os dados locais na memória do front-end se necessário
+    if (window.flowsData) {
+      const targetFlow = window.flowsData.find((f) => f.id === flowId);
+      if (targetFlow) {
+        const targetStep = targetFlow.steps.find((s) => s.id === stepId);
+        if (targetStep) {
+          targetStep.options = payloadOptions;
+        }
+      }
+    }
+
+    alert("Direcionamento de opções salvo com sucesso!");
+  } catch (error) {
+    console.error("Falha ao salvar opções do step:", error);
+    alert(`Não foi possível salvar: ${error.message}`);
+  } finally {
+    saveBtn.innerHTML = originalText;
+    saveBtn.disabled = false;
+  }
+}

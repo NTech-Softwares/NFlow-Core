@@ -4,7 +4,10 @@ import {
   getFlows,
   updateRegistry,
 } from "../../../../providers/whatsapp/baileys/engine/flowRegistry";
-import { Flow } from "../../../../providers/whatsapp/baileys/flows/types/flowTypes";
+import {
+  Flow,
+  FlowOption,
+} from "../../../../providers/whatsapp/baileys/flows/types/flowTypes";
 
 // Caminho absoluto para o arquivo oficial de dados que serve de persistência/backup local
 const caminhoBackupJson = path.resolve(
@@ -168,6 +171,58 @@ export async function updateStepMessageJson(
   } catch (error: any) {
     throw new Error(
       `[updateStepMessageJson] Falha na operação: ${error.message}`,
+    );
+  }
+}
+
+/**
+ * Atualiza as opções (direcionamentos de botões) de um step específico dentro de um fluxo existente.
+ * Sincroniza em tempo real na memória RAM e persiste no disco.
+ * * @param flowId - ID do fluxo onde o passo está alocado.
+ * @param stepId - ID do passo que terá as opções modificadas.
+ * @param newOptions - O novo array de opções/direcionamentos do step.
+ */
+export async function updateStepOptionsJson(
+  flowId: string,
+  stepId: string,
+  newOptions: FlowOption[],
+): Promise<void> {
+  try {
+    if (!flowId || !stepId) {
+      throw new Error("ID do fluxo e ID do step são obrigatórios.");
+    }
+
+    // 1. Obtém o registro atual
+    const registroAtual = getFlows();
+
+    // [VALIDAÇÃO] Certifica que o fluxo existe
+    if (!registroAtual[flowId]) {
+      throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
+    }
+
+    // [VALIDAÇÃO] Certifica que o step existe dentro desse fluxo
+    if (!registroAtual[flowId].steps || !registroAtual[flowId].steps[stepId]) {
+      throw new Error(`O step '${stepId}' não existe no fluxo '${flowId}'.`);
+    }
+
+    // 2. Clona PROFUNDAMENTE o estado para evitar mutação precoce na memória RAM
+    const todosOsFlowsClone = structuredClone(registroAtual);
+
+    // 3. Atualiza com segurança o objeto clonado
+    todosOsFlowsClone[flowId].steps[stepId].options = newOptions;
+
+    // 4. Sincroniza a MEMÓRIA RAM para efeito imediato no robô através do Registry
+    updateRegistry(todosOsFlowsClone);
+
+    // 5. Registra de forma síncrona o backup físico formatado no disco
+    fs.writeFileSync(
+      caminhoBackupJson,
+      JSON.stringify(todosOsFlowsClone, null, 2),
+      "utf8",
+    );
+  } catch (error: any) {
+    throw new Error(
+      `[updateStepOptionsJson] Falha na operação: ${error.message}`,
     );
   }
 }

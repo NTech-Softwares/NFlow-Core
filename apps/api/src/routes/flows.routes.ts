@@ -9,6 +9,7 @@ import {
   addFlow,
   removeFlow,
   updateStepMessage,
+  updateStepOptions,
 } from "../controllers/flows.controller";
 
 const router = Router();
@@ -29,6 +30,7 @@ router.post("/addflow", authMiddleware, addFlow);
 router.post("/removeFlow", authMiddleware, removeFlow);
 
 router.post("/update-message", authMiddleware, updateStepMessage);
+router.post("/update-options", authMiddleware, updateStepOptions);
 
 //FLOW ESPECÍFICO
 router.get("/:flowId", authMiddleware, getFlowById);
