@@ -25,32 +25,63 @@
           {
             "key": "1",
             "nextFlow": "cursos",
-            "nextStep": "inicio"
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "2",
             "nextFlow": "web",
-            "nextStep": "inicio"
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "3",
             "nextFlow": "mobile",
-            "nextStep": "inicio"
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "4",
             "nextFlow": "whatsapp",
-            "nextStep": "inicio"
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "5",
             "nextFlow": "automacao",
-            "nextStep": "inicio"
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "6",
             "nextFlow": "consultoria",
-            "nextStep": "inicio"
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "7",
+            "nextFlow": "web",
+            "nextStep": "inicio",
+            "goToStep": null,
+            "back": false
+          }
+        ]
+      },
+      "menu_financeiro": {
+        "id": "menu_financeiro",
+        "message": [
+          "Oi"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
           }
         ]
       }

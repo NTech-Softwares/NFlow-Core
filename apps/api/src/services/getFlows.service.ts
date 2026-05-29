@@ -1,17 +1,20 @@
-import { getFlows } from "../../../../providers/whatsapp/baileys/engine/flowRegistry";
+import { getFlowsForSession } from "../../../../providers/whatsapp/baileys/engine/flowRegistry";
 
-export async function getFlowsService() {
-  return getFlows();
+export async function getFlowsService(sessionId: string, id: string) {
+  return getFlowsForSession(sessionId, id);
 }
 
-export async function getFlowByIdService(flowId: string) {
-  const flows = getFlows();
-
+export async function getFlowByIdService(
+  sessionId: string,
+  id: string,
+  flowId: string,
+) {
+  const flows = getFlowsForSession(sessionId, id);
   return flows[flowId];
 }
 
-export async function getFlowsTreeService() {
-  const flows = getFlows();
+export async function getFlowsTreeService(sessionId: string, id: string) {
+  const flows = getFlowsForSession(sessionId, id);
 
   return Object.values(flows).map((flow: any) => {
     return {

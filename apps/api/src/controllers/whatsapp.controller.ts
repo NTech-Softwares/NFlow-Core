@@ -1,41 +1,80 @@
 import { Request, Response } from "express";
-import { sessionState } from "../../../../providers/whatsapp/baileys/state/connectionState";
-import { getGroups } from "../../../../providers/whatsapp/baileys/services/groups.service";
-import { messageQueue } from "../../../../shared/queue/messageQueue";
+import { WhatsappService } from "../services/whatsapp.service";
+import { logger } from "../../../../shared/utils/logger";
+
+const whatsappService = new WhatsappService();
+
+/*
+ =========================
+ AUXILIAR: Captura Segura do SessionId
+ =========================
+ */
+function getTenantSessionId(req: Request): string | null {
+  const user = (req as any).user;
+  if (!user) return null;
+
+  // Tenta pegar o whatsappSessionId do JWT, se não existir, monta usando o padrão estável
+  return user.whatsappSessionId || (user.id ? `${user.id}_session` : null);
+}
 
 /*
  =========================
  STATUS
  =========================
-*/
+ */
+export async function getStatus(req: Request, res: Response) {
+  try {
+    const sessionId = getTenantSessionId(req);
+    if (!sessionId) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Usuário não identificado" });
+    }
 
-export function getStatus(req: Request, res: Response) {
-  return res.json({
-    status: sessionState.status,
-    qr: sessionState.qr,
-  });
+    // Chama o service atualizado, que já vai ligar o Baileys se a Suzana estiver deslogada
+    const sessionData = await whatsappService.getStatus(sessionId);
+    return res.json(sessionData);
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
 }
 
 /*
  =========================
  LISTAR GRUPOS
  =========================
-*/
-
+ */
 export async function listGroups(req: Request, res: Response) {
   try {
-    const grupos = await getGroups();
+    const sessionId = getTenantSessionId(req);
 
+    if (!sessionId) {
+      logger.error("Tentativa de listar grupos sem sessão válida no req.user");
+      return res.status(401).json({ success: false, error: "Sessão inválida" });
+    }
+
+    logger.info(`Buscando grupos para a sessão ativa: ${sessionId}`);
+
+    // Tenta listar os grupos do serviço
+    const grupos = await whatsappService.listGroups(sessionId);
+
+    // Se por algum motivo o serviço retornar nulo ou não for um array, previne quebra
     return res.json({
       success: true,
-      array: grupos,
+      array: Array.isArray(grupos) ? grupos : [],
     });
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    // 🎯 Captura o erro clássico do Baileys sincronizando ou sem grupos carregados
+    logger.warn(
+      `[Baileys Sync] Não foi possível listar grupos para a sessão [${getTenantSessionId(req)}] neste momento. Detalhe: ${error.message}`,
+    );
 
-    return res.status(500).json({
+    // Em vez de estourar 500, responde 200 com sucesso false e avisa o front
+    return res.json({
       success: false,
-      error: "Erro ao listar grupos",
+      array: [],
+      error:
+        "Os grupos ainda estão sendo sincronizados pelo WhatsApp. Aguarde alguns instantes.",
     });
   }
 }
@@ -44,12 +83,14 @@ export async function listGroups(req: Request, res: Response) {
  =========================
  ENVIAR MENSAGEM
  =========================
-*/
-
+ */
 export async function sendMessage(req: Request, res: Response) {
   try {
-    const { number, message } = req.body;
+    const sessionId = getTenantSessionId(req);
+    if (!sessionId)
+      return res.status(401).json({ success: false, error: "Sessão inválida" });
 
+    const { number, message } = req.body;
     const image = req.file;
 
     if (!number || !message) {
@@ -59,36 +100,18 @@ export async function sendMessage(req: Request, res: Response) {
       });
     }
 
-    const formattedNumber = number.replace(/\D/g, "");
+    await whatsappService.sendIndividualMessage(
+      sessionId,
+      number,
+      message,
+      image?.path,
+    );
 
-    if (formattedNumber.length < 12) {
-      return res.status(400).json({
-        success: false,
-        error: "Número inválido",
-      });
-    }
-
-    messageQueue.push({
-      jid: `${formattedNumber}@s.whatsapp.net`,
-
-      imagePath: image?.path,
-
-      message: {
-        text: message,
-      },
-    });
-
-    console.log(`Mensagem adicionada na fila -> ${formattedNumber}`);
-
-    return res.json({
-      success: true,
-    });
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
+    return res.json({ success: true });
+  } catch (error: any) {
+    return res.status(400).json({
       success: false,
-      error: "Erro ao enviar mensagem",
+      error: error.message || "Erro ao enfileirar mensagem",
     });
   }
 }
@@ -97,55 +120,38 @@ export async function sendMessage(req: Request, res: Response) {
  =========================
  ENVIAR CAMPANHA
  =========================
-*/
-
+ */
 export async function sendCampaign(req: Request, res: Response) {
   try {
-    let { groups, message } = req.body;
+    const sessionId = getTenantSessionId(req);
+    if (!sessionId)
+      return res.status(401).json({ success: false, error: "Sessão inválida" });
 
+    const { groups, message } = req.body;
     const image = req.file;
 
-    /*
-     =========================
-     TRANSFORMA EM ARRAY
-     =========================
-    */
-
-    if (typeof groups === "string") {
-      groups = [groups];
-    }
-
-    if (!groups?.length || !message) {
+    if (!groups || !message) {
       return res.status(400).json({
         success: false,
-        error: "Selecione grupos e uma mensagem",
+        error: "Selecione grupos e uma mensagem válidos.",
       });
     }
 
-    groups.forEach((groupId: string) => {
-      messageQueue.push({
-        jid: groupId,
-
-        imagePath: image?.path,
-
-        message: {
-          text: message,
-        },
-      });
-    });
-
-    console.log(`${groups.length} mensagens adicionadas na fila`);
+    const totalEnfileirado = await whatsappService.sendGroupCampaign(
+      sessionId,
+      groups,
+      message,
+      image?.path,
+    );
 
     return res.json({
       success: true,
-      totalGroups: groups.length,
+      totalGroups: totalEnfileirado,
     });
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
+  } catch (error: any) {
+    return res.status(400).json({
       success: false,
-      error: "Erro ao enviar campanha",
+      error: error.message || "Erro ao processar campanha",
     });
   }
 }

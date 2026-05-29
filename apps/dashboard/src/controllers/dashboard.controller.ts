@@ -31,4 +31,10 @@ export class DashboardController {
 
     return res.sendFile(filePath);
   }
+
+  static register(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "register.html");
+
+    return res.sendFile(filePath);
+  }
 }

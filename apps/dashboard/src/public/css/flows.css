@@ -264,17 +264,22 @@ body {
 }
 
 .step-message-box {
-  max-height: 1000px;
+  max-height: 2000px; /* Garante que ela nasça aberta se não tiver a classe collapsed */
   overflow: hidden;
   transition:
     max-height 0.3s ease-in-out,
-    margin-bottom 0.3s ease;
+    margin-bottom 0.3s ease-in-out,
+    opacity 0.2s ease;
   margin-bottom: 16px;
+  opacity: 1;
 }
 
+/* Força o colapso correto ao clicar em ocultar */
 .step-message-box.collapsed {
-  max-height: 0;
-  margin-bottom: 0;
+  max-height: 0 !important;
+  margin-bottom: 0 !important;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .whatsapp-preview-wrapper {
@@ -628,7 +633,8 @@ body {
   margin-bottom: 12px;
 }
 
-#modal-message-input {
+#modal-message-input,
+#modal-step-message-input {
   width: 100%;
   background: #0b141a;
   color: #e9edef;
@@ -641,7 +647,8 @@ body {
   resize: vertical;
 }
 
-#modal-message-input:focus {
+#modal-message-input:focus,
+#modal-step-message-input:focus {
   border-color: #18eb35;
   box-shadow: 0 0 8px rgba(24, 235, 53, 0.15);
 }
@@ -683,6 +690,53 @@ body {
 .btn-modal-save:hover {
   background: #13c72b;
   box-shadow: 0 0 12px rgba(24, 235, 53, 0.3);
+}
+
+/* Botão de Adição Rápida de Passo (+ Passo) */
+.btn-add-step-trigger {
+  background: rgba(24, 235, 53, 0.1);
+  border: 1px solid rgba(24, 235, 53, 0.3);
+  color: #18eb35;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-step-trigger:hover {
+  background: #18eb35;
+  color: #000000;
+  box-shadow: 0 0 8px rgba(24, 235, 53, 0.4);
+}
+
+/* Botão Simples de Remover Step (×) */
+.btn-delete-step {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition:
+    color 0.2s,
+    transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-step:hover:not([disabled]) {
+  color: #ff4a4a;
+  transform: scale(1.2);
+}
+
+.btn-delete-step[disabled] {
+  color: #222;
+  cursor: not-allowed;
+  opacity: 0.3;
 }
 
 /* ===================================================

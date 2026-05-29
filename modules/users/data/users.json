@@ -1,0 +1,20 @@
+{
+  "usuarios": [
+    {
+      "id": "mateus",
+      "name": "Mateus",
+      "email": "mlewin",
+      "passwordHash": "$2b$10$DZ9ElHZlfaC/hYzuMsxMs.toKB8CIiRnrTUg1xeTkMM9nAIoB23qa",
+      "whatsappSessionId": "mateus_session",
+      "createdAt": "2026-05-29T22:00:05.652Z"
+    },
+    {
+      "id": "suzana",
+      "name": "Suzana",
+      "email": "suzana",
+      "passwordHash": "$2b$10$Hew1/ovvb4J/jzU7buRoQeeAOY5XxZ7DuDQBrJaLyfZlJ/wC3ovPC",
+      "whatsappSessionId": "suzana_session",
+      "createdAt": "2026-05-29T22:06:40.204Z"
+    }
+  ]
+}

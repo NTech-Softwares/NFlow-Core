@@ -15,6 +15,10 @@ const caminhoBackupJson = path.resolve(
   "../../../../providers/whatsapp/baileys/flows/data/flows.json",
 );
 
+/* =========================================================================
+   GERENCIAMENTO DE FLUXOS (FLOWS)
+   ========================================================================= */
+
 /**
  * Cria um novo fluxo de automação, injeta seu passo inicial com mensagem e o armazena.
  * A alteração é aplicada imediatamente em memória RAM e persistida no arquivo físico.
@@ -22,7 +26,6 @@ const caminhoBackupJson = path.resolve(
  * @param initialStep - O nome do estágio inicial do fluxo (padrão: "inicio").
  * @param stepMessage - O menu de opções ou texto explicativo pertencente ao passo inicial.
  * @returns Retorna o objeto do fluxo recém-criado em conformidade com a interface Flow.
- * @throws {Error} Caso o flowId seja omitido, o fluxo já exista ou ocorra falha de I/O no disco.
  */
 export async function addFlowJson(
   flowId: string,
@@ -30,50 +33,45 @@ export async function addFlowJson(
   stepMessage?: string,
 ): Promise<Flow> {
   try {
-    // [VALIDAÇÃO] Garante que o identificador do fluxo foi fornecido
     if (!flowId) {
       throw new Error("O ID do fluxo é obrigatório.");
     }
 
-    // Define o nome do passo inicial utilizando o fallback padrão caso não seja enviado
     const stepNome = initialStep || "inicio";
+    const registroAtual = getFlows();
 
-    // 1. Captura o estado atual de todos os fluxos ativos direto da MEMÓRIA RAM
-    const todosOsFlows = { ...getFlows() };
-
-    // [VALIDAÇÃO] Impede a criação de fluxos duplicados com o mesmo ID
-    if (todosOsFlows[flowId]) {
+    if (registroAtual[flowId]) {
       throw new Error(`Um fluxo com o ID '${flowId}' já existe.`);
     }
 
-    // 2. Monta a nova estrutura do fluxo com as saudações e o passo inicial parametrizados
+    // 1. Clona profundamente o estado atual para mutação segura
+    const todosOsFlowsClone = structuredClone(registroAtual);
+
+    // 2. Monta a nova estrutura do fluxo
     const newFlow: Flow = {
       id: flowId,
       initialStep: stepNome,
       steps: {
         [stepNome]: {
           id: stepNome,
-          message: [stepMessage || ""],
+          message: stepMessage ? stepMessage.split("\n") : [""],
           options: [
             {
               key: "0",
               back: true,
             },
-          ], // Inicializa vazio para ser populado posteriormente via painel (opção 0 é padrão)
+          ],
         },
       },
     };
 
-    // 3. Insere o novo objeto mapeando-o diretamente sob a chave do flowId
-    todosOsFlows[flowId] = newFlow;
+    todosOsFlowsClone[flowId] = newFlow;
 
-    // 4. Sincroniza a MEMÓRIA RAM para que o motor do chatbot e o painel operem as mudanças em tempo real
-    updateRegistry(todosOsFlows);
-
-    // 5. Registra de forma síncrona o backup físico formatado no disco (persistência)
+    // 3. Sincroniza a memória RAM e persiste no disco
+    updateRegistry(todosOsFlowsClone);
     fs.writeFileSync(
       caminhoBackupJson,
-      JSON.stringify(todosOsFlows, null, 2),
+      JSON.stringify(todosOsFlowsClone, null, 2),
       "utf8",
     );
 
@@ -85,35 +83,29 @@ export async function addFlowJson(
 
 /**
  * Remove permanentemente um fluxo de automação do ecossistema.
- * A remoção limpa o registro em memória viva e atualiza o arquivo de persistência física.
- * * @param flowId - Identificador exclusivo do fluxo que será deletado.
- * @throws {Error} Caso o flowId seja omitido, o fluxo não seja localizado ou ocorra erro de escrita.
  */
 export async function removeFlowJson(flowId: string): Promise<void> {
   try {
-    // [VALIDAÇÃO] Garante que o identificador do fluxo foi fornecido
     if (!flowId) {
       throw new Error("O ID do fluxo é obrigatório.");
     }
 
-    // 1. Captura o estado atual de todos os fluxos ativos direto da MEMÓRIA RAM
-    const todosOsFlows = { ...getFlows() };
+    const registroAtual = getFlows();
 
-    // [VALIDAÇÃO] Certifica que o fluxo de fato existe antes de iniciar a deleção
-    if (!todosOsFlows[flowId]) {
+    if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
     }
 
-    // 2. Remove a propriedade correspondente ao fluxo de dentro do mapa de objetos
-    delete todosOsFlows[flowId];
+    // 1. Clona profundamente o estado atual para mutação segura
+    const todosOsFlowsClone = structuredClone(registroAtual);
 
-    // 3. Sincroniza a MEMÓRIA RAM (O motor do WhatsApp desvincula o fluxo instantaneamente)
-    updateRegistry(todosOsFlows);
+    delete todosOsFlowsClone[flowId];
 
-    // 4. Reescreve o arquivo de persistência física no disco com os dados atualizados
+    // 2. Sincroniza a memória RAM e persiste no disco
+    updateRegistry(todosOsFlowsClone);
     fs.writeFileSync(
       caminhoBackupJson,
-      JSON.stringify(todosOsFlows, null, 2),
+      JSON.stringify(todosOsFlowsClone, null, 2),
       "utf8",
     );
   } catch (error: any) {
@@ -121,12 +113,123 @@ export async function removeFlowJson(flowId: string): Promise<void> {
   }
 }
 
+/* =========================================================================
+   GERENCIAMENTO DE PASSOS (STEPS)
+   ========================================================================= */
+
+/**
+ * Adiciona um novo step (estágio) dentro de um fluxo existente.
+ * * @param flowId - ID do fluxo onde o passo será alocado.
+ * @param stepId - ID/Nome exclusivo do novo passo (ex: 'financeiro_menu').
+ * @param stepMessage - Mensagem de texto inicial do passo.
+ */
+export async function addStepJson(
+  flowId: string,
+  stepId: string,
+  stepMessage?: string,
+): Promise<void> {
+  try {
+    if (!flowId || !stepId) {
+      throw new Error("ID do fluxo e ID do novo step são obrigatórios.");
+    }
+
+    const registroAtual = getFlows();
+
+    if (!registroAtual[flowId]) {
+      throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
+    }
+
+    if (registroAtual[flowId].steps && registroAtual[flowId].steps[stepId]) {
+      throw new Error(
+        `O step '${stepId}' já existe dentro do fluxo '${flowId}'.`,
+      );
+    }
+
+    // 1. Clona profundamente o estado atual para mutação segura
+    const todosOsFlowsClone = structuredClone(registroAtual);
+
+    // 2. Garante que o mapa de steps exista
+    if (!todosOsFlowsClone[flowId].steps) {
+      todosOsFlowsClone[flowId].steps = {};
+    }
+
+    // 3. Insere a estrutura do novo Step com a opção padrão de voltar (key 0)
+    todosOsFlowsClone[flowId].steps[stepId] = {
+      id: stepId,
+      message: stepMessage ? stepMessage.split("\n") : [""],
+      options: [
+        {
+          key: "0",
+          back: true,
+        },
+      ],
+    };
+
+    // 4. Sincroniza a memória RAM e persiste no disco
+    updateRegistry(todosOsFlowsClone);
+    fs.writeFileSync(
+      caminhoBackupJson,
+      JSON.stringify(todosOsFlowsClone, null, 2),
+      "utf8",
+    );
+  } catch (error: any) {
+    throw new Error(`[addStepJson] Falha na operação: ${error.message}`);
+  }
+}
+
+/**
+ * Remove um step específico de dentro de um fluxo existente.
+ * Impedirá a remoção se o step for o passo inicial definido do fluxo.
+ */
+export async function removeStepJson(
+  flowId: string,
+  stepId: string,
+): Promise<void> {
+  try {
+    if (!flowId || !stepId) {
+      throw new Error("ID do fluxo e ID do step são obrigatórios.");
+    }
+
+    const registroAtual = getFlows();
+
+    if (!registroAtual[flowId]) {
+      throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
+    }
+
+    if (!registroAtual[flowId].steps || !registroAtual[flowId].steps[stepId]) {
+      throw new Error(`O step '${stepId}' não existe no fluxo '${flowId}'.`);
+    }
+
+    // [REGRA DE NEGÓCIO] Impede que o usuário delete o ponto de entrada principal do fluxo
+    if (registroAtual[flowId].initialStep === stepId) {
+      throw new Error(
+        `Não é possível deletar o step '${stepId}' porque ele é o estágio inicial do fluxo.`,
+      );
+    }
+
+    // 1. Clona profundamente o estado atual para mutação segura
+    const todosOsFlowsClone = structuredClone(registroAtual);
+
+    delete todosOsFlowsClone[flowId].steps[stepId];
+
+    // 2. Sincroniza a memória RAM e persiste no disco
+    updateRegistry(todosOsFlowsClone);
+    fs.writeFileSync(
+      caminhoBackupJson,
+      JSON.stringify(todosOsFlowsClone, null, 2),
+      "utf8",
+    );
+  } catch (error: any) {
+    throw new Error(`[removeStepJson] Falha na operação: ${error.message}`);
+  }
+}
+
+/* =========================================================================
+   ATUALIZAÇÃO DE CONTEÚDO (MESSAGES & OPTIONS)
+   ========================================================================= */
+
 /**
  * Atualiza a mensagem de um step específico dentro de um fluxo existente.
- * Sincroniza em tempo real na memória RAM e persiste no disco.
- * * @param flowId - ID do fluxo onde o passo está alocado.
- * @param stepId - ID do passo que terá a mensagem modificada.
- * @param newMessage - O novo texto da mensagem (enviado com \n do textarea).
  */
 export async function updateStepMessageJson(
   flowId: string,
@@ -138,34 +241,26 @@ export async function updateStepMessageJson(
       throw new Error("ID do fluxo e ID do step são obrigatórios.");
     }
 
-    // 1. Captura o estado atual de todos os fluxos ativos direto da MEMÓRIA RAM
-    const todosOsFlows = { ...getFlows() };
+    const registroAtual = getFlows();
 
-    // [VALIDAÇÃO] Certifica que o fluxo existe
-    if (!todosOsFlows[flowId]) {
+    if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
     }
 
-    // [VALIDAÇÃO] Certifica que o step existe dentro desse fluxo
-    if (!todosOsFlows[flowId].steps || !todosOsFlows[flowId].steps[stepId]) {
+    if (!registroAtual[flowId].steps || !registroAtual[flowId].steps[stepId]) {
       throw new Error(`O step '${stepId}' não existe no fluxo '${flowId}'.`);
     }
 
-    // 2. Trata a mensagem: divide de volta em um array de linhas caso contenha quebras de linha
-    // Isso preserva o formato original do seu JSON.
+    const todosOsFlowsClone = structuredClone(registroAtual);
     const messageArray =
       typeof newMessage === "string" ? newMessage.split("\n") : [""];
 
-    // 3. Atualiza o objeto específico na estrutura
-    todosOsFlows[flowId].steps[stepId].message = messageArray;
+    todosOsFlowsClone[flowId].steps[stepId].message = messageArray;
 
-    // 4. Sincroniza a MEMÓRIA RAM para efeito imediato no robô
-    updateRegistry(todosOsFlows);
-
-    // 5. Registra de forma síncrona o backup físico formatado no disco
+    updateRegistry(todosOsFlowsClone);
     fs.writeFileSync(
       caminhoBackupJson,
-      JSON.stringify(todosOsFlows, null, 2),
+      JSON.stringify(todosOsFlowsClone, null, 2),
       "utf8",
     );
   } catch (error: any) {
@@ -176,11 +271,7 @@ export async function updateStepMessageJson(
 }
 
 /**
- * Atualiza as opções (direcionamentos de botões) de um step específico dentro de um fluxo existente.
- * Sincroniza em tempo real na memória RAM e persiste no disco.
- * * @param flowId - ID do fluxo onde o passo está alocado.
- * @param stepId - ID do passo que terá as opções modificadas.
- * @param newOptions - O novo array de opções/direcionamentos do step.
+ * Atualiza as opções (direcionamentos de botões) de um step específico.
  */
 export async function updateStepOptionsJson(
   flowId: string,
@@ -192,29 +283,21 @@ export async function updateStepOptionsJson(
       throw new Error("ID do fluxo e ID do step são obrigatórios.");
     }
 
-    // 1. Obtém o registro atual
     const registroAtual = getFlows();
 
-    // [VALIDAÇÃO] Certifica que o fluxo existe
     if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
     }
 
-    // [VALIDAÇÃO] Certifica que o step existe dentro desse fluxo
     if (!registroAtual[flowId].steps || !registroAtual[flowId].steps[stepId]) {
       throw new Error(`O step '${stepId}' não existe no fluxo '${flowId}'.`);
     }
 
-    // 2. Clona PROFUNDAMENTE o estado para evitar mutação precoce na memória RAM
     const todosOsFlowsClone = structuredClone(registroAtual);
 
-    // 3. Atualiza com segurança o objeto clonado
     todosOsFlowsClone[flowId].steps[stepId].options = newOptions;
 
-    // 4. Sincroniza a MEMÓRIA RAM para efeito imediato no robô através do Registry
     updateRegistry(todosOsFlowsClone);
-
-    // 5. Registra de forma síncrona o backup físico formatado no disco
     fs.writeFileSync(
       caminhoBackupJson,
       JSON.stringify(todosOsFlowsClone, null, 2),

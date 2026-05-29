@@ -9,5 +9,6 @@ dashboardRoutes.get("/qr", DashboardController.qrCode);
 dashboardRoutes.get("/flows", DashboardController.flows);
 
 dashboardRoutes.get("/login", DashboardController.login);
+dashboardRoutes.get("/register", DashboardController.register);
 
 export default dashboardRoutes;

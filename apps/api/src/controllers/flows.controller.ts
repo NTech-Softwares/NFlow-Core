@@ -1,19 +1,17 @@
 import { Request, Response } from "express";
-import * as fs from "fs";
-import * as path from "path";
 import {
   getFlowsService,
   getFlowByIdService,
   getFlowsTreeService,
 } from "../services/getFlows.service";
-import { Flow } from "../../../../providers/whatsapp/baileys/flows/types/flowTypes";
 import {
   addFlowJson,
   removeFlowJson,
+  addStepJson, // IMPORTADO: Novo service para adicionar passos
+  removeStepJson, // IMPORTADO: Novo service para remover passos
   updateStepMessageJson,
-  updateStepOptionsJson, // IMPORTADO: Novo service de opções do passo
+  updateStepOptionsJson,
 } from "../services/setflows.service";
-import { STATUS_EXPIRY_SECONDS } from "@whiskeysockets/baileys";
 
 /*
  =========================
@@ -25,9 +23,7 @@ export async function getFlows(req: Request, res: Response) {
     const flows = await getFlowsService();
     return res.json(flows);
   } catch (error) {
-    return res.status(500).json({
-      error: "Erro ao buscar flows.",
-    });
+    return res.status(500).json({ error: "Erro ao buscar flows." });
   }
 }
 
@@ -39,24 +35,15 @@ export async function getFlows(req: Request, res: Response) {
 export async function getFlowById(req: Request, res: Response) {
   try {
     const { flowId } = req.params;
-
     if (!flowId)
-      return res.status(404).json({
-        error: "FlowID não encontrado.",
-      });
+      return res.status(404).json({ error: "FlowID não encontrado." });
 
     const flow = await getFlowByIdService(flowId);
-
-    if (!flow)
-      return res.status(404).json({
-        error: "Flow não encontrado.",
-      });
+    if (!flow) return res.status(404).json({ error: "Flow não encontrado." });
 
     return res.json(flow);
   } catch (error) {
-    return res.status(500).json({
-      error: "Erro ao buscar flow.",
-    });
+    return res.status(500).json({ error: "Erro ao buscar flow." });
   }
 }
 
@@ -67,12 +54,15 @@ export async function getFlowById(req: Request, res: Response) {
 */
 export async function getFlowsTree(req: Request, res: Response) {
   try {
-    const tree = await getFlowsTreeService();
+    const user = (req as any).user;
+    const sessionId = user.whatsappSessionId;
+    const id = user.id.toString();
+
+    // Chama o serviço passando os parâmetros necessários
+    const tree = await getFlowsTreeService(sessionId, id);
     return res.json(tree);
   } catch (error) {
-    return res.status(500).json({
-      error: "Erro ao gerar árvore dos flows.",
-    });
+    return res.status(500).json({ error: "Erro ao gerar árvore dos flows." });
   }
 }
 
@@ -83,21 +73,21 @@ export async function getFlowsTree(req: Request, res: Response) {
 */
 export async function addFlow(req: Request, res: Response) {
   try {
-    const { flowId, flowGreeting, initialStep, stepMessage } = req.body;
+    const { flowId, initialStep, stepMessage } = req.body;
 
     if (!flowId) {
       return res.status(400).json({ error: "O ID do fluxo é obrigatório." });
     }
 
-    await addFlowJson(flowId, flowGreeting, initialStep, stepMessage);
+    await addFlowJson(flowId, initialStep, stepMessage);
 
     return res
       .status(201)
       .json({ status: "success", message: "Fluxo adicionado com sucesso" });
   } catch (error: any) {
-    return res.status(400).json({
-      error: error.message || "Erro ao adicionar fluxo.",
-    });
+    return res
+      .status(400)
+      .json({ error: error.message || "Erro ao adicionar fluxo." });
   }
 }
 
@@ -123,9 +113,63 @@ export async function removeFlow(req: Request, res: Response) {
       message: "Fluxo deletado com sucesso.",
     });
   } catch (error: any) {
-    return res.status(400).json({
-      error: error.message || "Erro ao remover fluxo.",
+    return res
+      .status(400)
+      .json({ error: error.message || "Erro ao remover fluxo." });
+  }
+}
+
+/*
+ =========================
+ ADICIONA STEP
+ =========================
+*/
+export async function addStep(req: Request, res: Response) {
+  try {
+    const { flowId, stepId, stepMessage } = req.body;
+
+    if (!flowId)
+      return res.status(400).json({ error: "O flowId é obrigatório." });
+    if (!stepId)
+      return res.status(400).json({ error: "O stepId é obrigatório." });
+
+    await addStepJson(flowId, stepId, stepMessage);
+
+    return res.status(201).json({
+      status: "success",
+      message: `Passo '${stepId}' adicionado com sucesso ao fluxo '${flowId}'.`,
     });
+  } catch (error: any) {
+    return res
+      .status(400)
+      .json({ error: error.message || "Erro ao adicionar passo." });
+  }
+}
+
+/*
+ =========================
+ REMOVE STEP
+ =========================
+*/
+export async function removeStep(req: Request, res: Response) {
+  try {
+    const { flowId, stepId } = req.body;
+
+    if (!flowId)
+      return res.status(400).json({ error: "O flowId é obrigatório." });
+    if (!stepId)
+      return res.status(400).json({ error: "O stepId é obrigatório." });
+
+    await removeStepJson(flowId, stepId);
+
+    return res.status(200).json({
+      status: "success",
+      message: `Passo '${stepId}' removido com sucesso do fluxo '${flowId}'.`,
+    });
+  } catch (error: any) {
+    return res
+      .status(400)
+      .json({ error: error.message || "Erro ao remover passo." });
   }
 }
 
@@ -139,16 +183,13 @@ export async function updateStepMessage(req: Request, res: Response) {
     const { flowId, stepId, newMessage } = req.body;
 
     if (!flowId)
-      return res
-        .status(400)
-        .json({ error: "O flowId é obrigatório no corpo da requisição." });
-
+      return res.status(400).json({ error: "O flowId é obrigatório." });
     if (!stepId)
+      return res.status(400).json({ error: "O stepId é obrigatório." });
+    if (newMessage === undefined)
       return res
         .status(400)
-        .json({ error: "O stepId é obrigatório no corpo da requisição." });
-
-    if (!newMessage) return res.status(400).json({ error: "Não há mensagem." });
+        .json({ error: "O campo newMessage é obrigatório." });
 
     await updateStepMessageJson(flowId, stepId, newMessage);
 
@@ -157,9 +198,9 @@ export async function updateStepMessage(req: Request, res: Response) {
       message: "Mensagem updated com sucesso.",
     });
   } catch (error: any) {
-    return res.status(400).json({
-      error: error.message || "Erro ao atualizar mensagem.",
-    });
+    return res
+      .status(400)
+      .json({ error: error.message || "Erro ao atualizar mensagem." });
   }
 }
 
@@ -172,28 +213,16 @@ export async function updateStepOptions(req: Request, res: Response) {
   try {
     const { flowId, stepId, newOptions } = req.body;
 
-    // Validações básicas da requisição de entrada
-    if (!flowId) {
-      return res
-        .status(400)
-        .json({ error: "O flowId é obrigatório no corpo da requisição." });
-    }
-
-    if (!stepId) {
-      return res
-        .status(400)
-        .json({ error: "O stepId é obrigatório no corpo da requisição." });
-    }
-
+    if (!flowId)
+      return res.status(400).json({ error: "O flowId é obrigatório." });
+    if (!stepId)
+      return res.status(400).json({ error: "O stepId é obrigatório." });
     if (!newOptions || !Array.isArray(newOptions)) {
-      return res
-        .status(400)
-        .json({
-          error: "O campo newOptions deve ser uma lista (Array) válida.",
-        });
+      return res.status(400).json({
+        error: "O campo newOptions deve ser uma lista (Array) válida.",
+      });
     }
 
-    // Executa a atualização na RAM e no JSON físico
     await updateStepOptionsJson(flowId, stepId, newOptions);
 
     return res.status(200).json({
@@ -201,9 +230,8 @@ export async function updateStepOptions(req: Request, res: Response) {
       message: "Direcionamento de opções atualizado com sucesso.",
     });
   } catch (error: any) {
-    // Captura erros de fluxos/steps inexistentes vindos do service e repassa com clareza
-    return res.status(400).json({
-      error: error.message || "Erro ao atualizar as opções do step.",
-    });
+    return res
+      .status(400)
+      .json({ error: error.message || "Erro ao atualizar as opções do step." });
   }
 }

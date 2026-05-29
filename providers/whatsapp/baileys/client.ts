@@ -1,252 +1,246 @@
-import P, { pino } from "pino";
 import makeWASocket, {
   Browsers,
   useMultiFileAuthState,
   DisconnectReason,
-  WAMessage,
   fetchLatestWaWebVersion,
   WASocket,
 } from "@whiskeysockets/baileys";
+import { pino } from "pino";
 import qrcode from "qrcode-terminal";
 import { Boom } from "@hapi/boom";
-import fs from "fs"; // <-- Importado para gerenciar a exclusão da pasta de credenciais
+import fs from "fs";
+import path from "path";
 import { logger } from "../../../shared/utils/logger";
 import { getMessage } from "../../../shared/utils/message";
 import MessageHandler from "./handlers/messageHandler";
-import { sessionState } from "./state/connectionState";
 
-const CONNECTION_TYPE = "QR"; // "NUMBER" (se quiser usar o número para login)
-const PHONE_NUMBER = "556892000000"; // +55 (68) 9200-0000 -> 556892000000 (formato para número)
-const USE_LASTEST_VERSION = true;
-const AUTH_FOLDER = "auth"; // Mapeado em variável para facilitar a manutenção
+// Interfaces para controle interno por instância
+interface SessionControl {
+  sock: WASocket;
+  status: "DISCONNECTED" | "CONNECTING" | "QRCODE" | "CONNECTED";
+  qr: string | null;
+  reconnectAttempts: number;
+  isStarting: boolean;
+}
 
-let sock: WASocket | null = null;
+// 🎯 O CORAÇÃO DO MULTI-TENANT: Armazena as sessões ativas isoladas na memória do Node.js
+const activeSessions = new Map<string, SessionControl>();
 
-let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
-let isStarting = false;
+const USE_LATEST_VERSION = true;
 
-export const startWhatsapp = async (): Promise<WASocket> => {
-  if (isStarting && sock) {
-    return sock;
+/**
+ * Inicializa ou retorna a sessão do WhatsApp de um usuário específico
+ * @param sessionId O whatsappSessionId vindo do banco/JSON do usuário
+ */
+export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
+  // Se a sessão já existe, está conectada ou tentando conectar, reaproveita a instância
+  const existingSession = activeSessions.get(sessionId);
+  if (
+    existingSession &&
+    (existingSession.isStarting || existingSession.status === "CONNECTED")
+  ) {
+    return existingSession.sock;
   }
 
-  isStarting = true;
+  // Define o caminho dinâmico e isolado da pasta de autenticação do cliente
+  const authFolder = path.join(process.cwd(), "auth", "sessions", sessionId);
+
+  // Inicializa ou recupera o objeto de controle da sessão específica no Map
+  if (!activeSessions.has(sessionId)) {
+    activeSessions.set(sessionId, {
+      sock: null as any,
+      status: "DISCONNECTED",
+      qr: null,
+      reconnectAttempts: 0,
+      isStarting: true,
+    });
+  } else {
+    activeSessions.get(sessionId)!.isStarting = true;
+  }
+
+  const currentControl = activeSessions.get(sessionId)!;
 
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(AUTH_FOLDER);
+    const { state, saveCreds } = await useMultiFileAuthState(authFolder);
     const { version, isLatest } = await fetchLatestWaWebVersion({});
-    if (USE_LASTEST_VERSION) {
+
+    if (USE_LATEST_VERSION) {
       logger.info(
-        `Versão atual do WaWeb: ${version.join(".")} | ${
-          isLatest ? "Versão mais recente" : "Está desatualizado"
+        `[Sessão: ${sessionId}] Versão WaWeb: ${version.join(".")} | ${
+          isLatest ? "Mais recente" : "Desatualizada"
         }`,
       );
     }
 
-    // @ts-ignore
-    sock = makeWASocket({
+    const sock = makeWASocket({
       auth: state,
-      browser:
-        // @ts-ignore
-        CONNECTION_TYPE === "NUMBER"
-          ? Browsers.ubuntu("Chrome")
-          : Browsers.appropriate("Desktop"),
+      browser: Browsers.appropriate("Desktop"),
       printQRInTerminal: false,
-      version: USE_LASTEST_VERSION ? version : undefined,
+      version: USE_LATEST_VERSION ? version : undefined,
       defaultQueryTimeoutMs: 60000,
-      //Torna o Baileys Silencioso - Menos logs
-      logger: pino({ level: "silent" }),
+      logger: pino({ level: "silent" }), // Evita flooding de logs no terminal
       generateHighQualityLinkPreview: false,
     });
 
-    // @ts-ignore
-    if (CONNECTION_TYPE === "NUMBER" && !sock.authState.creds.registered) {
-      try {
-        setTimeout(async () => {
-          if (sock) {
-            const code = await sock.requestPairingCode(PHONE_NUMBER);
-            logger.info(
-              `\n========================================\n\nCódigo de Pareamento: \n\n  ${code}\n\n========================================`,
-            );
-          }
-        }, 1000);
-      } catch (error) {
-        logger.error("Erro ao obter o código de pareamento.");
-      }
-    }
+    // Vincula o socket criado ao controle da sessão do cliente
+    currentControl.sock = sock;
 
+    // Escuta atualizações de conexão
     sock.ev.on(
       "connection.update",
       async ({ connection, lastDisconnect, qr }: any) => {
         logger.info(
-          `Socket Connection Update: ${connection || ""} ${lastDisconnect || ""}`,
+          `[Sessão: ${sessionId}] Update: ${connection || ""} ${lastDisconnect || ""}`,
         );
 
         if (qr) {
-          sessionState.status = "QRCODE";
-          sessionState.qr = qr;
-          if (CONNECTION_TYPE === "QR") {
-            qrcode.generate(qr, { small: true });
-          }
+          currentControl.status = "QRCODE";
+          currentControl.qr = qr;
+
+          // Exibe o QR do cliente específico no terminal para debug local
+          console.log(`\n--- QR CODE DO CLIENTE: ${sessionId} ---`);
+          qrcode.generate(qr, { small: true });
         }
 
         if (connection === "connecting") {
-          sessionState.status = "CONNECTING";
+          currentControl.status = "CONNECTING";
         }
 
         if (connection === "open") {
-          sessionState.status = "CONNECTED";
-          sessionState.qr = null;
-          reconnectAttempts = 0;
-          isStarting = false; // Permite novas inicializações futuras se cair
-          logger.info("Bot Conectado com Sucesso!");
+          currentControl.status = "CONNECTED";
+          currentControl.qr = null;
+          currentControl.reconnectAttempts = 0;
+          currentControl.isStarting = false;
+          logger.info(`[Sessão: ${sessionId}] Bot Conectado com Sucesso!`);
         }
 
         if (connection === "close") {
-          sessionState.status = "DISCONNECTED";
-          logger.error("Conexão fechada");
+          currentControl.status = "DISCONNECTED";
+          logger.error(`[Sessão: ${sessionId}] Conexão fechada.`);
 
           const statusCode = (lastDisconnect?.error as Boom)?.output
             ?.statusCode;
           const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
           if (shouldReconnect) {
-            reconnectAttempts++;
+            currentControl.reconnectAttempts++;
 
-            if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+            if (currentControl.reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
               logger.error(
-                "Máximo de tentativas de reconexão atingido. Pare a aplicação.",
+                `[Sessão: ${sessionId}] Limite máximo de reconexões atingido.`,
               );
-              isStarting = false;
+              currentControl.isStarting = false;
               return;
             }
 
             logger.warn(
-              `Tentando reconectar (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) em 5s...`,
+              `[Sessão: ${sessionId}] Tentando reconectar (${currentControl.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}) em 5s...`,
             );
 
             setTimeout(() => {
-              isStarting = false; // Libera o semáforo para a tentativa ocorrer
-              startWhatsapp();
+              currentControl.isStarting = false;
+              startWhatsapp(sessionId);
             }, 5000);
           } else {
-            // =========================================================================
-            // TRATAMENTO DE DESCONEXÃO PERMANENTE (LOGGED OUT)
-            // =========================================================================
+            // TRATAMENTO DE LOGOUT PERMANENTE DO CLIENTE ESPECÍFICO
             logger.warn(
-              "Desconectado permanentemente do dispositivo. Limpando sessão antiga e gerando novo QR Code...",
+              `[Sessão: ${sessionId}] Desconectado permanentemente. Limpando diretório local...`,
             );
 
-            // Força a remoção segura da pasta de autenticação antiga (e seus tokens inválidos)
             try {
-              if (fs.existsSync(AUTH_FOLDER)) {
-                fs.rmSync(AUTH_FOLDER, { recursive: true, force: true });
+              if (fs.existsSync(authFolder)) {
+                fs.rmSync(authFolder, { recursive: true, force: true });
                 logger.info(
-                  `Pasta de credenciais '${AUTH_FOLDER}' limpa com sucesso.`,
+                  `[Sessão: ${sessionId}] Pasta de credenciais limpa.`,
                 );
               }
-            } catch (err ) {
+            } catch (err) {
               logger.error(
-                "Erro crítico ao tentar remover pastas de autenticação:",
+                `[Sessão: ${sessionId}] Erro ao remover pasta de autenticação:`,
                 err,
               );
             }
 
-            // Reseta controles de estado global para permitir uma nova inicialização limpa
-            reconnectAttempts = 0;
-            isStarting = false;
+            currentControl.reconnectAttempts = 0;
+            currentControl.isStarting = false;
+            currentControl.qr = null;
+            activeSessions.delete(sessionId); // Remove do Map para reset total
 
-            // Dá um delay curto de 2 segundos para garantir o I/O do HD e reinicia o fluxo do QR Code
             setTimeout(() => {
-              logger.info(
-                "Reiniciando o serviço do WhatsApp para exibição de novo QR...",
-              );
-              startWhatsapp();
+              startWhatsapp(sessionId);
             }, 2000);
           }
         }
       },
     );
 
+    // Escuta novas mensagens recebidas por esta instância
     sock.ev.on("messages.upsert", async ({ messages, type }) => {
-      // Ignorar mensagens de histórico antigas (carregamento inicial)
       if (type !== "notify") return;
 
       for (const message of messages) {
         try {
-          // Ignorar mensagens vazias
-          if (!message.message) continue;
-
-          // Ignorar mensagens enviadas pelo próprio bot
-          if (message.key.fromMe) continue;
+          if (!message.message || message.key.fromMe) continue;
 
           const jid = message.key.remoteJid;
-
-          // Ignorar mensagens sem JID
-          if (!jid) {
-            logger.warn("Mensagem sem JID foi ignorada!");
+          if (!jid || jid.endsWith("@g.us") || jid === "status@broadcast")
             continue;
-          }
-
-          // Filtros de chat
-          const isGroup = jid.endsWith("@g.us");
-          const isStatus = jid === "status@broadcast";
-          if (isGroup || isStatus) continue;
-
-          // Filtros de eventos de sistema internos
-          if (message.messageStubType) continue;
-
-          // Tratamento para eventos internos e mensagens editadas
-          if (message.message.protocolMessage) continue;
-
+          if (message.messageStubType || message.message.protocolMessage)
+            continue;
           if (
             message.message.reactionMessage ||
             message.message.pollUpdateMessage
-          ) {
+          )
             continue;
-          }
 
           const formattedMessage = getMessage(message);
+          if (!formattedMessage || !formattedMessage.content) continue;
 
-          // ignora mensagens inválidas ou vazias
-          if (!formattedMessage || !formattedMessage.content) {
-            logger.warn(`Mensagem inválida ou sem texto -> ${jid}`);
-            continue;
-          }
+          logger.info(
+            `[Sessão: ${sessionId}] Mensagem de ${formattedMessage.pushName || "User"} (${jid})`,
+          );
 
-          logger.info(`
-            =========================
-            NOVA MENSAGEM PRIVADA
-            =========================
-            JID: ${jid}
-            PUSHNAME: ${formattedMessage.pushName || "Desconhecido"}
-            FROM_ME: ${message.key.fromMe}
-            CONTEÚDO: ${formattedMessage.content}
-            =========================
-            `);
-
-          await MessageHandler(formattedMessage);
+          // 💡 IMPORTANTE: Passamos o sessionId para o Handler saber qual fluxo de qual cliente rodar!
+          await MessageHandler(formattedMessage, sessionId);
         } catch (error) {
-          logger.error(`Erro ao processar mensagem: ${error}`);
+          logger.error(
+            `[Sessão: ${sessionId}] Erro ao processar mensagem: ${error}`,
+          );
         }
       }
     });
 
-    // Salvar as credenciais de autenticação
     sock.ev.on("creds.update", saveCreds);
     return sock;
   } catch (error) {
-    isStarting = false;
-    // @ts-ignore
-    logger.error("Erro fatal ao iniciar o WhatsApp:", error);
+    currentControl.isStarting = false;
+    logger.error(`[Sessão: ${sessionId}] Erro fatal de inicialização:`, error);
     throw error;
   }
 };
 
-export function getWhatsapp() {
-  if (!sock) {
-    throw new Error("WhatsApp não iniciado");
+/**
+ * Recupera a instância do socket de um usuário ativo na memória
+ */
+export function getWhatsapp(sessionId: string): WASocket {
+  const session = activeSessions.get(sessionId);
+  if (!session || !session.sock) {
+    throw new Error(`WhatsApp não iniciado para a sessão: ${sessionId}`);
   }
-  return sock;
+  return session.sock;
+}
+
+/**
+ * Retorna o status atualizado de uma sessão específica para a API
+ */
+export function getSessionStatus(sessionId: string) {
+  const session = activeSessions.get(sessionId);
+  if (!session) {
+    return { status: "DISCONNECTED", qr: null };
+  }
+  return {
+    status: session.status,
+    qr: session.qr,
+  };
 }

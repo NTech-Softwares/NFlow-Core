@@ -1,0 +1,25 @@
+{
+  "main": {
+    "id": "main",
+    "name": "Menu Principal",
+    "initialStep": "menu",
+    "steps": {
+      "menu": {
+        "id": "menu",
+        "name": "Menu Inicial",
+        "message": [
+          "👋 Olá! Seja bem-vindo(a) ao seu novo atendimento automático.",
+          "",
+          "Você ainda não configurou as opções deste menu.",
+          "Crie fluxos de atendimento para o seu bot!"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      }
+    }
+  }
+}

@@ -13,6 +13,13 @@ app.use(
     origin: "*",
   }),
 );
+app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self'; connect-src 'self' http://localhost:3000 https://api.qrserver.com; img-src 'self' data: https://api.qrserver.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;",
+  );
+  next();
+});
 app.use(express.json());
 
 app.use("/auth", authRoutes);

@@ -1,7 +1,5 @@
 import { messageQueue } from "../../../shared/queue/messageQueue";
-
 import { getWhatsapp } from "../../../providers/whatsapp/baileys/client";
-
 import { logger } from "../../../shared/utils/logger";
 
 function delay(ms: number) {
@@ -13,14 +11,12 @@ function delay(ms: number) {
  PAYLOAD DA MENSAGEM
  =========================
 */
-
 function createMessagePayload(job: any) {
   return job.imagePath
     ? {
         image: {
           url: job.imagePath,
         },
-
         caption: job.message.text,
       }
     : {
@@ -33,30 +29,19 @@ function createMessagePayload(job: any) {
  ENVIO PARA GRUPOS
  =========================
 */
-
 async function sendGroupMessage(sock: any, job: any, messagePayload: any) {
-  logger.info(`
-  =========================
-  ENVIO GRUPO
-  =========================
-  ${job.jid}
-  =========================
-  `);
+  logger.info(
+    `\n[Sessão: ${job.sessionId}] === ENVIO GRUPO ===\nJID: ${job.jid}`,
+  );
 
   await sock.sendPresenceUpdate("composing", job.jid);
-
   await delay(1000);
 
   const response = await sock.sendMessage(job.jid, messagePayload);
 
-  logger.info(`
-  =========================
-  MENSAGEM ENVIADA
-  =========================
-  JID: ${job.jid}
-  MESSAGE_ID: ${response.key.id}
-  =========================
-  `);
+  logger.info(
+    `\n[Sessão: ${job.sessionId}] === MENSAGEM ENVIADA ===\nJID: ${job.jid}\nID: ${response.key.id}`,
+  );
 }
 
 /*
@@ -64,30 +49,19 @@ async function sendGroupMessage(sock: any, job: any, messagePayload: any) {
  ENVIO PARA LID
  =========================
 */
-
 async function sendLidMessage(sock: any, job: any, messagePayload: any) {
-  logger.info(`
-  =========================
-  ENVIO LID
-  =========================
-  ${job.jid}
-  =========================
-  `);
+  logger.info(
+    `\n[Sessão: ${job.sessionId}] === ENVIO LID ===\nJID: ${job.jid}`,
+  );
 
   await sock.sendPresenceUpdate("composing", job.jid);
-
   await delay(1000);
 
   const response = await sock.sendMessage(job.jid, messagePayload);
 
-  logger.info(`
-  =========================
-  MENSAGEM ENVIADA
-  =========================
-  JID: ${job.jid}
-  MESSAGE_ID: ${response.key.id}
-  =========================
-  `);
+  logger.info(
+    `\n[Sessão: ${job.sessionId}] === MENSAGEM ENVIADA ===\nJID: ${job.jid}\nID: ${response.key.id}`,
+  );
 }
 
 /*
@@ -95,74 +69,40 @@ async function sendLidMessage(sock: any, job: any, messagePayload: any) {
  ENVIO PARA PRIVADOS
  =========================
 */
-
 async function sendPrivateMessage(sock: any, job: any, messagePayload: any) {
-  logger.info(`
-  =========================
-  ENVIO PRIVADO
-  =========================
-  ${job.jid}
-  =========================
-  `);
+  logger.info(
+    `\n[Sessão: ${job.sessionId}] === ENVIO PRIVADO ===\nJID: ${job.jid}`,
+  );
 
   const number = job.jid.replace("@s.whatsapp.net", "");
-
   const [result] = await sock.onWhatsApp(number);
 
-  logger.info(`
-  =========================
-  WHATSAPP CHECK
-  =========================
-  ${JSON.stringify(result)}
-  =========================
-  `);
-
   if (!result?.exists) {
-    logger.error(`
-    =========================
-    NÚMERO NÃO EXISTE
-    =========================
-    ${job.jid}
-    =========================
-    `);
-
+    logger.error(
+      `\n[Sessão: ${job.sessionId}] === NÚMERO NÃO EXISTE NO WHATSAPP ===\nJID: ${job.jid}`,
+    );
     return;
   }
 
   const realJid = result.jid;
 
-  logger.info(`
-  =========================
-  REAL JID
-  =========================
-  ${realJid}
-  =========================
-  `);
-
   await sock.presenceSubscribe(realJid);
-
   await delay(500);
 
   const response = await sock.sendMessage(realJid, messagePayload);
 
-  logger.info(`
-  =========================
-  MENSAGEM ENVIADA
-  =========================
-  JID: ${realJid}
-  MESSAGE_ID: ${response.key.id}
-  =========================
-  `);
+  logger.info(
+    `\n[Sessão: ${job.sessionId}] === MENSAGEM ENVIADA ===\nJID: ${realJid}\nID: ${response.key.id}`,
+  );
 }
 
 /*
  =========================
- WORKER
+ WORKER CORE
  =========================
 */
-
 export async function startWorker() {
-  logger.info("Worker iniciado");
+  logger.info("Worker iniciado operando em modo Multi-Tenant");
 
   while (true) {
     if (messageQueue.length > 0) {
@@ -170,109 +110,60 @@ export async function startWorker() {
 
       if (!job) {
         await delay(700);
-
         continue;
       }
 
       try {
-        const sock = getWhatsapp();
-
-        if (!sock) {
-          logger.error("WhatsApp não conectado");
-
-          await delay(2000);
-
-          continue;
-        }
+        // 🎯 CAPTURA DINÂMICA: Passa o sessionId do job para pegar o socket correto do cliente dono do disparo
+        const sock = getWhatsapp(job.sessionId);
 
         logger.info(`
-        =========================
-        PROCESSANDO JOB
-        =========================
-        JID: ${job.jid}
-        TEXTO: ${job.message.text}
-
-        IMAGE: ${job.imagePath || "NÃO"}
-        =========================
+        ==================================================
+        PROCESSANDO JOB MULTI-TENANT
+        ==================================================
+        SESSÃO DONA: ${job.sessionId}
+        DESTINATÁRIO: ${job.jid}
+        TEXTO: ${job.message.text.substring(0, 30)}...
+        HAS_IMAGE: ${job.imagePath ? "SIM" : "NÃO"}
+        ==================================================
         `);
-
-        /*
-         =========================
-         PAYLOAD
-         =========================
-        */
 
         const messagePayload = createMessagePayload(job);
 
-        /*
-         =========================
-         TIPOS
-         =========================
-        */
-
         const isGroup = job.jid.endsWith("@g.us");
-
         const isUser = job.jid.endsWith("@s.whatsapp.net");
-
         const isLid = job.jid.endsWith("@lid");
-
-        /*
-         =========================
-         GRUPOS
-         =========================
-        */
 
         if (isGroup) {
           await sendGroupMessage(sock, job, messagePayload);
         } else if (isUser) {
-
-        /*
-         =========================
-         PRIVADOS
-         =========================
-        */
           await sendPrivateMessage(sock, job, messagePayload);
         } else if (isLid) {
-
-        /*
-         =========================
-         LID
-         =========================
-        */
           await sendLidMessage(sock, job, messagePayload);
         } else {
-
-        /*
-         =========================
-         JID INVÁLIDO
-         =========================
-        */
-          logger.error(`
-          =========================
-          JID INVÁLIDO
-          =========================
-          ${job.jid}
-          =========================
-          `);
+          logger.error(
+            `[Sessão: ${job.sessionId}] JID Inválido ou desconhecido: ${job.jid}`,
+          );
         }
 
         /*
          =========================
-         DELAY ANTI-SPAM
+         DELAY ANTI-BAN RATELIMIT
          =========================
         */
-
         const randomDelay = Math.floor(Math.random() * 2000) + 2000;
-
         await delay(randomDelay);
-      } catch (error) {
+      } catch (error: any) {
         logger.error(`
-        =========================
-        ERRO AO ENVIAR
-        =========================
-        ${error}
-        =========================
+        ==================================================
+        ERRO CRÍTICO NO WORKER (JOB REJEITADO)
+        ==================================================
+        SESSÃO: ${job.sessionId}
+        ALVO: ${job.jid}
+        MOTIVO: ${error.message || error}
+        ==================================================
         `);
+        // Opcional: Se o token caiu ou a sessão não foi iniciada, você poderia tratar logs ou alertas aqui
       }
     }
 

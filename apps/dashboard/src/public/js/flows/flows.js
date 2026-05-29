@@ -1,11 +1,11 @@
 const token = localStorage.getItem("token");
 
-init();
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});
 
 async function init() {
-  const authenticated = await checkAuthentication();
-  if (!authenticated) return;
-
+  // O auth.js global já valida o token aqui. Focamos apenas na regra de negócio:
   const whatsappConnected = await getStatus();
   if (!whatsappConnected) {
     window.location.href = "/qr";
@@ -17,15 +17,14 @@ async function init() {
 
 /*
  =========================
- STATUS (Atualizado para retornar booleano)
+ STATUS (Corrigido para a Rota Nova /status)
  =========================
-*/
+ */
 async function getStatus() {
   const statusElement = document.getElementById("status");
 
   try {
-    // Utiliza o endpoint padronizado do ecossistema
-    const response = await fetch(`${API_URL}/whatsapp/status`, {
+    const response = await fetch(`${window.APP_CONFIG.API_URL}/status`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -37,20 +36,13 @@ async function getStatus() {
     }
 
     const data = await response.json();
-
-    // Normaliza o status vindo do backend
     const estado = data.status ? data.status.toLowerCase() : "unknown";
 
-    // Injeta o texto legível na sua UI se o elemento existir na tela
     if (statusElement) {
       statusElement.innerText = data.status || "DISCONNECTED";
     }
 
-    console.log("-----------------------------------------");
-    console.log("WhatsApp Status Data:", data);
-
-    // Retorna verdadeiro SOMENTE se estiver pronto para uso
-    if (estado === "open" || estado === "connected" || estado === "connected") {
+    if (estado === "open" || estado === "connected") {
       return true;
     }
 
@@ -59,7 +51,7 @@ async function getStatus() {
     if (statusElement) {
       statusElement.innerText = "Erro";
     }
-    console.log("Erro ao obter status do WhatsApp:", error);
+    console.log("Erro ao obter status do WhatsApp em Flows:", error);
     return false;
   }
 }

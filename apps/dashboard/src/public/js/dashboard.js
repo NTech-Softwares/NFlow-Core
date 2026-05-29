@@ -1,24 +1,23 @@
-const API_URL = window.APP_CONFIG.API_URL;
 const token = localStorage.getItem("token");
 
-init();
+// Espera o DOM carregar para evitar problemas com elementos de interface
+document.addEventListener("DOMContentLoaded", () => {
+  init();
+});
 
 async function init() {
-  const authenticated = await loginHandle();
+  // Removido o loginHandle() duplicado para evitar concorrência com o auth.js
 
-  if (!authenticated) {
-    return;
-  }
-
-  // Verifica o status do WhatsApp. Se não estiver pronto/conectado, aborta e redireciona
+  // Verifica o status do WhatsApp
   const whatsappConnected = await getStatus();
   if (!whatsappConnected) {
+    console.log("[Dashboard] WhatsApp desconectado. Redirecionando para QR...");
+    // 🎯 Se seu servidor estático precisa da extensão, use '/qr.html' ou '/qr-code.html'. Ajustado para '/qr' conforme sua rota:
     window.location.href = "/qr";
     return;
   }
 
   let list_groups = false;
-
   if (!list_groups) {
     await listGroups();
     list_groups = true;
@@ -27,48 +26,14 @@ async function init() {
 
 /*
  =========================
- AUTENTICAÇÃO
+ STATUS (Sincronizado com a Rota Nova)
  =========================
-*/
-async function loginHandle() {
-  if (!token) {
-    window.location.href = "/login";
-    return false;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/auth/me`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      localStorage.removeItem("token");
-      window.location.href = "/login";
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    localStorage.removeItem("token");
-    window.location.href = "/login";
-    return false;
-  }
-}
-
-/*
- =========================
- STATUS (Atualizado para retornar booleano)
- =========================
-*/
+ */
 async function getStatus() {
   const statusElement = document.getElementById("status");
 
   try {
-    // Utiliza o endpoint padronizado do ecossistema
-    const response = await fetch(`${API_URL}/whatsapp/status`, {
+    const response = await fetch(`${API_URL}/status`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -80,20 +45,15 @@ async function getStatus() {
     }
 
     const data = await response.json();
-
-    // Normaliza o status vindo do backend
     const estado = data.status ? data.status.toLowerCase() : "unknown";
 
-    // Injeta o texto legível na sua UI se o elemento existir na tela
     if (statusElement) {
       statusElement.innerText = data.status || "DISCONNECTED";
     }
 
-    console.log("-----------------------------------------");
-    console.log("WhatsApp Status Data:", data);
+    console.log("[Dashboard] WhatsApp Status Data:", data);
 
-    // Retorna verdadeiro SOMENTE se estiver pronto para uso
-    if (estado === "open" || estado === "connected" || estado === "connected") {
+    if (estado === "open" || estado === "connected") {
       return true;
     }
 

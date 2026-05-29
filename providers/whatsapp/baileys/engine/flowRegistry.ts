@@ -1,22 +1,106 @@
-import flowsData from "../flows/data/flows.json";
+import fs from "fs";
+import path from "path";
 import { Flow } from "../flows/types/flowTypes";
+import { logger } from "../../../../shared/utils/logger";
 
-// Clonamos o JSON inicial para uma variável na memória que pode ser alterada
-let registryInMemory: Record<string, Flow> = { ...flowsData } as Record<
-  string,
-  Flow
->;
+export const DEFAULT_FLOW_TEMPLATE: Record<string, Flow> = {
+  main: {
+    id: "main",
+    name: "Menu Principal",
+    initialStep: "menu",
+    steps: {
+      menu: {
+        id: "menu",
+        name: "Menu Inicial",
+        message: [
+          "👋 Olá! Seja bem-vindo(a) ao seu novo atendimento automático.",
+          "",
+          "Você ainda não configurou as opções deste menu.",
+          "Crie fluxos de atendimento para o seu bot!",
+        ],
+        options: [
+          {
+            key: "0",
+            back: true,
+          },
+        ],
+      },
+    },
+  },
+};
 
 /**
- * Retorna o estado atual dos fluxos guardados na memória.
+ * Auxiliar para capturar o caminho absoluto do arquivo flows.json baseado no ID do Usuário
  */
-export function getFlows() {
-  return registryInMemory;
+function getFlowFilePath(id: string): string {
+  return path.join(
+    process.cwd(),
+    "providers",
+    "whatsapp",
+    "baileys",
+    "flows",
+    "data",
+    id,
+    "flows.json",
+  );
 }
 
 /**
- * Atualiza o estado da memória (usado pelos serviços de mutação)
+ * Retorna o fluxo customizado de uma sessão específica baseada no ID do usuário
  */
-export function updateRegistry(newRegistry: Record<string, Flow>) {
-  registryInMemory = newRegistry;
+export function getFlowsForSession(
+  sessionId: string,
+  id: string,
+): Record<string, Flow> {
+  const userFlowFile = getFlowFilePath(id);
+  const userFolder = path.dirname(userFlowFile);
+
+  try {
+    // 🎯 Garante que a árvore de pastas no providers/.../flows/data/{id} exista
+    if (!fs.existsSync(userFolder)) {
+      fs.mkdirSync(userFolder, { recursive: true });
+    }
+
+    // 🎯 Se o usuário não tiver o arquivo, grava o template minimalista
+    if (!fs.existsSync(userFlowFile)) {
+      logger.info(
+        `[Registry] Inicializando estrutura minimalista padrão para o ID: ${id} (Sessão: ${sessionId})`,
+      );
+
+      fs.writeFileSync(
+        userFlowFile,
+        JSON.stringify(DEFAULT_FLOW_TEMPLATE, null, 2),
+        "utf-8",
+      );
+    }
+
+    const fileContent = fs.readFileSync(userFlowFile, "utf-8");
+    return JSON.parse(fileContent) as Record<string, Flow>;
+  } catch (error: any) {
+    logger.error(
+      `Erro ao carregar/criar fluxos para o ID [${id}] (Sessão: ${sessionId}): ${error.message}`,
+    );
+    return DEFAULT_FLOW_TEMPLATE;
+  }
+}
+
+/**
+ * Salva um novo fluxo customizado enviado pelo painel para um usuário específico
+ */
+export function saveFlowsForSession(
+  sessionId: string,
+  id: string,
+  newFlows: Record<string, Flow>,
+) {
+  const userFlowFile = getFlowFilePath(id);
+  const userFolder = path.dirname(userFlowFile);
+
+  if (!fs.existsSync(userFolder)) {
+    fs.mkdirSync(userFolder, { recursive: true });
+  }
+
+  fs.writeFileSync(userFlowFile, JSON.stringify(newFlows, null, 2), "utf-8");
+  logger.info(
+    `[Registry] Fluxos atualizados com sucesso no providers/data para o ID: ${id}`,
+  );
 }

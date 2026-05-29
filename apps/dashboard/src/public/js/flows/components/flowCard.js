@@ -17,13 +17,24 @@ function createFlowHTML(flow) {
           </div>
 
           <div class="flow-name">
-            ${flow.name}
+            ${flow.name || flow.id}
           </div>
 
         </div>
 
-        <div class="flow-badge">
-          ${flow.steps.length} steps
+        <div class="flow-header-right" style="display: flex; align-items: center; gap: 8px;">
+          <button 
+            type="button" 
+            class="btn-add-step-trigger" 
+            onclick="promptAddStep('${flow.id}'); event.stopPropagation();"
+            title="Adicionar Novo Passo"
+          >
+            + Passo
+          </button>
+          
+          <div class="flow-badge">
+            ${(flow.steps || []).length} steps
+          </div>
         </div>
 
       </div>
@@ -33,7 +44,7 @@ function createFlowHTML(flow) {
         id="flow-body-${flow.id}"
       >
 
-        ${flow.steps.map((step) => createStepHTML(flow, step)).join("")}
+        ${(flow.steps || []).map((step) => createStepHTML(flow, step)).join("")}
 
       </div>
 

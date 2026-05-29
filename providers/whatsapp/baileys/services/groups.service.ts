@@ -1,17 +1,24 @@
-import { getWhatsapp } from '../client'
+import { getWhatsapp } from "../client";
 
-export async function getGroups() {
-    const sock = getWhatsapp()
+/**
+ * Lista todos os grupos participantes de uma sessão específica (Multi-Tenant)
+ */
+export async function getGroups(sessionId: string) {
+  // 🎯 Recebe o sessionId do inquilino
 
-    if (!sock) {
-        throw new Error('WhatsApp não conectado')
-    }
+  // 🎯 Passa o sessionId para buscar o socket correto deste cliente no Map
+  const sock = getWhatsapp(sessionId);
 
-    const groups = await sock.groupFetchAllParticipating()
+  if (!sock) {
+    throw new Error(`WhatsApp não iniciado para a sessão: ${sessionId}`);
+  }
 
-    return Object.values(groups).map(group => ({
-        id: group.id,
-        name: group.subject,
-        participants: group.participants.length
-    }))
+  // Busca os grupos direto da instância do Baileys deste usuário
+  const groups = await sock.groupFetchAllParticipating();
+
+  return Object.values(groups).map((group) => ({
+    id: group.id,
+    name: group.subject, // O Baileys chama o nome do grupo de 'subject'
+    participants: group.participants ? group.participants.length : 0,
+  }));
 }
