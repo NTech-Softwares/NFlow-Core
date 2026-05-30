@@ -1,4 +1,4 @@
-import { logger } from "../../../../shared/utils/logger";
+import { logger } from "../../../shared/utils/logger";
 
 type StackItem = {
   flow: string;
@@ -21,7 +21,7 @@ const sessions = new Map<string, Session>();
  * @param sessionId O ID da sessão do dono do Bot
  */
 export function getSession(remoteJid: string, sessionId: string) {
-  // 🎯 CHAVE COMPOSTA EXCLUSIVA: impede colisão entre clientes de tenants diferentes
+  // CHAVE COMPOSTA EXCLUSIVA: impede colisão entre clientes de tenants diferentes
   const compositeKey = `${sessionId}:${remoteJid}`;
 
   if (!sessions.has(compositeKey)) {

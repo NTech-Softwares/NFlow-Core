@@ -12,7 +12,7 @@ import fs from "fs";
 import path from "path";
 import { logger } from "../../../shared/utils/logger";
 import { getMessage } from "../../../shared/utils/message";
-import MessageHandler from "./handlers/messageHandler";
+import MessageHandler from "./handlers/message.handler";
 
 // Interfaces para controle interno por instância
 interface SessionControl {

@@ -1,4 +1,4 @@
-import { getFlowsForSession } from "./flowRegistry";
+import { getFlowsForSession } from "../repository/flow.registry";
 import { getSession } from "../state/sessionStore";
 
 /**
@@ -19,12 +19,11 @@ export async function processFlow(
   const normalized = content.trim().toLowerCase();
 
   // 🎯 EXTRAÇÃO DO ID DO USUÁRIO: Captura a primeira parte antes do "_session"
-  // Caso seu sessionId seja o ID puro do banco, basta usar: const userId = sessionId;
   const userId = sessionId.includes("_session")
     ? sessionId.split("_session")[0]
     : sessionId;
 
-  // 2. Carrega dinamicamente os fluxos exclusivos DESTE inquilino passando sessionId e userId
+  // 2. Carrega dinamicamente os fluxos exclusivos DESTE inquilino
   const flows = getFlowsForSession(sessionId, userId);
   const currentFlow = flows[session.currentFlow];
 

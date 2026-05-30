@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { Flow } from "../flows/types/flowTypes";
-import { logger } from "../../../../shared/utils/logger";
+import { Flow } from "../domain/flow.types";
+import { logger } from "../../../shared/utils/logger";
 
 export const DEFAULT_FLOW_TEMPLATE: Record<string, Flow> = {
   main: {
@@ -31,18 +31,10 @@ export const DEFAULT_FLOW_TEMPLATE: Record<string, Flow> = {
 
 /**
  * Auxiliar para capturar o caminho absoluto do arquivo flows.json baseado no ID do Usuário
+ * Aponta para a pasta central de storage na raiz do projeto
  */
 function getFlowFilePath(id: string): string {
-  return path.join(
-    process.cwd(),
-    "providers",
-    "whatsapp",
-    "baileys",
-    "flows",
-    "data",
-    id,
-    "flows.json",
-  );
+  return path.join(process.cwd(), "storage", "flows", id, "flows.json");
 }
 
 /**
@@ -56,7 +48,7 @@ export function getFlowsForSession(
   const userFolder = path.dirname(userFlowFile);
 
   try {
-    // 🎯 Garante que a árvore de pastas no providers/.../flows/data/{id} exista
+    // 🎯 Garante que a árvore de pastas no storage/flows/{id} exista
     if (!fs.existsSync(userFolder)) {
       fs.mkdirSync(userFolder, { recursive: true });
     }
@@ -64,7 +56,7 @@ export function getFlowsForSession(
     // 🎯 Se o usuário não tiver o arquivo, grava o template minimalista
     if (!fs.existsSync(userFlowFile)) {
       logger.info(
-        `[Registry] Inicializando estrutura minimalista padrão para o ID: ${id} (Sessão: ${sessionId})`,
+        `[Registry] Inicializando estrutura minimalista padrão no storage para o ID: ${id} (Sessão: ${sessionId})`,
       );
 
       fs.writeFileSync(
@@ -101,6 +93,6 @@ export function saveFlowsForSession(
 
   fs.writeFileSync(userFlowFile, JSON.stringify(newFlows, null, 2), "utf-8");
   logger.info(
-    `[Registry] Fluxos atualizados com sucesso no providers/data para o ID: ${id}`,
+    `[Registry] Fluxos atualizados com sucesso no storage para o ID: ${id}`,
   );
 }

@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
-import { WhatsappService } from "../services/whatsapp.service";
+import { whatsappService } from "../services/whatsapp.service";
 import { logger } from "../../../../shared/utils/logger";
-
-const whatsappService = new WhatsappService();
 
 /*
  =========================
@@ -31,7 +29,7 @@ export async function getStatus(req: Request, res: Response) {
         .json({ success: false, error: "Usuário não identificado" });
     }
 
-    // Chama o service atualizado, que já vai ligar o Baileys se a Suzana estiver deslogada
+    // Chama o service atualizado, que já vai ligar o Baileys se a sessão estiver deslogada
     const sessionData = await whatsappService.getStatus(sessionId);
     return res.json(sessionData);
   } catch (error: any) {
@@ -53,23 +51,22 @@ export async function listGroups(req: Request, res: Response) {
       return res.status(401).json({ success: false, error: "Sessão inválida" });
     }
 
-    logger.info(`Buscando grupos para a sessão ativa: ${sessionId}`);
+    logger.info(`Buscando grupos para a sessão active: ${sessionId}`);
 
-    // Tenta listar os grupos do serviço
+    // Tenta listar os grupos do serviço remoto/local
     const grupos = await whatsappService.listGroups(sessionId);
 
-    // Se por algum motivo o serviço retornar nulo ou não for um array, previne quebra
     return res.json({
       success: true,
       array: Array.isArray(grupos) ? grupos : [],
     });
   } catch (error: any) {
-    // 🎯 Captura o erro clássico do Baileys sincronizando ou sem grupos carregados
+    // Captura o erro clássico do Baileys sincronizando ou sem grupos carregados
     logger.warn(
       `[Baileys Sync] Não foi possível listar grupos para a sessão [${getTenantSessionId(req)}] neste momento. Detalhe: ${error.message}`,
     );
 
-    // Em vez de estourar 500, responde 200 com sucesso false e avisa o front
+    // Em vez de estourar 500, responde 200 com sucesso false e avisa o front de forma elegante
     return res.json({
       success: false,
       array: [],

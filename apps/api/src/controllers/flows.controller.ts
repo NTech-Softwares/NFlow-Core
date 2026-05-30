@@ -1,17 +1,6 @@
 import { Request, Response } from "express";
-import {
-  getFlowsService,
-  getFlowByIdService,
-  getFlowsTreeService,
-} from "../services/getFlows.service";
-import {
-  addFlowJson,
-  removeFlowJson,
-  addStepJson, // IMPORTADO: Novo service para adicionar passos
-  removeStepJson, // IMPORTADO: Novo service para remover passos
-  updateStepMessageJson,
-  updateStepOptionsJson,
-} from "../services/setflows.service";
+import * as getFlowsService from "../services/getFlows.service";
+import * as setFlowsService from "../services/setflows.service";
 
 /*
  =========================
@@ -20,7 +9,11 @@ import {
 */
 export async function getFlows(req: Request, res: Response) {
   try {
-    const flows = await getFlowsService();
+    const user = (req as any).user;
+    const flows = await getFlowsService.getFlowsService(
+      user.whatsappSessionId,
+      user.id.toString(),
+    );
     return res.json(flows);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar flows." });
@@ -35,10 +28,16 @@ export async function getFlows(req: Request, res: Response) {
 export async function getFlowById(req: Request, res: Response) {
   try {
     const { flowId } = req.params;
+    const user = (req as any).user;
+
     if (!flowId)
       return res.status(404).json({ error: "FlowID não encontrado." });
 
-    const flow = await getFlowByIdService(flowId);
+    const flow = await getFlowsService.getFlowByIdService(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+    );
     if (!flow) return res.status(404).json({ error: "Flow não encontrado." });
 
     return res.json(flow);
@@ -55,11 +54,10 @@ export async function getFlowById(req: Request, res: Response) {
 export async function getFlowsTree(req: Request, res: Response) {
   try {
     const user = (req as any).user;
-    const sessionId = user.whatsappSessionId;
-    const id = user.id.toString();
-
-    // Chama o serviço passando os parâmetros necessários
-    const tree = await getFlowsTreeService(sessionId, id);
+    const tree = await getFlowsService.getFlowsTreeService(
+      user.whatsappSessionId,
+      user.id.toString(),
+    );
     return res.json(tree);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao gerar árvore dos flows." });
@@ -68,18 +66,25 @@ export async function getFlowsTree(req: Request, res: Response) {
 
 /*
  =========================
- ADICIONA FLOW
+ GERENCIAMENTO (ADD/REMOVE)
  =========================
 */
 export async function addFlow(req: Request, res: Response) {
   try {
     const { flowId, initialStep, stepMessage } = req.body;
+    const user = (req as any).user;
 
     if (!flowId) {
       return res.status(400).json({ error: "O ID do fluxo é obrigatório." });
     }
 
-    await addFlowJson(flowId, initialStep, stepMessage);
+    await setFlowsService.addFlow(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+      initialStep,
+      stepMessage,
+    );
 
     return res
       .status(201)
@@ -91,14 +96,10 @@ export async function addFlow(req: Request, res: Response) {
   }
 }
 
-/*
- =========================
- REMOVE FLOW
- =========================
-*/
 export async function removeFlow(req: Request, res: Response) {
   try {
     const { flowId } = req.body;
+    const user = (req as any).user;
 
     if (!flowId) {
       return res
@@ -106,7 +107,11 @@ export async function removeFlow(req: Request, res: Response) {
         .json({ error: "O flowId é obrigatório no corpo da requisição." });
     }
 
-    await removeFlowJson(flowId);
+    await setFlowsService.removeFlow(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+    );
 
     return res.status(200).json({
       status: "success",
@@ -121,19 +126,26 @@ export async function removeFlow(req: Request, res: Response) {
 
 /*
  =========================
- ADICIONA STEP
+ GERENCIAMENTO DE PASSOS
  =========================
 */
 export async function addStep(req: Request, res: Response) {
   try {
     const { flowId, stepId, stepMessage } = req.body;
+    const user = (req as any).user;
 
     if (!flowId)
       return res.status(400).json({ error: "O flowId é obrigatório." });
     if (!stepId)
       return res.status(400).json({ error: "O stepId é obrigatório." });
 
-    await addStepJson(flowId, stepId, stepMessage);
+    await setFlowsService.addStep(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+      stepId,
+      stepMessage,
+    );
 
     return res.status(201).json({
       status: "success",
@@ -146,21 +158,22 @@ export async function addStep(req: Request, res: Response) {
   }
 }
 
-/*
- =========================
- REMOVE STEP
- =========================
-*/
 export async function removeStep(req: Request, res: Response) {
   try {
     const { flowId, stepId } = req.body;
+    const user = (req as any).user;
 
     if (!flowId)
       return res.status(400).json({ error: "O flowId é obrigatório." });
     if (!stepId)
       return res.status(400).json({ error: "O stepId é obrigatório." });
 
-    await removeStepJson(flowId, stepId);
+    await setFlowsService.removeStep(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+      stepId,
+    );
 
     return res.status(200).json({
       status: "success",
@@ -175,12 +188,13 @@ export async function removeStep(req: Request, res: Response) {
 
 /*
  =========================
- Edita Mensagem
+ ATUALIZAÇÕES
  =========================
 */
 export async function updateStepMessage(req: Request, res: Response) {
   try {
     const { flowId, stepId, newMessage } = req.body;
+    const user = (req as any).user;
 
     if (!flowId)
       return res.status(400).json({ error: "O flowId é obrigatório." });
@@ -191,7 +205,13 @@ export async function updateStepMessage(req: Request, res: Response) {
         .status(400)
         .json({ error: "O campo newMessage é obrigatório." });
 
-    await updateStepMessageJson(flowId, stepId, newMessage);
+    await setFlowsService.updateStepMessage(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+      stepId,
+      newMessage,
+    );
 
     return res.status(200).json({
       status: "success",
@@ -204,14 +224,10 @@ export async function updateStepMessage(req: Request, res: Response) {
   }
 }
 
-/*
- =========================
- Edita Opções (Direcionamentos)
- =========================
-*/
 export async function updateStepOptions(req: Request, res: Response) {
   try {
     const { flowId, stepId, newOptions } = req.body;
+    const user = (req as any).user;
 
     if (!flowId)
       return res.status(400).json({ error: "O flowId é obrigatório." });
@@ -223,7 +239,13 @@ export async function updateStepOptions(req: Request, res: Response) {
       });
     }
 
-    await updateStepOptionsJson(flowId, stepId, newOptions);
+    await setFlowsService.updateStepOptions(
+      user.whatsappSessionId,
+      user.id.toString(),
+      flowId,
+      stepId,
+      newOptions,
+    );
 
     return res.status(200).json({
       status: "success",
