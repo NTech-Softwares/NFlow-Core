@@ -1,48 +1,42 @@
-const token = localStorage.getItem("token");
+// Removemos o escopo global do token e do listener automático.
+// Agora a inicialização é controlada pelo navigation.js
 
-// Espera o DOM carregar para evitar problemas com elementos de interface
-document.addEventListener("DOMContentLoaded", () => {
-  init();
-});
+window.initDashboardView = async function () {
+  console.log("[Dashboard] Inicializando painel de métricas...");
 
-async function init() {
-  // Removido o loginHandle() duplicado para evitar concorrência com o auth.js
+  // Garante a captura atualizada do token gerido pelo auth.js
+  const currentToken = localStorage.getItem("token");
 
-  // Verifica o status do WhatsApp
-  const whatsappConnected = await getStatus();
+  // Verifica o status do WhatsApp de forma isolada nesta janela
+  const whatsappConnected = await getDashboardWhatsAppStatus(currentToken);
   if (!whatsappConnected) {
     console.log("[Dashboard] WhatsApp desconectado. Redirecionando para QR...");
-    // 🎯 Se seu servidor estático precisa da extensão, use '/qr.html' ou '/qr-code.html'. Ajustado para '/qr' conforme sua rota:
     window.location.href = "/qr";
     return;
   }
 
-  let list_groups = false;
-  if (!list_groups) {
-    await listGroups();
-    list_groups = true;
-  }
-}
+  // Se estiver conectado, popula a lista de grupos para campanhas
+  await listGroups(currentToken);
+};
 
 /*
  =========================
- STATUS (Sincronizado com a Rota Nova)
+ STATUS (Exclusivo da View Dashboard)
  =========================
  */
-async function getStatus() {
+async function getDashboardWhatsAppStatus(token) {
   const statusElement = document.getElementById("status");
+  const apiUrl = window.APP_CONFIG.API_URL;
 
   try {
-    const response = await fetch(`${API_URL}/status`, {
+    const response = await fetch(`${apiUrl}/status`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
     const data = await response.json();
     const estado = data.status ? data.status.toLowerCase() : "unknown";
@@ -51,18 +45,10 @@ async function getStatus() {
       statusElement.innerText = data.status || "DISCONNECTED";
     }
 
-    console.log("[Dashboard] WhatsApp Status Data:", data);
-
-    if (estado === "open" || estado === "connected") {
-      return true;
-    }
-
-    return false;
+    return estado === "open" || estado === "connected";
   } catch (error) {
-    if (statusElement) {
-      statusElement.innerText = "Erro";
-    }
-    console.log("Erro ao obter status do WhatsApp:", error);
+    if (statusElement) statusElement.innerText = "Erro";
+    console.error("Erro ao obter status do WhatsApp no Dashboard:", error);
     return false;
   }
 }
@@ -103,10 +89,12 @@ async function updateNumberInputState() {
  =========================
 */
 async function sendMessage() {
+  const token = localStorage.getItem("token");
   const number = document.getElementById("number").value;
   const message = document.getElementById("message").value;
   const image = document.getElementById("image").files[0];
   const result = document.getElementById("result");
+  const apiUrl = window.APP_CONFIG.API_URL;
 
   result.innerText = "Enviando...";
 
@@ -115,28 +103,21 @@ async function sendMessage() {
     formData.append("number", number);
     formData.append("message", message);
 
-    if (image) {
-      formData.append("image", image);
-    }
+    if (image) formData.append("image", image);
 
-    const response = await fetch(`${API_URL}/whatsapp/send-message`, {
+    const response = await fetch(`${apiUrl}/whatsapp/send-message`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
 
     const data = await response.json();
-
-    if (data.success) {
-      result.innerText = "Mensagem adicionada na fila com sucesso!";
-    } else {
-      result.innerText = "Erro ao enviar mensagem";
-    }
+    result.innerText = data.success
+      ? "Mensagem adicionada na fila com sucesso!"
+      : "Erro ao enviar mensagem";
   } catch (error) {
     result.innerText = "Erro ao conectar com a API";
-    console.log(error);
+    console.error(error);
   }
 }
 
@@ -145,30 +126,28 @@ async function sendMessage() {
  LISTAR GRUPOS
  =========================
 */
-async function listGroups() {
-  const groups = document.getElementById("groups");
-  if (!groups) return; // Evita quebra se a tela não possuir o container
+async function listGroups(token) {
+  const groupsContainer = document.getElementById("groups");
+  if (!groupsContainer) return;
 
-  groups.innerHTML = "";
+  groupsContainer.innerHTML = "";
   const resultGroup = document.getElementById("resultGroup");
+  const apiUrl = window.APP_CONFIG.API_URL;
 
   if (resultGroup) resultGroup.innerText = "Listando...";
 
   try {
-    const response = await fetch(`${API_URL}/whatsapp/list-groups`, {
+    const response = await fetch(`${apiUrl}/whatsapp/list-groups`, {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     const data = await response.json();
 
-    if (data.success) {
-      if (resultGroup)
-        resultGroup.innerText = "Download de lista de grupos concluído...";
-    } else {
-      if (resultGroup) resultGroup.innerText = "Erro ao listar grupos";
+    if (data.success && resultGroup) {
+      resultGroup.innerText = "Download de lista de grupos concluído...";
+    } else if (resultGroup) {
+      resultGroup.innerText = "Erro ao listar grupos";
     }
 
     if (data.array && Array.isArray(data.array)) {
@@ -177,30 +156,22 @@ async function listGroups() {
         groupItem.classList.add("group-item");
         groupItem.innerHTML = `
           <div class="group-left">
-            <input
-              type="checkbox"
-              class="group-checkbox"
-              value="${group.id}"
-            >
+            <input type="checkbox" class="group-checkbox" value="${group.id}">
             <div class="group-info">
-              <span class="group-name">
-                ${group.name}
-              </span>
-              <span class="group-members">
-                ${group.participants} participantes
-              </span>
+              <span class="group-name">${group.name}</span>
+              <span class="group-members">${group.participants} participantes</span>
             </div>
           </div>
         `;
 
         const checkbox = groupItem.querySelector(".group-checkbox");
         checkbox.addEventListener("change", updateNumberInputState);
-        groups.appendChild(groupItem);
+        groupsContainer.appendChild(groupItem);
       });
     }
   } catch (error) {
     if (resultGroup) resultGroup.innerText = "Erro ao conectar com a API";
-    console.log(error);
+    console.error(error);
   }
 }
 
@@ -226,10 +197,11 @@ async function toggleSelectAll() {
  =========================
 */
 async function sendCampaign() {
+  const token = localStorage.getItem("token");
+  const apiUrl = window.APP_CONFIG.API_URL;
   const selectedGroups = [
     ...document.querySelectorAll(".group-checkbox:checked"),
   ].map((cb) => cb.value);
-
   const image = document.getElementById("image").files[0];
   const result = document.getElementById("result");
 
@@ -237,33 +209,23 @@ async function sendCampaign() {
 
   try {
     const formData = new FormData();
-    selectedGroups.forEach((group) => {
-      formData.append("groups", group);
-    });
-
+    selectedGroups.forEach((group) => formData.append("groups", group));
     formData.append("message", document.getElementById("message").value);
 
-    if (image) {
-      formData.append("image", image);
-    }
+    if (image) formData.append("image", image);
 
-    const response = await fetch(`${API_URL}/whatsapp/send-campaign`, {
+    const response = await fetch(`${apiUrl}/whatsapp/send-campaign`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
 
     const data = await response.json();
-
-    if (data.success) {
-      result.innerText = "Campanha adicionada na fila com sucesso!";
-    } else {
-      result.innerText = "Erro ao enviar campanha";
-    }
+    result.innerText = data.success
+      ? "Campanha adicionada na fila com sucesso!"
+      : "Erro ao enviar campanha";
   } catch (error) {
     result.innerText = "Erro ao conectar com a API";
-    console.log(error);
+    console.error(error);
   }
 }

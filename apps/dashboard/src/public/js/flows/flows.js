@@ -1,39 +1,38 @@
-const token = localStorage.getItem("token");
+// Inicialização agora atrelada ao ecossistema unificado da SPA
+window.initFlowsView = async function () {
+  console.log("[Flows] Carregando módulo de fluxos automáticos...");
 
-document.addEventListener("DOMContentLoaded", () => {
-  init();
-});
+  const currentToken = localStorage.getItem("token");
 
-async function init() {
-  // O auth.js global já valida o token aqui. Focamos apenas na regra de negócio:
-  const whatsappConnected = await getStatus();
+  // Reutiliza e valida o status específico para a aba de fluxos
+  const whatsappConnected = await getFlowsWhatsAppStatus(currentToken);
   if (!whatsappConnected) {
     window.location.href = "/qr";
     return;
   }
 
+  // Carrega os dados estruturais dos fluxos para renderização
   await loadFlows();
-}
+};
 
 /*
  =========================
- STATUS (Corrigido para a Rota Nova /status)
+ STATUS (Isolado e protegido para a view de fluxos)
  =========================
  */
-async function getStatus() {
+async function getFlowsWhatsAppStatus(token) {
   const statusElement = document.getElementById("status");
+  const apiUrl = window.APP_CONFIG.API_URL;
 
   try {
-    const response = await fetch(`${window.APP_CONFIG.API_URL}/status`, {
+    const response = await fetch(`${apiUrl}/status`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status}`);
-    }
+    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
 
     const data = await response.json();
     const estado = data.status ? data.status.toLowerCase() : "unknown";
@@ -42,32 +41,24 @@ async function getStatus() {
       statusElement.innerText = data.status || "DISCONNECTED";
     }
 
-    if (estado === "open" || estado === "connected") {
-      return true;
-    }
-
-    return false;
+    return estado === "open" || estado === "connected";
   } catch (error) {
-    if (statusElement) {
-      statusElement.innerText = "Erro";
-    }
-    console.log("Erro ao obter status do WhatsApp em Flows:", error);
+    if (statusElement) statusElement.innerText = "Erro";
+    console.error("Erro ao obter status do WhatsApp em Flows:", error);
     return false;
   }
 }
 
 async function loadFlows() {
+  // Assume a existência da sua função auxiliar de renderização contida nos submódulos
   const container = getFlowsContainer();
-
   showLoading(container);
 
   try {
     const flows = await fetchFlows();
-
     renderFlows(flows);
   } catch (error) {
     showError(container);
-
-    console.log(error);
+    console.error("[Flows Engine Error]:", error);
   }
 }

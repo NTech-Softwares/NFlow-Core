@@ -1,11 +1,8 @@
 import {
   getFlowsForSession,
   saveFlowsForSession,
-} from "../../../providers/whatsapp/baileys/engine/flowRegistry";
-import {
-  Flow,
-  FlowOption,
-} from "../domain/flow.types";
+} from "../../flows/repository/flow.registry";
+import { Flow, FlowOption } from "../domain/flow.types";
 
 /* =========================================================================
    GERENCIAMENTO DE FLUXOS (FLOWS)

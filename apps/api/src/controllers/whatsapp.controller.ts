@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { whatsappService } from "../services/whatsapp.service";
 import { logger } from "../../../../shared/utils/logger";
+import { ApiAttendanceService } from "../services/attendance.service";
 
 /*
  =========================
@@ -97,12 +98,18 @@ export async function sendMessage(req: Request, res: Response) {
       });
     }
 
+    const remoteJid = number.includes("@")
+      ? number
+      : `${number}@s.whatsapp.net`;
+
     await whatsappService.sendIndividualMessage(
       sessionId,
       number,
       message,
       image?.path,
     );
+
+    await ApiAttendanceService.triggerOperatorMessageHook(sessionId, remoteJid);
 
     return res.json({ success: true });
   } catch (error: any) {

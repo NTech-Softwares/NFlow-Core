@@ -5,23 +5,32 @@ type StackItem = {
   step: string;
 };
 
-type Session = {
+// Interface auxiliar para os metadados do agendamento temporário
+export type CustomServicesState = {
+  step: "SELECT_SERVICE" | "PROCESS_SERVICE" | "PROCESS_DAY" | "PROCESS_HOUR";
+  selectedService?: any;
+  selectedDate?: string;
+  selectedDateLabel?: string;
+  tempDaysMap?: Array<{ dateStr: string; label: string }>;
+  tempHoursMap?: string[];
+};
+
+export type Session = {
   currentFlow: string;
   currentStep: string;
   welcome: boolean;
+  atendimento: "automatico" | "em_espera" | "em_atendimento";
+  pushName: string;
+  lastMessage: string;
+  updatedAt: Date;
   stack: StackItem[];
+  botMessageIds?: string[];
+  customServicesState?: CustomServicesState; // 🔥 Adicionado para sanar o erro do TS
 };
 
-// Map global na memória, mas com chaves compostas e isoladas
 const sessions = new Map<string, Session>();
 
-/**
- * Recupera ou cria o estado de conversação de um lead, isolado por inquilino.
- * @param remoteJid O JID do cliente que está mandando mensagem
- * @param sessionId O ID da sessão do dono do Bot
- */
 export function getSession(remoteJid: string, sessionId: string) {
-  // CHAVE COMPOSTA EXCLUSIVA: impede colisão entre clientes de tenants diferentes
   const compositeKey = `${sessionId}:${remoteJid}`;
 
   if (!sessions.has(compositeKey)) {
@@ -32,9 +41,53 @@ export function getSession(remoteJid: string, sessionId: string) {
       currentFlow: "main",
       currentStep: "menu",
       welcome: false,
+      atendimento: "automatico",
+      pushName: "Cliente WhatsApp",
+      lastMessage: "",
+      updatedAt: new Date(),
       stack: [],
     });
   }
 
   return sessions.get(compositeKey)!;
+}
+
+export function getActiveChatsBySession(sessionId: string) {
+  const list: Array<{ jid: string } & Partial<Session>> = [];
+  const prefix = `${sessionId}:`;
+
+  for (const [key, value] of sessions.entries()) {
+    if (key.startsWith(prefix)) {
+      const jid = key.split(":")[1];
+      if (value.atendimento !== "automatico") {
+        list.push({
+          jid,
+          ...value,
+        });
+      }
+    }
+  }
+
+  return list.sort((a, b) => b.updatedAt!.getTime() - a.updatedAt!.getTime());
+}
+
+export function updateChatStatus(
+  remoteJid: string,
+  sessionId: string,
+  status: "automatico" | "em_atendimento",
+) {
+  const compositeKey = `${sessionId}:${remoteJid}`;
+  if (sessions.has(compositeKey)) {
+    const session = sessions.get(compositeKey)!;
+    session.atendimento = status;
+    session.updatedAt = new Date();
+
+    if (status === "automatico") {
+      session.currentFlow = "main";
+      session.currentStep = "menu";
+      session.welcome = false;
+    }
+    return true;
+  }
+  return false;
 }

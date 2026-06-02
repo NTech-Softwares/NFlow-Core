@@ -1,4 +1,4 @@
-import { getFlowsForSession } from "../../../providers/whatsapp/baileys/engine/flowRegistry";
+import { getFlowsForSession } from "../../flows/repository/flow.registry";
 
 export async function getFlowsService(sessionId: string, id: string) {
   return getFlowsForSession(sessionId, id);

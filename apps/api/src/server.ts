@@ -1,13 +1,15 @@
 import "dotenv/config";
 import { app } from "./app";
 import { startWorker } from "../../worker/src/server";
-import { WhatsappService } from "./services/whatsapp.service";
+import { whatsappService } from "./services/whatsapp.service";
 import { logger } from "../../../shared/utils/logger";
+import { startScheduleWorker } from "../../../modules/scheduler/schedule.worker";
 
 const PORT = 3333;
-const whatsappService = new WhatsappService();
 
 async function bootstrap() {
+  // 🔄 Liga o agendador em background na inicialização do servidor
+  startScheduleWorker();
   // 🔄 Inicializa o motor do Worker de background
   startWorker();
 

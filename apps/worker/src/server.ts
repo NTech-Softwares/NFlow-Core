@@ -1,6 +1,9 @@
 import { messageQueue } from "../../../shared/queue/messageQueue";
 import { getWhatsapp } from "../../../providers/whatsapp/baileys/client";
 import { logger } from "../../../shared/utils/logger";
+import { QueueJob } from "../../../shared/types/QueueJob";
+import { updateSchedule } from "../../../modules/scheduler/schedule.repository"; // 🟢 Importação do repositório
+import { getSession } from "../../../modules/flows/state/sessionStore";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -59,6 +62,13 @@ async function sendLidMessage(sock: any, job: any, messagePayload: any) {
 
   const response = await sock.sendMessage(job.jid, messagePayload);
 
+  // 🟢 Registra o ID enviado para não quebrar fluxos caso o webhook capture o eco
+  if (response?.key?.id) {
+    const session = getSession(job.jid, job.sessionId);
+    if (!session.botMessageIds) session.botMessageIds = [];
+    session.botMessageIds.push(response.key.id);
+  }
+
   logger.info(
     `\n[Sessão: ${job.sessionId}] === MENSAGEM ENVIADA ===\nJID: ${job.jid}\nID: ${response.key.id}`,
   );
@@ -91,6 +101,14 @@ async function sendPrivateMessage(sock: any, job: any, messagePayload: any) {
 
   const response = await sock.sendMessage(realJid, messagePayload);
 
+  // 🟢 CORREÇÃO: Agora mapeando as propriedades corretas vindas de 'realJid' e 'job'
+  if (response?.key?.id) {
+    const session = getSession(realJid, job.sessionId);
+
+    if (!session.botMessageIds) session.botMessageIds = [];
+    session.botMessageIds.push(response.key.id);
+  }
+
   logger.info(
     `\n[Sessão: ${job.sessionId}] === MENSAGEM ENVIADA ===\nJID: ${realJid}\nID: ${response.key.id}`,
   );
@@ -106,7 +124,7 @@ export async function startWorker() {
 
   while (true) {
     if (messageQueue.length > 0) {
-      const job = messageQueue.shift();
+      const job = messageQueue.shift() as QueueJob | undefined;
 
       if (!job) {
         await delay(700);
@@ -114,8 +132,13 @@ export async function startWorker() {
       }
 
       try {
-        // 🎯 CAPTURA DINÂMICA: Passa o sessionId do job para pegar o socket correto do cliente dono do disparo
         const sock = getWhatsapp(job.sessionId);
+
+        if (!sock) {
+          throw new Error(
+            "SESSAO_OFFLINE: O socket do Baileys não está inicializado ou está indisponível.",
+          );
+        }
 
         logger.info(`
         ==================================================
@@ -142,8 +165,17 @@ export async function startWorker() {
           await sendLidMessage(sock, job, messagePayload);
         } else {
           logger.error(
-            `[Sessão: ${job.sessionId}] JID Inválido ou desconhecido: ${job.jid}`,
+            `[Sessão: ${job.sessionId}] JID Inválido ou desconhecido (Descarte Direto): ${job.jid}`,
           );
+
+          // 🟢 Trata descarte de JID inválido também no repositório de agendamentos se aplicável
+          if (job.userId && job.scheduleId) {
+            await updateSchedule(job.userId, job.scheduleId, {
+              status: "failed",
+              error: "JID do destinatário inválido ou malformado.",
+            });
+          }
+          continue;
         }
 
         /*
@@ -156,14 +188,61 @@ export async function startWorker() {
       } catch (error: any) {
         logger.error(`
         ==================================================
-        ERRO CRÍTICO NO WORKER (JOB REJEITADO)
+        ERRO DETECTADO NO PROCESSAMENTO DO JOB
         ==================================================
         SESSÃO: ${job.sessionId}
         ALVO: ${job.jid}
         MOTIVO: ${error.message || error}
         ==================================================
         `);
-        // Opcional: Se o token caiu ou a sessão não foi iniciada, você poderia tratar logs ou alertas aqui
+
+        const errorMessage = error.message || "";
+
+        const isConnectionError =
+          errorMessage.includes("Closed") ||
+          errorMessage.includes("not opened") ||
+          errorMessage.includes("connecting") ||
+          errorMessage.includes("SESSAO_OFFLINE") ||
+          errorMessage.includes("undefined") ||
+          error.name === "TypeError" ||
+          error.code === "ECONNRESET" ||
+          error.code === "EPIPE";
+
+        const currentAttempts = job.attempts || 0;
+
+        if (isConnectionError && currentAttempts < 3) {
+          job.attempts = currentAttempts + 1;
+
+          logger.warn(
+            `[Worker] Instância [${job.sessionId}] com instabilidade. Reinserindo na fila para tentativa (${job.attempts}/3)...`,
+          );
+
+          messageQueue.push(job);
+          await delay(1000);
+        } else {
+          logger.error(
+            `[Worker] Job da sessão [${job.sessionId}] para [${job.jid}] descartado definitivamente.`,
+          );
+
+          // 🟢 ⏰ CRÍTICO: Se o job veio do agendador, atualiza o status para 'failed' no JSON do cliente
+          if (job.userId && job.scheduleId) {
+            try {
+              await updateSchedule(job.userId, job.scheduleId, {
+                status: "failed",
+                error:
+                  errorMessage ||
+                  "Limite máximo de tentativas de conexão esgotado.",
+              });
+              logger.warn(
+                `[Worker] Status do agendamento [${job.scheduleId}] revertido para 'failed' no armazenamento.`,
+              );
+            } catch (repoError: any) {
+              logger.error(
+                `[Worker] Erro ao gravar status de falha no agendamento: ${repoError.message}`,
+              );
+            }
+          }
+        }
       }
     }
 

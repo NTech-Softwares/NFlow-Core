@@ -1,0 +1,238 @@
+/* ==========================================================================
+   NFLOW CORE SYSTEM LAYOUT - LAYOUT GRAPHICS & RESPONSIVENESS
+   ========================================================================== */
+
+:root {
+  --sidebar-width: 260px;
+  --mobile-header-height: 60px;
+  --color-layout-dark: #000000;
+  --color-layout-surface: #1c1c1c;
+  --color-layout-border: #2a2a2a;
+  --color-layout-neon: #18eb35;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-layout-dark);
+  color: #e9edef;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  overflow-x: hidden;
+}
+
+/* utilitário global para controle de visualização da SPA */
+.hidden {
+  display: none !important;
+}
+
+/* Estrutura Base Master Grid */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Sidebar Estilo WhatsApp Dark */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--color-layout-surface);
+  border-right: 1px solid var(--color-layout-border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99;
+  transition: transform 0.3s ease;
+}
+
+.sidebar-brand {
+  padding: 24px;
+  border-bottom: 1px solid var(--color-layout-border);
+}
+
+.sidebar-brand h2 {
+  color: var(--color-layout-neon);
+  font-size: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Itens de Navegação Interativos */
+.sidebar-nav .nav-item {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 12px 16px;
+  color: #8f8f8f;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav .nav-item:hover {
+  color: #e9edef;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.sidebar-nav .nav-item.active {
+  color: #000000;
+  background-color: var(--color-layout-neon);
+  font-weight: bold;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid var(--color-layout-border);
+}
+
+.btn-logout {
+  width: 100%;
+  background: rgba(235, 24, 24, 0.1);
+  border: 1px solid rgba(235, 24, 24, 0.2);
+  color: #ff4d4d;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-logout:hover {
+  background: rgba(235, 24, 24, 0.2);
+}
+
+/* Área de Conteúdo Principal */
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: 40px;
+  width: calc(100vw - var(--sidebar-width));
+}
+
+.view-section {
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+/* Header para Mobile */
+.mobile-header {
+  display: none;
+  height: var(--mobile-header-height);
+  background-color: var(--color-layout-surface);
+  border-bottom: 1px solid var(--color-layout-border);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: 0 16px;
+  align-items: center;
+  gap: 16px;
+}
+
+.menu-toggle-btn {
+  background: none;
+  border: none;
+  color: #e9edef;
+  font-size: 24px;
+  cursor: pointer;
+  max-width: 100px;
+}
+
+.mobile-brand {
+  font-weight: bold;
+  color: var(--color-layout-neon);
+  font-size: 18px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 98;
+}
+
+/* Extração e limpeza do botão neon inline */
+.neon-action-btn {
+  background-color: var(--color-layout-neon);
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.neon-action-btn:hover {
+  background-color: #13c72b;
+  box-shadow: 0 0 12px rgba(24, 235, 53, 0.4);
+}
+
+.placeholder-text {
+  color: #8f8f8f;
+  margin-top: 10px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE QUERIES (MEDIA BREAKPOINTS)
+   ========================================================================== */
+
+@media (max-width: 991px) {
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    top: var(--mobile-header-height);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar.open + .sidebar-overlay {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+    padding: 24px 16px;
+    margin-top: var(--mobile-header-height);
+  }
+}

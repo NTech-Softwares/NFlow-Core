@@ -1,0 +1,231 @@
+/* ==========================================================================
+   NFLOW CORE SYSTEM - SCHEDULES MODULE (COMPACT LOG STREAM DESIGN)
+   ========================================================================== */
+
+#view-schedule .card {
+  background: #171717;
+  border: 1px solid #262626;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  margin-bottom: 24px;
+}
+
+#view-schedule .card h2 {
+  font-size: 16px;
+  color: var(--color-layout-neon, #18eb35);
+  font-weight: 700;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===================================================
+   FORMULÁRIO DE CADASTRO (CAIXA MAIOR)
+=================================================== */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  color: #8f8f8f;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  background: #0d0d0d;
+  border: 1px solid #2a2a2a;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Caixa de mensagem expandida para maior área de trabalho */
+.form-group textarea {
+  min-height: 180px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  border-color: var(--color-layout-neon, #18eb35);
+  box-shadow: 0 0 8px rgba(24, 235, 53, 0.15);
+}
+
+.btn-submit {
+  background-color: var(--color-layout-neon, #18eb35);
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-submit:hover {
+  background-color: #13c72b;
+  box-shadow: 0 0 12px rgba(24, 235, 53, 0.4);
+}
+
+/* ===================================================
+   FILA DE AGENDAMENTOS (CARDS ULTRA-COMPACTOS)
+=================================================== */
+.schedules-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Grid mais justa */
+}
+
+/* Card transformado em uma list-row de perfil baixo */
+.schedule-card {
+  background: #141414;
+  border: 1px solid #222222;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.schedule-card:hover {
+  border-color: #333333;
+  background: #161616;
+}
+
+/* Indicadores laterais minimalistas e discretos */
+.schedule-card.status-pending {
+  border-left: 3px solid #34b7f1;
+}
+.schedule-card.status-sent {
+  border-left: 3px solid #18eb35;
+}
+.schedule-card.status-canceled {
+  border-left: 3px solid #444444;
+}
+.schedule-card.status-failed {
+  border-left: 3px solid #ff4a4a;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.schedule-target {
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.schedule-target i {
+  color: #8f8f8f;
+  font-size: 12px;
+}
+
+/* Badges lineares e menores semelhantes às do fluxo */
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.status-badge.pending {
+  background: rgba(52, 183, 241, 0.08);
+  color: #34b7f1;
+  border: 1px solid rgba(52, 183, 241, 0.15);
+}
+.status-badge.sent {
+  background: rgba(24, 235, 53, 0.08);
+  color: #18eb35;
+  border: 1px solid rgba(24, 235, 53, 0.15);
+}
+.status-badge.canceled {
+  background: rgba(255, 255, 255, 0.04);
+  color: #8f8f8f;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.status-badge.failed {
+  background: rgba(255, 74, 74, 0.08);
+  color: #ff4a4a;
+  border: 1px solid rgba(255, 74, 74, 0.15);
+}
+
+/* Conteúdo da Mensagem com alinhamento à esquerda e truncamento rígido de 1 linha */
+.schedule-body {
+  font-size: 13px;
+  color: #8f8f8f;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding: 2px 0;
+}
+
+/* Rodapé menor e integrado à malha */
+.schedule-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #555555;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.schedule-time {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-delete {
+  background: transparent;
+  border: 1px solid #2a2a2a;
+  color: #8f8f8f;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  max-width: 115px;
+}
+
+.btn-delete:hover {
+  color: #ff4a4a;
+  border-color: #ff4a4a;
+  background: rgba(255, 74, 74, 0.05);
+}
+
+.empty-msg {
+  color: #555555;
+  font-size: 13px;
+  font-style: italic;
+}

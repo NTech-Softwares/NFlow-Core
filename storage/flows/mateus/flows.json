@@ -8,7 +8,9 @@
         "id": "menu",
         "name": "Menu Inicial",
         "message": [
-          "👋 Olá! Seja bem-vindo(a) ao nosso atendimento.",
+          "👋 Olá! Seja bem-vindo(a) a NTech.",
+          "",
+          "🙋‍♂️ Digite \"atendimento\" para chamar um atendente humano a qualquer momento.",
           "",
           "Escolha uma das opções abaixo para continuar:",
           "",
@@ -38,7 +40,7 @@
           },
           {
             "key": "3",
-            "nextFlow": "mobile",
+            "nextFlow": "mobile_desktop",
             "nextStep": "inicio",
             "goToStep": null,
             "back": false
@@ -63,25 +65,6 @@
             "nextStep": "inicio",
             "goToStep": null,
             "back": false
-          },
-          {
-            "key": "7",
-            "nextFlow": "web",
-            "nextStep": "inicio",
-            "goToStep": null,
-            "back": false
-          }
-        ]
-      },
-      "menu_financeiro": {
-        "id": "menu_financeiro",
-        "message": [
-          "Oi"
-        ],
-        "options": [
-          {
-            "key": "0",
-            "back": true
           }
         ]
       }
@@ -96,39 +79,54 @@
         "id": "inicio",
         "name": "Menu Inicial",
         "message": [
-          "🎓 Bem-vindo à área de cursos.",
+          "🎓 Bem-vindo à área de cursos e treinamentos!",
           "",
-          "Estamos felizes em ver o seu interesse em aprender uma nova profissão, hobby ou desenvolver novas habilidades para o mercado.",
+          "Estamos felizes em ver o seu interesse em aprender uma nova profissão, desenvolver um hobby ou aprimorar suas habilidades para o mercado de trabalho.",
           "",
-          "Escolha uma das opções abaixo:",
+          "Escolha uma das opções abaixo para conhecer nossos treinamentos:",
           "",
-          "1 - Desenvolvimento Web para iniciantes",
-          "2 - Desenvolvimento Mobile para iniciantes",
-          "3 - Desenvolvimento Back-end",
-          "4 - Desenvolvimento Front-end",
-          "0 - Voltar ao Menu Principal",
+          "1 - 🌐 Desenvolvimento Web para iniciantes",
+          "2 - 📱 Desenvolvimento Mobile para iniciantes",
+          "3 - ⚙️ Desenvolvimento Back-end",
+          "4 - 🎨 Desenvolvimento Front-end",
+          "0 - 🏠 Voltar ao Menu Principal",
           "",
           "Digite o número da opção desejada."
         ],
         "options": [
           {
             "key": "1",
-            "nextStep": "webIniciantes"
+            "nextFlow": "cursos",
+            "nextStep": "webIniciantes",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "2",
-            "nextStep": "mobileIniciantes"
+            "nextFlow": "cursos",
+            "nextStep": "mobileIniciantes",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "3",
-            "nextStep": "backend"
+            "nextFlow": "cursos",
+            "nextStep": "backend",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "4",
-            "nextStep": "frontend"
+            "nextFlow": "cursos",
+            "nextStep": "frontend",
+            "goToStep": null,
+            "back": false
           },
           {
             "key": "0",
+            "nextFlow": null,
+            "nextStep": null,
+            "goToStep": null,
             "back": true
           }
         ]
@@ -148,11 +146,14 @@
           "• Git e GitHub",
           "• Projetos práticos",
           "",
-          "⏱ Carga horária: 14 horas",
+          "🕑 Carga horária: 10 horas",
           "🎯 Nível: Iniciante",
+          "💰 Valor: R$99,90",
           "",
-          "voltar - para ir ao Menu Anterior",
-          "0 - para ir ao Menu Principal"
+          "Digite \"agendar\" para agendar suas aulas e aguarde o atendente para realizar o pagamento da matrícula.",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -176,11 +177,14 @@
           "• Consumo de APIs",
           "• Publicação de aplicativos",
           "",
-          "⏱ Carga horária: 14 horas",
-          "🎯 Nível: Intermediário",
+          "🕑 Carga horária: 10 horas",
+          "🎯 Nível: Iniciante",
+          "💰 Valor: R$99,90",
           "",
-          "voltar - para ir ao Menu Anterior",
-          "0 - Voltar ao Menu Principal"
+          "Digite \"agendar\" para agendar suas aulas e aguarde o atendente para realizar o pagamento da matrícula.",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -205,11 +209,14 @@
           "• Autenticação JWT",
           "• Arquitetura de projetos",
           "",
-          "⏱ Carga horária: 24 horas",
+          "🕑 Carga horária: 20 horas",
           "🎯 Nível: Intermediário",
+          "💰 Valor: R$229,90",
           "",
-          "voltar - para ir ao Menu Anterior",
-          "0 - Voltar ao Menu Principal"
+          "Digite \"agendar\" para agendar suas aulas e aguarde o atendente para realizar o pagamento da matrícula.",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -234,11 +241,14 @@
           "• Responsividade",
           "• UI/UX básico",
           "",
-          "⏱ Carga horária: 24 horas",
+          "🕑 Carga horária: 20 horas",
           "🎯 Nível: Intermediário",
+          "💰 Valor: R$229,90",
           "",
-          "voltar - para ir ao Menu Anterior",
-          "0 - Voltar ao Menu Principal"
+          "Digite \"agendar\" para agendar suas aulas e aguarde o atendente para realizar o pagamento da matrícula.",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -260,14 +270,150 @@
         "message": [
           "🌐 Criação de Sites e Landing Pages",
           "",
-          "Aqui você pode solicitar:",
-          "• Sites institucionais",
-          "• Landing pages de alta conversão",
-          "• Blogs e portais",
+          "Aumente a presença digital do seu negócio com soluções sob medida focadas em conversão e autoridade.",
           "",
-          "Em breve conteúdo completo...",
+          "Escolha o modelo ideal para o seu momento atual:",
           "",
-          "0 - Voltar ao menu principal"
+          "1 - 🖥️ Sites Institucionais",
+          "2 - 🚀 Landing Pages de alta conversão",
+          "3 - 📰 Blogs e Portais de conteúdo",
+          "4 - 🛒 Loja Online (E-commerce)",
+          "0 - 🏠 Voltar ao Menu Principal",
+          "",
+          "Digite o número da opção desejada."
+        ],
+        "options": [
+          {
+            "key": "0",
+            "nextFlow": null,
+            "nextStep": null,
+            "goToStep": null,
+            "back": true
+          },
+          {
+            "key": "1",
+            "nextFlow": "web",
+            "nextStep": "sites_institucionais",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "2",
+            "nextFlow": "web",
+            "nextStep": "landing_pages",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "3",
+            "nextFlow": "web",
+            "nextStep": "blogs_e_portais",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "4",
+            "nextFlow": "web",
+            "nextStep": "loja_online",
+            "goToStep": null,
+            "back": false
+          }
+        ]
+      },
+      "blogs_e_portais": {
+        "id": "blogs_e_portais",
+        "message": [
+          "🌐 Blogs e Portais de Conteúdo",
+          "",
+          "O que é: Plataformas robustas estruturadas para a publicação constante de artigos, notícias e novidades. Perfeito para estratégias de marketing de conteúdo e indexação orgânica no Google (SEO).",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Por favor, informe-nos:",
+          "",
+          "Qual será o nicho ou tema central do portal?",
+          "",
+          "Você precisará de recursos extras (como área de membros, newsletter ou sistema de anúncios)?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "landing_pages": {
+        "id": "landing_pages",
+        "message": [
+          "🌐 Landing Pages de Alta Conversão",
+          "",
+          "O que é: Uma página única projetada estrategicamente com um único objetivo: fazer o visitante realizar uma ação (comprar um produto, assinar um serviço ou deixar o contato). É a ferramenta indispensável para campanhas de tráfego pago (Google Ads/Meta Ads).",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para iniciarmos o desenho da sua estratégia, envie-nos:",
+          "",
+          "Qual produto ou serviço específico você deseja anunciar?",
+          "",
+          "Quem é o seu público-alvo principal?",
+          "",
+          "Você já possui a oferta ou os textos prontos, ou precisará de suporte com a escrita persuasiva (Copywriting)?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "sites_institucionais": {
+        "id": "sites_institucionais",
+        "message": [
+          "🌐 Sites Institucionais",
+          "",
+          "O que é: A vitrine digital completa da sua empresa. Ideal para transmitir credibilidade, apresentar seus produtos/serviços detalhadamente, contar a história da marca e centralizar seus canais de contato.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para prepararmos sua proposta, por favor nos envie textualmente:",
+          "",
+          "Qual o nome da sua empresa e o seu segmento?",
+          "",
+          "Você já possui logotipo e identidade visual definida?",
+          "",
+          "Tem algum site de referência que você gosta visualmente?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "loja_online": {
+        "id": "loja_online",
+        "message": [
+          "🛒 Loja Online (E-commerce)",
+          "",
+          "O que é: Uma plataforma de vendas completa e automatizada na internet configurada para o seu negócio. Ideal para quem quer expor e vender produtos físicos ou digitais 24h por dia, com carrinho de compras, cálculo de frete automático (Correios/Transportadoras) e meios de pagamento seguros integrados (PIX, Cartão de Crédito e Boleto).",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para desenharmos a estrutura da sua loja, informe-nos:",
+          "",
+          "Quais tipos de produtos você pretende vender e quantos itens diferentes (catálogo) terá a loja aproximadamente?",
+          "",
+          "Você já vende por algum outro canal atualmente (Instagram, Mercado Livre, Loja Física) ou está começando do zero?",
+          "",
+          "Já possui preferência por algum gateway de pagamento (ex: Mercado Pago, Stripe, Pagar.me) ou emissor de nota fiscal?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -278,9 +424,9 @@
       }
     }
   },
-  "mobile": {
-    "id": "mobile",
-    "name": "Orçamento Mobile",
+  "mobile_desktop": {
+    "id": "mobile_desktop",
+    "name": "Orçamento Mobile e Desktop",
     "initialStep": "inicio",
     "steps": {
       "inicio": {
@@ -289,14 +435,82 @@
         "message": [
           "📱 Aplicativos Mobile e Desktop",
           "",
-          "Criamos soluções para:",
-          "• Android",
-          "• iOS",
-          "• Desktop (Electron)",
+          "Desenvolvemos aplicativos sob medida com alta tecnologia, focados em performance, design moderno e excelente experiência do usuário.",
           "",
-          "Em breve conteúdo completo...",
+          "Escolha a plataforma que deseja desenvolver:",
           "",
-          "0 - Voltar ao menu principal"
+          "1 - 📱 Aplicativos Mobile (Android e iOS)",
+          "2 - 💻 Aplicativos Desktop (Windows, Mac ou Linux)",
+          "0 - 🏠 Voltar ao Menu Principal",
+          "",
+          "Digite o número da opção desejada."
+        ],
+        "options": [
+          {
+            "key": "0",
+            "nextFlow": null,
+            "nextStep": null,
+            "goToStep": null,
+            "back": true
+          },
+          {
+            "key": "1",
+            "nextFlow": "mobile_desktop",
+            "nextStep": "aplicativos_mobile",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "2",
+            "nextFlow": "mobile_desktop",
+            "nextStep": "aplicativos_desktop",
+            "goToStep": null,
+            "back": false
+          }
+        ]
+      },
+      "aplicativos_desktop": {
+        "id": "aplicativos_desktop",
+        "message": [
+          "📱 Aplicativos Desktop (Sistemas de Computador)",
+          "",
+          "O que é: Softwares robustos instalados no computador, desenvolvidos via Electron. Excelentes para ferramentas corporativas que exigem alto processamento de dados locais, funcionamento offline e integração profunda com o sistema operacional.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para nos ajudar no dimensionamento do sistema, informe:",
+          "",
+          "Quais rotinas operacionais ou processos o sistema precisará gerenciar?",
+          "",
+          "Ele precisará se conectar com algum hardware físico (ex: impressoras térmicas, leitores de código de barras) ou com outros sistemas que você já usa?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "aplicativos_mobile": {
+        "id": "aplicativos_mobile",
+        "message": [
+          "📱 Aplicativos Mobile (Android e iOS)",
+          "",
+          "O que é: Aplicativos instalados diretamente no smartphone do usuário. Perfeitos para criar startups, plataformas de serviços, sistemas de fidelização de clientes ou ferramentas de campo integradas para equipes internas.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para entendermos o escopo do seu projeto, responda abaixo:",
+          "",
+          "Qual é o objetivo principal e o maior problema que seu aplicativo vai resolver?",
+          "",
+          "O app precisará de recursos nativos do celular (ex: GPS, Câmera, Notificações Push, Pagamento integrado)?",
+          "",
+          "Quem será o usuário final da plataforma?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -318,14 +532,82 @@
         "message": [
           "🤖 Automação de WhatsApp",
           "",
-          "Soluções com:",
-          "• Bots inteligentes",
-          "• Atendimento automático",
-          "• Fluxos conversacionais",
+          "Transforme o seu WhatsApp em uma máquina de vendas e atendimento qualificado operando 24 horas por dia através da nossa plataforma especializada.",
           "",
-          "Em breve conteúdo completo...",
+          "Escolha uma opção abaixo:",
           "",
-          "0 - Voltar ao menu principal"
+          "1 - 🚀 Conhecer a plataforma NFlow e suas vantagens",
+          "2 - 📝 Solicitar demonstração ou orçamento de fluxo personalizado",
+          "0 - 🏠 Voltar ao Menu Principal",
+          "",
+          "Digite o número da opção desejada."
+        ],
+        "options": [
+          {
+            "key": "0",
+            "nextFlow": null,
+            "nextStep": null,
+            "goToStep": null,
+            "back": true
+          },
+          {
+            "key": "1",
+            "nextFlow": "whatsapp",
+            "nextStep": "vantagens_nflow",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "2",
+            "nextFlow": "whatsapp",
+            "nextStep": "solicitar_orcamento",
+            "goToStep": null,
+            "back": false
+          }
+        ]
+      },
+      "solicitar_orcamento": {
+        "id": "solicitar_orcamento",
+        "message": [
+          "🤖 Orçamento e Desenho de Fluxo",
+          "",
+          "Perfeito! Vamos entender o cenário ideal de automação para a sua operação.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Por favor, responda brevemente:",
+          "",
+          "Quantas mensagens ou novos contatos sua empresa recebe por dia, em média?",
+          "",
+          "Qual o principal objetivo do assistente virtual? (Ex: Suporte técnico, Vendas, Agendamento de horários, Envio de boletos).",
+          "",
+          "Você já possui um roteiro/script das mensagens escritas, ou precisa que nossa equipe monte o fluxo do zero?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "vantagens_nflow": {
+        "id": "vantagens_nflow",
+        "message": [
+          "🤖 Conheça o NFlow",
+          "",
+          "O NFlow é a nossa tecnologia exclusiva para transformar o seu WhatsApp em uma verdadeira máquina de vendas. Desenvolvido para empresas que querem automatizar o atendimento, profissionalizar a equipe e escalar resultados.",
+          "",
+          "🚀 Vantagens que geram lucro:",
+          "• 🤖 Robô Inteligente 24/7: Triagem instantânea. Seu cliente atendido na hora, sem filas ou espera.",
+          "• 👥 Multi-atendentes: Toda a sua equipe de vendas trabalhando unificada em um único número.",
+          "• 🎯 Filtro de Leads: O robô qualifica o contato e passa para o comercial apenas quem está pronto para comprar.",
+          "• 📢 Campanhas em Massa: Envie avisos, ofertas e novidades diretamente para números privados e grupos de forma massiva.",
+          "• 📅 Agendamento de Mensagens: Programe envios automáticos para serem disparados exatamente no dia e horário que você precisar.",
+          "",
+          "voltar - ↩️ Voltar ao Menu Anterior",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -347,14 +629,112 @@
         "message": [
           "⚙️ Automação de Processos",
           "",
-          "Automatizamos:",
-          "• Sistemas internos",
-          "• Fluxos de vendas",
-          "• Integrações API",
+          "Elimine tarefas repetitivas, diminua drasticamente erros manuais e substitua fluxos burocráticos por tecnologia automatizada.",
           "",
-          "Em breve conteúdo completo...",
+          "Selecione a área que deseja otimizar na sua empresa:",
           "",
-          "0 - Voltar ao menu principal"
+          "1 - 📊 Sistemas Internos",
+          "2 - 📈 Fluxos de Vendas",
+          "3 - 🔗 Integrações de APIs",
+          "0 - 🏠 Voltar ao Menu Principal",
+          "",
+          "Digite o número da opção desejada."
+        ],
+        "options": [
+          {
+            "key": "0",
+            "nextFlow": null,
+            "nextStep": null,
+            "goToStep": null,
+            "back": true
+          },
+          {
+            "key": "1",
+            "nextFlow": "automacao",
+            "nextStep": "sistemas_internos",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "2",
+            "nextFlow": "automacao",
+            "nextStep": "fluxos_de_vendas",
+            "goToStep": null,
+            "back": false
+          },
+          {
+            "key": "3",
+            "nextFlow": "automacao",
+            "nextStep": "integracoes_de_apis",
+            "goToStep": null,
+            "back": false
+          }
+        ]
+      },
+      "integracoes_de_apis": {
+        "id": "integracoes_de_apis",
+        "message": [
+          "⚙️ Integrações de APIs",
+          "",
+          "🌟 São ideais para: Fazer com que sistemas diferentes e isolados se comuniquem perfeitamente. Por exemplo: quando uma venda é aprovada no seu gateway de pagamento, o sistema emite automaticamente a nota fiscal em outro software e atualiza o cadastro de clientes instantaneamente em um terceiro banco de dados.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para avaliarmos a viabilidade técnica:",
+          "",
+          "Quais são as plataformas, aplicativos ou ferramentas que você precisa interligar?",
+          "",
+          "Quais dados ou ações precisam ser compartilhados entre eles?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "fluxos_de_vendas": {
+        "id": "fluxos_de_vendas",
+        "message": [
+          "⚙️ Fluxos de Vendas",
+          "",
+          "🌟 São ideais para: Automatizar a esteira comercial. Desde o momento em que o lead entra no seu sistema até o pós-venda, disparando alertas internos para os vendedores, e-mails de acompanhamento de propostas, mensagens de cobrança e atualizações de status sem esforço humano.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Para desenharmos sua esteira de automação:",
+          "",
+          "Onde você capta seus potenciais clientes hoje? (Site, Redes Sociais, Anúncios)?",
+          "",
+          "Qual ferramenta ou CRM você utiliza atualmente para acompanhar as vendas?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
+        ],
+        "options": [
+          {
+            "key": "0",
+            "back": true
+          }
+        ]
+      },
+      "sistemas_internos": {
+        "id": "sistemas_internos",
+        "message": [
+          "⚙️ Sistemas Internos",
+          "",
+          "🌟 São ideais para: Empresas que perdem muito tempo gerando relatórios diários manuais, preenchendo planilhas complexas de Excel no fim do mês ou fazendo conferências repetitivas entre diferentes setores. O software passa a consolidar tudo de forma automatizada e em tempo real.",
+          "",
+          "📝 Primeiras informações para atendimento:",
+          "Conte-nos um pouco sobre a sua rotina:",
+          "",
+          "Qual é o processo manual ou planilha que mais consome o tempo da sua equipe hoje?",
+          "",
+          "Quantos colaboradores estão envolvidos nessa tarefa atualmente?",
+          "",
+          "voltar - ↩️ Voltar",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {
@@ -376,14 +756,21 @@
         "message": [
           "💬 Consultoria Personalizada",
           "",
-          "Te ajudamos com:",
-          "• Arquitetura de sistemas",
-          "• Escalabilidade",
-          "• Projetos completos",
+          "Precisa de direcionamento estratégico, validação técnica ou apoio especializado para planejar soluções digitais escaláveis no seu negócio?",
           "",
-          "Em breve conteúdo completo...",
+          "🎯 Nosso serviço de consultoria apoia você em:",
+          "• Arquitetura de Sistemas: Escolha correta de tecnologias, frameworks e infraestrutura ideal para o projeto.",
+          "• Escalabilidade e Otimização: Ajustar sistemas lentos e gargalos de banco de dados para suportar altas cargas de acessos simultâneos.",
+          "• Desenho de Escopo Técnico: Transformar sua ideia de negócio em especificações de software claras antes de iniciar o código.",
           "",
-          "0 - Voltar ao menu principal"
+          "📝 Primeiras informações para atendimento:",
+          "Para agendarmos sua sessão com o consultor técnico, por favor nos envie:",
+          "",
+          "Um breve resumo do seu desafio atual ou da ideia do projeto.",
+          "",
+          "Qual a principal dúvida ou problema tecnológico você quer sanar agora?",
+          "",
+          "0 - 🏠 Voltar ao Menu Principal"
         ],
         "options": [
           {

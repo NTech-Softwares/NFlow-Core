@@ -7,7 +7,17 @@ const MessageHandler = async (message: FormattedMessage, sessionId: string) => {
   const content = message.content?.trim().toLowerCase() || "";
 
   // 🎯 Aciona o motor independente passando os dados capturados do Baileys
-  const result = await processFlow(jid, content, sessionId);
+  const result = await processFlow(
+    jid,
+    content,
+    sessionId,
+    message.pushName || "",
+    message.fromMe,
+    message.key.id || "",
+  );
+
+  // Se não houver mensagens para responder, corta a execução aqui e não manda nada
+  if (!result.messages || result.messages.length === 0) return;
 
   messageQueue.push({
     sessionId,

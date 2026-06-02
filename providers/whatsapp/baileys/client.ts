@@ -177,11 +177,11 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
 
     // Escuta novas mensagens recebidas por esta instância
     sock.ev.on("messages.upsert", async ({ messages, type }) => {
-      if (type !== "notify") return;
+      if (type !== "notify" && type !== "append") return;
 
       for (const message of messages) {
         try {
-          if (!message.message || message.key.fromMe) continue;
+          if (!message.message) continue;
 
           const jid = message.key.remoteJid;
           if (!jid || jid.endsWith("@g.us") || jid === "status@broadcast")
@@ -194,11 +194,13 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
           )
             continue;
 
-          const formattedMessage = getMessage(message);
+          // O seu getMessage já recebe o 'sock' perfeitamente aqui:
+          const formattedMessage = getMessage(message, sock);
           if (!formattedMessage || !formattedMessage.content) continue;
 
+          // Log incremental para você acompanhar o comportamento no terminal
           logger.info(
-            `[Sessão: ${sessionId}] Mensagem de ${formattedMessage.pushName || "User"} (${jid})`,
+            `[Sessão: ${sessionId}] Mensagem processada | De: ${formattedMessage.pushName || "User"} | deMim? ${formattedMessage.fromMe}`,
           );
 
           // 💡 IMPORTANTE: Passamos o sessionId para o Handler saber qual fluxo de qual cliente rodar!

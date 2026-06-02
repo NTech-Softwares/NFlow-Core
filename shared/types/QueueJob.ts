@@ -1,8 +1,11 @@
 export type QueueJob = {
-  sessionId: string; // ✨ Sincronizado com o tipo da fila principal
+  sessionId: string;
   jid: string;
   imagePath?: string;
   message: {
     text: string;
   };
+  attempts?: number;
+  userId?: string;
+  scheduleId?: string;
 };

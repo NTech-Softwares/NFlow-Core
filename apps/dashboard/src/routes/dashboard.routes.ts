@@ -4,6 +4,7 @@ import { DashboardController } from "../controllers/dashboard.controller";
 const dashboardRoutes = Router();
 
 dashboardRoutes.get("/", DashboardController.index);
+dashboardRoutes.get("/campaigns", DashboardController.campaigns);
 dashboardRoutes.get("/criar-flow", DashboardController.wizard);
 dashboardRoutes.get("/qr", DashboardController.qrCode);
 dashboardRoutes.get("/flows", DashboardController.flows);

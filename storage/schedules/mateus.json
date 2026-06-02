@@ -1,0 +1,47 @@
+[
+  {
+    "id": "1",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "5585989747449@s.whatsapp.net",
+    "message": {
+      "text": "Olá! Passando para lembrar do seu relatório mensal que vence amanhã."
+    },
+    "scheduledAt": "2026-05-30T17:52:00.000Z",
+    "status": "sent",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-05-30T17:40:00.000Z",
+    "sentAt": "2026-05-30T21:14:13.768Z"
+  },
+  {
+    "id": "b0a1985e-9c01-4d2c-b095-a52ca091e735",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "5585989747449@s.whatsapp.net",
+    "message": {
+      "text": "Testando o agendamento de mensagens"
+    },
+    "scheduledAt": "2026-05-30T22:13:00.000Z",
+    "status": "sent",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-05-30T22:11:57.072Z",
+    "sentAt": "2026-05-30T22:13:03.536Z"
+  },
+  {
+    "id": "041f3153-b2a0-412b-80e7-de318ebb3851",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "5588992075703@s.whatsapp.net",
+    "message": {
+      "text": "🚀 Olá, Márcio! Tudo bem?\n\nPassando para lembrar que a sua *3ª aula do Curso de Desenvolvimento Web para Iniciantes* está prestes a começar! 💻✨\n\n📩 Em instantes, o professor entrará em contato para enviar o link de acesso à aula.\n\n📚 Aproveite ao máximo esse momento de aprendizado e não deixe de tirar suas dúvidas durante a aula.\n\n🎯 Desejamos uma excelente aula e muito sucesso na sua jornada como desenvolvedor!\n\nAté breve! 👨‍💻🚀\n\nEstá é uma mensagem automática."
+    },
+    "scheduledAt": "2026-06-02T20:00:00.000Z",
+    "status": "sent",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-01T13:15:55.394Z",
+    "sentAt": "2026-06-02T20:00:01.397Z"
+  }
+]

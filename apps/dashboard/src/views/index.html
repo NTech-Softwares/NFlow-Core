@@ -1,0 +1,846 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NFlow Core - Painel de Controle</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+
+    <link rel="stylesheet" href="/css/dashboard.css" />
+    <link rel="stylesheet" href="/css/flows.css" />
+    <link rel="stylesheet" href="/css/layout.css" />
+    <link rel="stylesheet" href="/css/schedules.css" />
+  </head>
+
+  <body>
+    <div
+      class="sidebar-overlay"
+      id="sidebarOverlay"
+      onclick="toggleSidebar()"
+    ></div>
+
+    <header class="mobile-header">
+      <button class="menu-toggle-btn" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+      </button>
+      <span class="mobile-brand">NFlow Core</span>
+    </header>
+
+    <div class="app-layout">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+          <h2>NFlow</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button
+            class="nav-item active"
+            data-target="view-attendance"
+            onclick="switchView('view-attendance')"
+          >
+            <i class="fas fa-headset"></i> Atendimento Humano
+          </button>
+          <button
+            class="nav-item"
+            data-target="view-dashboard"
+            onclick="switchView('view-dashboard')"
+          >
+            <i class="fas fa-bullhorn"></i> Campanhas
+          </button>
+          <button
+            class="nav-item"
+            data-target="view-flows"
+            onclick="switchView('view-flows')"
+          >
+            <i class="fas fa-robot"></i> Bot de Atendimento
+          </button>
+          <button
+            class="nav-item"
+            data-target="view-custom-services"
+            onclick="switchView('view-custom-services')"
+          >
+            <i class="fas fa-concierge-bell"></i> Serviços e Agenda
+          </button>
+          <button
+            class="nav-item"
+            data-target="view-schedule"
+            onclick="switchView('view-schedule')"
+          >
+            <i class="fas fa-calendar-alt"></i> Agendamentos de Mensagens
+          </button>
+          <button
+            class="nav-item"
+            data-target="view-profile"
+            onclick="switchView('view-profile')"
+          >
+            <i class="fas fa-user-cog"></i> Perfil / Empresa
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button class="btn-logout" onclick="handleLogout()">
+            <i class="fas fa-sign-out-alt"></i> Sair da Conta
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <section id="view-attendance" class="view-section">
+          <div class="page-header">
+            <div class="title-group">
+              <h1 class="page-title">Painel de Atendimento</h1>
+              <p class="page-subtitle">
+                Monitore clientes em espera por atendimento.
+              </p>
+            </div>
+            <button
+              style="max-width: 240px"
+              class="btn-secondary"
+              onclick="loadAttendanceSessions()"
+            >
+              <i class="fas fa-sync-alt"></i> Atualizar Painel
+            </button>
+          </div>
+
+          <div class="row">
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <h2>
+                  <i class="fas fa-clock" style="color: #ff9f43"></i>
+                  Fila de Espera (Aguardando Operador)
+                </h2>
+                <div
+                  id="waiting-queue"
+                  class="groups-list"
+                  style="margin-top: 1rem; min-height: 200px"
+                ></div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <h2>
+                  <i class="fas fa-user-tie" style="color: #18eb35"></i>
+                  Em Atendimento (Conversas Ativas)
+                </h2>
+                <div
+                  id="active-queue"
+                  class="groups-list"
+                  style="margin-top: 1rem; min-height: 200px"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-dashboard" class="view-section hidden">
+          <div class="page-header">
+            <h1>Enviar Campanhas</h1>
+          </div>
+
+          <div class="row">
+            <div class="col-12">
+              <div class="card status-card">
+                <h2>Status do WhatsApp</h2>
+                <p class="status" id="status">Buscando...</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card d-flex flex-column gap-2">
+                <div class="groups-container">
+                  <div class="groups-header">
+                    <h3>Grupos</h3>
+                    <button class="select-all-btn" onclick="toggleSelectAll()">
+                      Selecionar Todos
+                    </button>
+                  </div>
+                  <div id="groups" class="groups-list"></div>
+                </div>
+                <button class="btn-secondary" onclick="listGroups()">
+                  Listar Grupos
+                </button>
+                <p id="resultGroup" class="result-feedback"></p>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <h2>Enviar Mensagem</h2>
+                <div class="form-group">
+                  <label for="number">Número</label>
+                  <input type="text" id="number" placeholder="5585999999999" />
+                </div>
+                <div class="form-group">
+                  <label for="message">Mensagem</label>
+                  <textarea
+                    id="message"
+                    placeholder="Digite sua mensagem"
+                  ></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="image">Imagem</label>
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    class="file-input"
+                  />
+                </div>
+                <div class="btn-group mobile-column">
+                  <button id="sendMessage" onclick="sendMessage()">
+                    Enviar Mensagem
+                  </button>
+                  <button id="sendCampaign" onclick="sendCampaign()">
+                    Enviar Campanha
+                  </button>
+                </div>
+                <p id="result" class="result-feedback"></p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-flows" class="view-section hidden">
+          <div class="page-header">
+            <div class="title-group">
+              <h1 class="page-title">Configurações</h1>
+              <p class="page-subtitle">
+                Visualização dos fluxos de atendimento
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn-add-flow neon-action-btn"
+              onclick="window.location.href = '/criar-flow'"
+            >
+              <i class="fas fa-plus"></i> Novo Fluxo
+            </button>
+          </div>
+          <div id="flows" class="flows-grid"></div>
+        </section>
+
+        <section id="view-custom-services" class="view-section hidden">
+          <div
+            class="page-header"
+            style="
+              display: flex;
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 12px;
+            "
+          >
+            <div>
+              <h1>Serviços & Agendamentos</h1>
+              <p class="placeholder-text" style="margin-top: 4px">
+                Gerencie o catálogo oferecido pelo Bot e acompanhe os horários
+                reservados pelos clientes.
+              </p>
+            </div>
+            <div
+              id="custom-services-result"
+              class="status"
+              style="
+                display: block;
+                width: 100%;
+                max-width: 350px;
+                text-align: center;
+                color: #a0a0a0;
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid #262626;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+              "
+            >
+              Painel Sincronizado
+            </div>
+          </div>
+
+          <div class="row">
+            <div
+              class="col-12 col-lg-6"
+              style="display: flex; flex-direction: column; gap: 20px"
+            >
+              <div
+                class="card"
+                style="
+                  padding: 20px;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 16px;
+                "
+              >
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    border-bottom: 1px solid #262626;
+                    padding-bottom: 12px;
+                  "
+                >
+                  <span
+                    style="color: var(--color-layout-neon); font-size: 16px"
+                  >
+                    <i class="fas fa-sliders-h"></i>
+                  </span>
+                  <h2 style="margin: 0; font-size: 16px">
+                    Regras de Agendamento de serviços
+                  </h2>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 4px">
+                  <label
+                    style="
+                      font-size: 11px;
+                      color: #8f8f8f;
+                      margin-bottom: 6px;
+                      display: block;
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    Atendimentos Simultâneos por Horário
+                  </label>
+                  <input
+                    type="number"
+                    id="cfg-max-simultaneous"
+                    min="1"
+                    value="1"
+                    style="
+                      padding: 10px;
+                      font-size: 13px;
+                      background: #0d0d0d;
+                      border: 1px solid #262626;
+                      color: #fff;
+                      border-radius: 6px;
+                      width: 100%;
+                      font-weight: bold;
+                    "
+                    required
+                  />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0">
+                  <label
+                    style="
+                      font-size: 11px;
+                      color: #8f8f8f;
+                      margin-bottom: 6px;
+                      display: block;
+                      text-transform: uppercase;
+                      letter-spacing: 0.5px;
+                    "
+                  >
+                    Mensagem de Confirmação Geral (WhatsApp)
+                  </label>
+                  <textarea
+                    id="cfg-confirmation-message"
+                    placeholder="Deixe em branco para usar o padrão ou monte seu texto aqui...&#10;&#10;Tags válidas: {cliente}, {servico}, {preco}, {data}, {horario}"
+                    style="
+                      padding: 12px;
+                      font-size: 13px;
+                      background: #0d0d0d;
+                      border: 1px solid #262626;
+                      color: #e9edef;
+                      border-radius: 6px;
+                      width: 100%;
+                      min-height: 120px;
+                      resize: vertical;
+                      font-family: monospace;
+                      line-height: 1.5;
+                      margin-bottom: 8px;
+                    "
+                  ></textarea>
+
+                  <details
+                    style="
+                      background: rgba(255, 255, 255, 0.02);
+                      border: 1px solid #1f1f1f;
+                      border-radius: 6px;
+                      padding: 8px 12px;
+                      cursor: pointer;
+                    "
+                  >
+                    <summary
+                      style="
+                        font-size: 11px;
+                        color: var(--color-layout-neon);
+                        font-weight: bold;
+                        list-style: none;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                      "
+                    >
+                      <i class="fas fa-info-circle"></i> Ver tags disponíveis
+                      (Legenda global e por item)
+                    </summary>
+                    <div
+                      style="
+                        margin-top: 10px;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 6px;
+                        border-top: 1px solid #1f1f1f;
+                        padding-top: 8px;
+                        cursor: default;
+                      "
+                    >
+                      <div style="font-size: 12px; color: #e9edef">
+                        <strong
+                          style="
+                            color: var(--color-layout-neon);
+                            font-family: monospace;
+                          "
+                          >{cliente}</strong
+                        >
+                        &rarr; Nome completo do cliente
+                      </div>
+                      <div style="font-size: 12px; color: #e9edef">
+                        <strong
+                          style="
+                            color: var(--color-layout-neon);
+                            font-family: monospace;
+                          "
+                          >{servico}</strong
+                        >
+                        &rarr; Nome do serviço selecionado no catálogo
+                      </div>
+                      <div style="font-size: 12px; color: #e9edef">
+                        <strong
+                          style="
+                            color: var(--color-layout-neon);
+                            font-family: monospace;
+                          "
+                          >{preco}</strong
+                        >
+                        &rarr; Valor formatado do serviço (Ex: R$ 50,00)
+                      </div>
+                      <div style="font-size: 12px; color: #e9edef">
+                        <strong
+                          style="
+                            color: var(--color-layout-neon);
+                            font-family: monospace;
+                          "
+                          >{data}</strong
+                        >
+                        &rarr; Data do agendamento (Ex: 15/10/2026)
+                      </div>
+                      <div style="font-size: 12px; color: #e9edef">
+                        <strong
+                          style="
+                            color: var(--color-layout-neon);
+                            font-family: monospace;
+                          "
+                          >{horario}</strong
+                        >
+                        &rarr; Horário marcado para o atendimento (Ex: 14:30)
+                      </div>
+                    </div>
+                  </details>
+                </div>
+              </div>
+
+              <div
+                class="card"
+                style="min-height: 400px; display: flex; flex-direction: column"
+              >
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid #262626;
+                    padding-bottom: 12px;
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span
+                      style="color: var(--color-layout-neon); font-size: 18px"
+                    >
+                      <i class="fas fa-book-open"></i>
+                    </span>
+                    <h2 style="margin: 0">Catálogo do Bot</h2>
+                  </div>
+                  <button
+                    type="button"
+                    class="select-all-btn"
+                    onclick="addNewServiceRow()"
+                  >
+                    <i class="fas fa-plus"></i> Novo Serviço / Curso
+                  </button>
+                </div>
+
+                <div
+                  id="services-list-container"
+                  class="groups-list"
+                  style="max-height: 640px; flex: 1; overflow-y: auto"
+                >
+                  <p class="result-feedback">
+                    Buscando catálogo de serviços...
+                  </p>
+                </div>
+
+                <div
+                  style="
+                    margin-top: 20px;
+                    padding-top: 16px;
+                    border-top: 1px solid #262626;
+                  "
+                >
+                  <button
+                    type="button"
+                    id="btn-save-services"
+                    onclick="saveCustomServicesCatalog()"
+                    class="neon-action-btn"
+                    style="width: 100%"
+                  >
+                    <i class="fas fa-save"></i> Salvar Alterações no Bot
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card" style="min-height: 500px; height: 100%">
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    border-bottom: 1px solid #262626;
+                    padding-bottom: 12px;
+                  "
+                >
+                  <div style="display: flex; align-items: center; gap: 10px">
+                    <span style="color: #ff9f43; font-size: 18px">
+                      <i class="fas fa-calendar-check"></i>
+                    </span>
+                    <h2 style="margin: 0">Próximos Serviços Agendados</h2>
+                  </div>
+                  <span
+                    id="badge-appointments-count"
+                    style="
+                      background: rgba(255, 159, 67, 0.1);
+                      color: #ff9f43;
+                      padding: 4px 10px;
+                      border-radius: 20px;
+                      font-size: 12px;
+                      font-weight: bold;
+                    "
+                    >0</span
+                  >
+                </div>
+
+                <div
+                  id="appointments-list-container"
+                  class="groups-list"
+                  style="max-height: 650px; overflow-y: auto"
+                >
+                  <p class="result-feedback">Buscando compromissos...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-schedule" class="view-section hidden">
+          <div class="page-header">
+            <div class="title-group">
+              <h1 class="page-title">Agendamentos</h1>
+              <p class="page-subtitle">
+                Gerencie os disparos automáticos programados
+              </p>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-12 col-lg-6">
+              <div class="card schedule-form-card">
+                <h2>
+                  <i class="fas fa-calendar-plus"></i> Programar Nova Mensagem
+                </h2>
+                <form id="scheduleForm">
+                  <div class="form-group">
+                    <label for="remoteJid">Número do Destinatário</label>
+                    <input
+                      type="text"
+                      id="remoteJid"
+                      placeholder="5585999999999"
+                      required
+                    />
+                  </div>
+                  <div class="form-group">
+                    <label for="scheduledAt">Data e Hora do Disparo</label>
+                    <input type="datetime-local" id="scheduledAt" required />
+                  </div>
+                  <div class="form-group">
+                    <label for="messageText">Mensagem do Disparo</label>
+                    <textarea
+                      id="messageText"
+                      rows="5"
+                      placeholder="Digite o conteúdo da mensagem programada..."
+                      required
+                    ></textarea>
+                  </div>
+                  <div
+                    class="btn-group"
+                    style="margin-top: 1rem; justify-content: flex-end"
+                  >
+                    <button type="submit" class="btn-submit">
+                      Agendar Disparo
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <h2><i class="fas fa-clock"></i> Fila de Envios Programados</h2>
+                <div id="schedulesGrid" class="schedules-grid"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="view-profile" class="view-section hidden">
+          <div class="page-header">
+            <div class="title-group">
+              <h1 class="page-title">Perfil do Negócio</h1>
+              <p class="page-subtitle">
+                Configure os dados da sua empresa e horários de atendimento
+              </p>
+            </div>
+            <div style="max-width: 200px; width: 100%">
+              <button
+                onclick="saveProfileBusinessHours()"
+                id="btn-save-profile"
+                class="neon-action-btn"
+              >
+                <i class="fas fa-save"></i> Salvar Alterações
+              </button>
+            </div>
+          </div>
+
+          <p
+            id="profile-result"
+            class="result-feedback"
+            style="margin: 8px"
+          ></p>
+
+          <div class="row">
+            <div class="col-12 col-lg-6">
+              <div class="card">
+                <h2><i class="fas fa-clock"></i> Horário de Atendimento</h2>
+
+                <div class="groups-container" style="margin-bottom: 16px">
+                  <div class="group-item">
+                    <div class="group-left">
+                      <input
+                        type="checkbox"
+                        id="profile-bh-enabled"
+                        class="group-checkbox"
+                      />
+                      <div class="group-info">
+                        <span class="group-name"
+                          >Ativar Controle de Horário</span
+                        >
+                        <span class="group-members"
+                          >Bloqueia ou libera o bot automaticamente</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="profile-bh-timezone"
+                    >Fuso Horário (Timezone)</label
+                  >
+                  <input
+                    type="text"
+                    id="profile-bh-timezone"
+                    placeholder="America/Sao_Paulo"
+                  />
+                </div>
+
+                <div class="groups-container" style="margin-top: 16px">
+                  <div class="groups-header">
+                    <h3>Dias e Intervalos de Funcionamento</h3>
+                  </div>
+                  <div
+                    id="profile-schedule-container"
+                    class="groups-list"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <div class="card d-flex flex-column gap-2">
+                <h2><i class="fas fa-comment-slash"></i> Fluxo de Ausência</h2>
+
+                <div class="form-group">
+                  <label for="profile-bh-away-message"
+                    >Mensagem de Ausência (Uma frase por linha)</label
+                  >
+                  <textarea
+                    id="profile-bh-away-message"
+                    rows="6"
+                    placeholder="Desculpe, não estamos atendendo agora.&#10;Nosso horário é de Segunda a Sexta..."
+                  ></textarea>
+                </div>
+
+                <div
+                  class="groups-container"
+                  style="margin-top: 16px; opacity: 0.5; border-style: dashed"
+                >
+                  <div class="groups-header">
+                    <h3 style="color: #a0a0a0">
+                      <i class="fas fa-building"></i> Dados Empresariais (Breve)
+                    </h3>
+                  </div>
+                  <div class="group-item">
+                    <span class="group-members"
+                      >Nome da Loja, CNPJ, Endereço e customizações visuais
+                      adicionais do bot.</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div id="message-edit-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fas fa-pen-to-square"></i> Editar Mensagem</h3>
+          <button
+            type="button"
+            class="btn-close-modal"
+            onclick="closeEditModal()"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-instruction">
+            Altere o texto enviado pelo bot neste estágio do fluxo:
+          </p>
+          <textarea
+            id="modal-message-input"
+            rows="8"
+            placeholder="Digite a mensagem do bot..."
+          ></textarea>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modal-cancel"
+            onclick="closeEditModal()"
+          >
+            Cancelar
+          </button>
+          <button type="button" id="btn-modal-save" class="btn-modal-save">
+            Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="step-create-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>
+            <i class="fas fa-folder-plus"></i> Adicionar Novo Passo (Step)
+          </h3>
+          <button
+            type="button"
+            class="btn-close-modal"
+            onclick="closeStepModal()"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-form-group">
+            <label class="modal-label"
+              >ID do Passo (Gerado Automaticamente):</label
+            >
+            <input
+              type="text"
+              id="modal-step-id-input"
+              disabled
+              class="input-modal-readonly"
+            />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">Nome:</label>
+            <input
+              type="text"
+              id="modal-step-name-input"
+              placeholder="Ex: Menu Financeiro"
+              class="input-modal-field"
+              oninput="handleStepNameAutoFill(this.value)"
+            />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">Mensagem Inicial do passo:</label>
+            <textarea
+              id="modal-step-message-input"
+              rows="5"
+              placeholder="Digite a mensagem do bot..."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modal-cancel"
+            onclick="closeStepModal()"
+          >
+            Cancelar
+          </button>
+          <button type="button" id="btn-modal-step-save" class="btn-modal-save">
+            Criar Passo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/navigation.js"></script>
+    <script src="/js/dashboard.js"></script>
+
+    <script src="/js/flows/api.js"></script>
+    <script src="/js/flows/components/option.js"></script>
+    <script src="/js/flows/components/step.js"></script>
+    <script src="/js/flows/components/flowCard.js"></script>
+    <script src="/js/flows/events/selects.js"></script>
+    <script src="/js/flows/events/collapse.js"></script>
+    <script src="/js/flows/ui/states.js"></script>
+    <script src="/js/flows/ui/elements.js"></script>
+    <script src="/js/flows/render.js"></script>
+    <script src="/js/flows/flows.js"></script>
+    <script src="/js/schedules.js"></script>
+    <script src="/js/profile.js"></script>
+    <script src="/js/attendance.js"></script>
+    <script src="/js/customServices.js"></script>
+  </body>
+</html>

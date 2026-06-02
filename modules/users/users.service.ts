@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import { logger } from "../../shared/utils/logger";
-import { DEFAULT_FLOW_TEMPLATE } from "../../providers/whatsapp/baileys/engine/flowRegistry";
+import { DEFAULT_FLOW_TEMPLATE } from "../flows/repository/flow.registry";
+import { BusinessHoursConfig } from "../../shared/utils/businessHours";
+import * as userRepository from "./users.repository";
 
 export class UserService {
   /**
@@ -20,12 +22,10 @@ export class UserService {
       );
       const userFlowFile = path.join(sessionFolder, "flows.json");
 
-      // Cria a pasta física do cliente se não existir
       if (!fs.existsSync(sessionFolder)) {
         fs.mkdirSync(sessionFolder, { recursive: true });
       }
 
-      // Grava o fluxo padrão limpo
       if (!fs.existsSync(userFlowFile)) {
         fs.writeFileSync(
           userFlowFile,
@@ -40,7 +40,56 @@ export class UserService {
       logger.error(
         `[Provisionamento] Falha ao criar espaço físico para o tenant [${id}]: ${error.message}`,
       );
-      // Não damos throw para não travar o cadastro do usuário caso dê algum erro de permissão de disco
     }
+  }
+
+  /**
+   * 🎯 Busca dados seguros e públicos do perfil do usuário
+   */
+  async getUserProfile(userId: string) {
+    const users = await userRepository.getUsers();
+    const user = users.find((u) => u.id === userId);
+
+    if (!user) {
+      throw new Error("Usuário não encontrado.");
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      businessHours: user.businessHours || {
+        enabled: false,
+        timezone: "America/Sao_Paulo",
+        schedule: {
+          "0": [],
+          "1": [],
+          "2": [],
+          "3": [],
+          "4": [],
+          "5": [],
+          "6": [],
+        },
+        awayMessage: ["⚠️ No momento estamos fora do horário de atendimento."],
+      },
+    };
+  }
+
+  /**
+   * 🎯 Atualiza as configurações de horário de funcionamento do usuário
+   */
+  async updateBusinessHours(
+    userId: string,
+    businessHours: BusinessHoursConfig,
+  ) {
+    const updatedUser = await userRepository.updateUserProfile(userId, {
+      businessHours,
+    });
+
+    if (!updatedUser) {
+      throw new Error("Falha ao atualizar perfil. Usuário não encontrado.");
+    }
+
+    return updatedUser.businessHours;
   }
 }

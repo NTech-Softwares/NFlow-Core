@@ -1,10 +1,13 @@
 type QueueMessage = {
-  sessionId: string; // ✨ Adicionado para identificar de qual cliente é o disparo
+  sessionId: string;
   jid: string;
   imagePath?: string;
   message: {
     text: string;
   };
+  attempts?: number;
+  userId?: string;
+  scheduleId?: string;
 };
 
 export const messageQueue: QueueMessage[] = [];

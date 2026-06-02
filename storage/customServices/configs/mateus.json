@@ -1,0 +1,42 @@
+{
+  "userId": "mateus",
+  "services": [
+    {
+      "id": "new-1780428697940",
+      "name": "Corte Degradê",
+      "price": 30,
+      "durationMinutes": 45,
+      "strategyType": "STANDARD",
+      "courseMetadata": null,
+      "useCustomMessage": false,
+      "customConfirmationMessage": ""
+    },
+    {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    }
+  ],
+  "maxSimultaneousSlots": 2,
+  "confirmationMessage": "🚀 *Fala {cliente}, seu horário tá fechado!*\n\nTe espero dia *{data}* às *{horario}* para fazer aquele *{servico}* de respeito.\n\nValor: {preco}. \n Até lá! 🫡"
+}

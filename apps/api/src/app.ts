@@ -5,6 +5,10 @@ import whatsappRoutes from "./routes/whatsapp.routes";
 import flowsRoutes from "./routes/flows.routes";
 import path from "path";
 import authRoutes from "../../../modules/auth/auth.routes";
+import { schedulerRoutes } from "./routes/schedule.routes";
+import { profileRoutes } from "./routes/profile.routes";
+import { attendanceRoutes } from "./routes/attendance.routes";
+import { customServicesRoutes } from "./routes/customServices.routes";
 
 const app = express();
 
@@ -26,5 +30,9 @@ app.use("/auth", authRoutes);
 app.use("/whatsapp", whatsappRoutes);
 app.use("/flows", flowsRoutes);
 app.use("/status", statusRoutes);
+app.use("/schedules", schedulerRoutes);
+app.use("/profile", profileRoutes);
+app.use("/attendance", attendanceRoutes);
+app.use("/custom-services", customServicesRoutes);
 
 export { app };

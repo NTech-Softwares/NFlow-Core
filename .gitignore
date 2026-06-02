@@ -54,3 +54,6 @@ qrcodes/
 sessions/
 auth/
 baileys_auth/
+
+# Storage
+storage/flows/*

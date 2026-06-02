@@ -301,6 +301,7 @@ body {
 }
 
 .btn-edit-message {
+  max-width: 90px;
   position: absolute;
   bottom: 10px;
   right: 10px;
@@ -614,6 +615,7 @@ body {
 }
 
 .btn-close-modal {
+  max-width: 75px;
   background: transparent;
   border: none;
   color: #666;

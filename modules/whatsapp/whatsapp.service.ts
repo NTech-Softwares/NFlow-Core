@@ -3,11 +3,11 @@ import {
   startWhatsapp,
   getSessionStatus,
   getWhatsapp,
-} from "../../../../providers/whatsapp/baileys/client";
-import { getGroups } from "../../../../providers/whatsapp/baileys/services/groups.service";
-import { messageQueue } from "../../../../shared/queue/messageQueue";
-import { getUsers } from "../../../../modules/users/users.repository";
-import { logger } from "../../../../shared/utils/logger";
+} from "../../providers/whatsapp/baileys/client";
+import { getGroups } from "../../providers/whatsapp/baileys/services/groups.service";
+import { messageQueue } from "../../shared/queue/messageQueue";
+import { getUsers } from "../../modules/users/users.repository";
+import { logger } from "../../shared/utils/logger";
 
 export class WhatsappService implements IWhatsappService {
   /**

@@ -3,7 +3,13 @@ import { Request, Response } from "express";
 
 export class DashboardController {
   static index(req: Request, res: Response) {
-    const filePath = path.resolve(__dirname, "..", "views", "dashboard.html");
+    const filePath = path.resolve(__dirname, "..", "views", "index.html");
+
+    return res.sendFile(filePath);
+  }
+
+  static campaigns(req: Request, res: Response) {
+    const filePath = path.resolve(__dirname, "..", "views", "campaigns.html");
 
     return res.sendFile(filePath);
   }
