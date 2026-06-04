@@ -49,14 +49,12 @@ export async function startScheduleWorker() {
             `[Scheduler] Encaminhando agendamento [${schedule.id}] para a fila de envio.`,
           );
 
-          // 🌟 Tipagem Segura: O repositório já reidratou o nó message e o sessionId
+          // 🔄 ATUALIZADO: Formato plano, passando userId e scheduleId diretamente
           messageQueue.push({
             sessionId: schedule.sessionId,
             jid: schedule.remoteJid,
+            messageText: schedule.message.text,
             imagePath: schedule.message.mediaUrl || undefined,
-            message: {
-              text: schedule.message.text,
-            },
             userId: schedule.userId,
             scheduleId: schedule.id,
           });

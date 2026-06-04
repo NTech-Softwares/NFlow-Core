@@ -19,12 +19,11 @@ const MessageHandler = async (message: FormattedMessage, sessionId: string) => {
   // Se não houver mensagens para responder, corta a execução aqui e não manda nada
   if (!result.messages || result.messages.length === 0) return;
 
+  // 🔄 ATUALIZADO: Usando messageText ao invés de message: { text }
   messageQueue.push({
     sessionId,
     jid,
-    message: {
-      text: result.messages.join("\n"),
-    },
+    messageText: result.messages.join("\n"),
   });
 };
 

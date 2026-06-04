@@ -66,12 +66,12 @@ export class WhatsappService implements IWhatsappService {
 
     const cleanJid = `${formattedNumber}@s.whatsapp.net`;
 
-    // Passamos o sessionId dentro do payload da fila para o Worker saber por qual canal disparar
+    // 🔄 ATUALIZADO: Nova estrutura plana de messageText e imagePath
     messageQueue.push({
       sessionId,
-      jid: `${formattedNumber}@s.whatsapp.net`,
-      imagePath,
-      message: { text },
+      jid: cleanJid,
+      messageText: text,
+      imagePath: imagePath || undefined,
     });
 
     logger.info(
@@ -97,11 +97,12 @@ export class WhatsappService implements IWhatsappService {
     }
 
     groupList.forEach((groupId) => {
+      // 🔄 ATUALIZADO
       messageQueue.push({
         sessionId,
         jid: groupId,
-        imagePath,
-        message: { text },
+        messageText: text,
+        imagePath: imagePath || undefined,
       });
     });
 

@@ -17,7 +17,7 @@ function createMessagePayload(job: QueueJob) {
 async function sendGroupMessage(sock: any, job: QueueJob, messagePayload: any) {
   await sock.sendPresenceUpdate("composing", job.jid);
   await delay(1000);
-  const response = await sock.sendMessage(job.jid, messagePayload);
+  await sock.sendMessage(job.jid, messagePayload);
   logger.info(
     `[Sessão: ${job.sessionId}] Mensagem enviada para o grupo ${job.jid}`,
   );
@@ -85,14 +85,21 @@ async function processJob(job: QueueJob) {
       await sendPrivateMessage(sock, job, messagePayload);
     }
 
-    // Marca como sucesso na fila
+    // Marca como sucesso na fila do banco
     await messageQueue.complete(job.id);
 
-    // Salva log assíncrono (SEM throw dentro do catch)
+    // 🔄 ATUALIZADO: Gravando user_id e schedule_id no log de auditoria de sucesso
     dbClient
       .query(
-        `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status) VALUES ($1, $2, $3, 'sent')`,
-        [job.sessionId, job.jid, job.messageText],
+        `INSERT INTO whatsapp_message_logs (session_id, user_id, schedule_id, jid, message_text, status) 
+         VALUES ($1, $2, $3, $4, $5, 'sent')`,
+        [
+          job.sessionId,
+          job.userId || null,
+          job.scheduleId || null,
+          job.jid,
+          job.messageText,
+        ],
       )
       .catch((err) =>
         logger.error(
@@ -106,7 +113,6 @@ async function processJob(job: QueueJob) {
       errorMessage.includes("Closed") ||
       error.code === "ECONNRESET";
 
-    // Se for erro de conexão, incrementa tentativa. Se for erro de validação (ex: numero não existe), não adianta tentar de novo.
     const newAttempts = job.attempts + 1;
 
     if (isConnectionError && newAttempts < 3) {
@@ -120,10 +126,19 @@ async function processJob(job: QueueJob) {
       );
       await messageQueue.fail(job.id, 999, errorMessage); // 999 garante status 'failed' absoluto
 
+      // 🔄 ATUALIZADO: Gravando user_id e schedule_id no log de erro
       dbClient
         .query(
-          `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message) VALUES ($1, $2, $3, 'failed', $4)`,
-          [job.sessionId, job.jid, job.messageText, errorMessage],
+          `INSERT INTO whatsapp_message_logs (session_id, user_id, schedule_id, jid, message_text, status, error_message) 
+           VALUES ($1, $2, $3, $4, $5, 'failed', $6)`,
+          [
+            job.sessionId,
+            job.userId || null,
+            job.scheduleId || null,
+            job.jid,
+            job.messageText,
+            errorMessage,
+          ],
         )
         .catch((err) =>
           logger.error(
@@ -138,7 +153,7 @@ export async function startWorker() {
   logger.info("🚀 Worker DB-Queue Multi-Tenant iniciado!");
 
   while (true) {
-    // 🟢 Busca até 10 mensagens simultâneas travando-as para este worker processar
+    // Busca até 10 mensagens simultâneas travando-as para este worker processar
     const batch = await messageQueue.fetchBatch(10);
 
     if (batch.length === 0) {
@@ -150,11 +165,10 @@ export async function startWorker() {
       `[Worker] Processando lote de ${batch.length} mensagens concorrentes...`,
     );
 
-    // 🟢 Executa o processamento de forma paralela usando Promise.allSettled
-    // Isso impede que a mensagem de um cliente atrase o fluxo de outro cliente!
+    // Executa o processamento de forma paralela usando Promise.allSettled
     await Promise.allSettled(
       batch.map(async (job) => {
-        // Pequeno delay randômico de anti-ban aplicado individualmente por thread
+        // Delay randômico de anti-ban aplicado individualmente por thread
         await delay(Math.floor(Math.random() * 1000) + 400);
         await processJob(job);
       }),

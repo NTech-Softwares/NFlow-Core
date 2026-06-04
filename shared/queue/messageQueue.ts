@@ -59,7 +59,16 @@ class MessageQueueManager {
           FOR UPDATE SKIP LOCKED
           LIMIT $1
         )
-        RETURNING id, session_id as "sessionId", jid, message_text as "messageText", image_path as "imagePath", status, attempts, send_at as "sendAt";
+        RETURNING 
+        id, 
+        session_id as "sessionId", 
+        jid, 
+        message_text as "messageText", 
+        image_path as "imagePath", 
+        status, attempts, 
+        send_at as "sendAt", 
+        user_id as "userId", 
+        schedule_id as "scheduleId";
       `,
         [limit],
       );

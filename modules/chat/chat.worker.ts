@@ -32,12 +32,12 @@ export function startChatWorker() {
         await updateChatStatus(remote_jid, session_id, "automatico");
 
         // 2. Enfileira a mensagem de aviso na esteira principal de envios
+        // 🔄 ATUALIZADO: Usando messageText
         messageQueue.push({
           sessionId: session_id,
           jid: remote_jid,
-          message: {
-            text: "⚠️ *Atendimento Encerrado*\n\nSeu atendimento foi encerrado devido à inatividade. Se precisar de mais alguma coisa, basta nos enviar uma nova mensagem e você será atendido prontamente!",
-          },
+          messageText:
+            "⚠️ *Atendimento Encerrado*\n\nSeu atendimento foi encerrado devido à inatividade. Se precisar de mais alguma coisa, basta nos enviar uma nova mensagem e você será atendido prontamente!",
         });
 
         logger.info(
