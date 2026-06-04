@@ -52,7 +52,6 @@ qrcodes/
 
 # Sessions
 sessions/
-auth/
 baileys_auth/
 
 # Storage
