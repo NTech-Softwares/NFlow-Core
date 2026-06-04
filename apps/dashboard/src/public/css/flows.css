@@ -477,6 +477,7 @@ body {
   cursor: pointer;
   padding: 8px;
   transition: color 0.2s;
+  max-width: 48px;
 }
 
 .btn-delete-option:hover {

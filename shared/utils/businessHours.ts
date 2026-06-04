@@ -48,8 +48,6 @@ export function isInsideBusinessHours(config: BusinessHoursConfig): boolean {
   });
 }
 
-// Adicione este export no final do arquivo: C:\My Codes\NFlow Core\shared\utils\businessHours.ts
-
 /**
  * Transforma o objeto de configuração de horários em um texto legível para o WhatsApp
  */

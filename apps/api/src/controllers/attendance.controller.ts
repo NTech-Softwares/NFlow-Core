@@ -9,7 +9,7 @@ export class AttendanceController {
   async listSessions(req: Request, res: Response): Promise<Response> {
     try {
       const userId = req.user.id;
-      const sessionId = req.user.sessionId || `${userId}_session`;
+      const sessionId = req.user.whatsappSessionId || `${userId}_session`;
 
       const sessions =
         await ApiAttendanceService.getSessionsInHumanAttendance(sessionId);
@@ -35,7 +35,7 @@ export class AttendanceController {
   async updateStatus(req: Request, res: Response): Promise<Response> {
     try {
       const userId = req.user.id;
-      const sessionId = req.user.sessionId || `${userId}_session`;
+      const sessionId = req.user.whatsappSessionId || `${userId}_session`;
       const { remoteJid, status } = req.body;
 
       if (!remoteJid || !status) {
@@ -69,7 +69,7 @@ export class AttendanceController {
   async closeAttendance(req: Request, res: Response): Promise<Response> {
     try {
       const userId = req.user.id;
-      const sessionId = req.user.sessionId || `${userId}_session`;
+      const sessionId = req.user.whatsappSessionId || `${userId}_session`;
       const { remoteJid } = req.body;
 
       if (!remoteJid) {
@@ -102,7 +102,7 @@ export class AttendanceController {
   async deleteAttendance(req: Request, res: Response): Promise<Response> {
     try {
       const userId = req.user.id;
-      const sessionId = req.user.sessionId || `${userId}_session`;
+      const sessionId = req.user.whatsappSessionId || `${userId}_session`;
       const { remoteJid } = req.body;
 
       if (!remoteJid) {

@@ -98,17 +98,15 @@ export async function sendMessage(req: Request, res: Response) {
       });
     }
 
-    const remoteJid = number.includes("@")
-      ? number
-      : `${number}@s.whatsapp.net`;
-
-    await whatsappService.sendIndividualMessage(
+    // 🟢 O Service Core agora limpa o número e nos devolve o JID perfeito
+    const remoteJid = await whatsappService.sendIndividualMessage(
       sessionId,
       number,
       message,
       image?.path,
     );
 
+    // 🟢 Agora o Hook de atendimento recebe o JID idêntico ao do banco/WhatsApp
     await ApiAttendanceService.triggerOperatorMessageHook(sessionId, remoteJid);
 
     return res.json({ success: true });

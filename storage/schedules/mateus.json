@@ -43,5 +43,313 @@
     "maxRetries": 3,
     "createdAt": "2026-06-01T13:15:55.394Z",
     "sentAt": "2026-06-02T20:00:01.397Z"
+  },
+  {
+    "id": "21601a63-6bf1-47d7-8966-75f7aca507b3",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Corte Degradê* amanhã, dia 04/06/2026 às 07:00. 🚀"
+    },
+    "scheduledAt": "2026-06-03T10:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:17.905Z"
+  },
+  {
+    "id": "9bc3bfc2-185b-4bfd-9a7d-5e4e9b70d6e0",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Corte Degradê* hoje às 07:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-06-04T09:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:17.952Z"
+  },
+  {
+    "id": "2b0008a1-f173-4fbe-9652-d506ae25b168",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 1)* amanhã, dia 04/06/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-06-03T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.658Z"
+  },
+  {
+    "id": "32a2422e-1275-43eb-bd91-a0d30ccfc1fc",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 1)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-06-04T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.664Z"
+  },
+  {
+    "id": "167dd9e5-f823-4ad7-8012-116636552266",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 2)* amanhã, dia 11/06/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-06-10T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.673Z"
+  },
+  {
+    "id": "ff7fa084-e3f8-43af-a520-ada9268db8f7",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 2)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-06-11T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.681Z"
+  },
+  {
+    "id": "aec783dd-bd1b-4f33-8d5e-949bce05ab5e",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 3)* amanhã, dia 18/06/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-06-17T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.690Z"
+  },
+  {
+    "id": "0e645c2a-daea-44ee-8498-d178d1489115",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 3)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-06-18T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.700Z"
+  },
+  {
+    "id": "3d597847-7aad-4c52-8e49-15b1b1c26a13",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 4)* amanhã, dia 25/06/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-06-24T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.709Z"
+  },
+  {
+    "id": "f427f50a-f4b6-4830-8789-718571e8057f",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 4)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-06-25T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.719Z"
+  },
+  {
+    "id": "56475e61-e08c-44bf-bca4-2726dfd0cc7b",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 5)* amanhã, dia 02/07/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-07-01T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.728Z"
+  },
+  {
+    "id": "d74fcc0f-9b83-430b-8465-7943ff9a7496",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 5)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-07-02T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.738Z"
+  },
+  {
+    "id": "3fb3cbb4-8fe6-4713-9077-2559aaefec07",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 6)* amanhã, dia 09/07/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-07-08T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.747Z"
+  },
+  {
+    "id": "be96cdb0-e59a-4901-9250-9a31393ef6fa",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 6)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-07-09T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.756Z"
+  },
+  {
+    "id": "ce39397a-54b9-4189-b808-aecf609902ab",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 7)* amanhã, dia 16/07/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-07-15T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.766Z"
+  },
+  {
+    "id": "62ed4e15-46ed-43b2-b47d-dbea38eaf73b",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 7)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-07-16T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.774Z"
+  },
+  {
+    "id": "75dc5910-a59c-4e6c-b9f0-850fc33ff1b2",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 8)* amanhã, dia 23/07/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-07-22T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.782Z"
+  },
+  {
+    "id": "59292832-5853-4b9e-a256-a78e6ee0070f",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 8)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-07-23T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.791Z"
+  },
+  {
+    "id": "e4fb1037-534e-4280-8261-b715f8f29533",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 9)* amanhã, dia 30/07/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-07-29T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.800Z"
+  },
+  {
+    "id": "398df89f-635d-46f1-b83a-eb0510c3b3fc",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 9)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-07-30T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.808Z"
+  },
+  {
+    "id": "13094a7f-f822-402d-a1e4-8493cf16ef69",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Olá, Mateus! Passando para lembrar de seu compromisso para *Curso de Programação (Aula 10)* amanhã, dia 06/08/2026 às 20:00. 🚀"
+    },
+    "scheduledAt": "2026-08-05T23:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.817Z"
+  },
+  {
+    "id": "2c1ac970-fca3-4a75-8aed-958bf71c4069",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "message": {
+      "text": "Ei, Mateus! Falta apenas 1 hora para *Curso de Programação (Aula 10)* hoje às 20:00. Te aguardamos! ⏳"
+    },
+    "scheduledAt": "2026-08-06T22:00:00.000Z",
+    "status": "pending",
+    "retryCount": 0,
+    "maxRetries": 3,
+    "createdAt": "2026-06-02T22:14:41.825Z"
   }
 ]

@@ -57,12 +57,14 @@ export class WhatsappService implements IWhatsappService {
     number: string,
     text: string,
     imagePath?: string,
-  ): Promise<void> {
+  ): Promise<string> {
     const formattedNumber = number.replace(/\D/g, "");
 
     if (formattedNumber.length < 12) {
       throw new Error("Formato de número inválido para o WhatsApp.");
     }
+
+    const cleanJid = `${formattedNumber}@s.whatsapp.net`;
 
     // Passamos o sessionId dentro do payload da fila para o Worker saber por qual canal disparar
     messageQueue.push({
@@ -75,6 +77,8 @@ export class WhatsappService implements IWhatsappService {
     logger.info(
       `[Sessão: ${sessionId}] Mensagem adicionada na fila -> ${formattedNumber}`,
     );
+
+    return cleanJid;
   }
 
   /**
@@ -113,6 +117,7 @@ export class WhatsappService implements IWhatsappService {
   async initAllSavedSessions(): Promise<void> {
     try {
       const users = await getUsers();
+
       logger.info(
         `[Auto-Boot] Inicializando sessões de ${users.length} clientes cadastrados...`,
       );

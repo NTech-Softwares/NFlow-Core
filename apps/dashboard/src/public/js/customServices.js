@@ -1,6 +1,5 @@
 /**
  * NFlow Core - Custom Services & Appointments Dashboard Component
- * Mantém o mesmo padrão de design reativo sem frameworks externos
  */
 
 let originalServicesList = [];
@@ -13,8 +12,11 @@ window.initCustomServicesView = async function () {
   const feedback = document.getElementById("custom-services-result");
   if (feedback) feedback.innerText = "";
 
-  // Dispara as duas cargas assíncronas em paralelo para performance
-  await Promise.all([loadServicesCatalog(), loadClientAppointments()]);
+  // Carrega o catálogo estático uma vez para permitir edição sem interrupções
+  await loadServicesCatalog();
+
+  // Executa a primeira carga imediata das reservas em tempo real
+  await window.refreshCustomServicesView();
 };
 
 /**
@@ -89,7 +91,6 @@ function renderServicesCatalog(services) {
     const strategyType = service.strategyType || "STANDARD";
     const useCustomMsg = !!service.useCustomMessage;
 
-    // Configura os metadados padrões de curso caso vazios
     const meta = service.courseMetadata || {
       totalClasses: 4,
       maxStudentsPerSlot: 1,
@@ -126,7 +127,6 @@ function renderServicesCatalog(services) {
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; background: #080808; padding: 14px; border-radius: 8px; border: 1px solid #1f1f1f;">
-        
         <div class="form-group" style="margin-bottom: 0; width: 100%;">
           <label style="font-size: 10px; color: #a0a0a0; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Tipo de Agendamento</label>
           <div style="position: relative;">
@@ -141,7 +141,6 @@ function renderServicesCatalog(services) {
         </div>
 
         <div class="course-fields-${idx}" style="display: ${strategyType === "RECURRENT_COURSE" ? "flex" : "none"}; flex-direction: column; gap: 12px; border-top: 1px solid #1a1a1a; padding-top: 12px;">
-          
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
             <div class="form-group" style="margin-bottom: 0;">
               <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Total Aulas</label>
@@ -154,23 +153,9 @@ function renderServicesCatalog(services) {
             <div class="form-group" style="margin-bottom: 0;">
               <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Janela Horário</label>
               <div style="display: flex; gap: 4px; align-items: center;">
-                <input type="text" 
-                       class="catalog-course-open" 
-                       placeholder="08:00" 
-                       maxlength="5"
-                       oninput="maskTimeInput(this)"
-                       onblur="captureCurrentCatalogInputs()"
-                       value="${meta.customHours?.open || ""}" 
-                       style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
+                <input type="text" class="catalog-course-open" placeholder="08:00" maxlength="5" oninput="maskTimeInput(this)" onblur="captureCurrentCatalogInputs()" value="${meta.customHours?.open || ""}" style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
                 <span style="color:#555; font-size:10px;">as</span>
-                <input type="text" 
-                       class="catalog-course-close" 
-                       placeholder="18:00" 
-                       maxlength="5"
-                       oninput="maskTimeInput(this)"
-                       onblur="captureCurrentCatalogInputs()"
-                       value="${meta.customHours?.close || ""}" 
-                       style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
+                <input type="text" class="catalog-course-close" placeholder="18:00" maxlength="5" oninput="maskTimeInput(this)" onblur="captureCurrentCatalogInputs()" value="${meta.customHours?.close || ""}" style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
               </div>
             </div>
           </div>
@@ -206,16 +191,12 @@ function renderServicesCatalog(services) {
             <span style="font-size: 10px; color: #555; font-style: italic;">Tags válidas: {cliente}, {servico}, {preco}, {data}, {horario}</span>
           </div>
         </div>
-
       </div>
     `;
     container.appendChild(itemRow);
   });
 }
 
-/**
- * Controla visualmente a exibição dos campos de Curso sem quebrar o fluxo reativo
- */
 window.toggleStrategyFields = function (index, value) {
   const fields = document.querySelectorAll(`.course-fields-${index}`);
   fields.forEach((f) => {
@@ -224,9 +205,6 @@ window.toggleStrategyFields = function (index, value) {
   captureCurrentCatalogInputs();
 };
 
-/**
- * Controla dinamicamente o recolhimento ou abertura da caixa de texto da mensagem customizada
- */
 window.toggleCustomMsgField = function (index, isChecked) {
   const wrapper = document.querySelectorAll(`.custom-msg-wrapper-${index}`);
   wrapper.forEach((w) => {
@@ -235,9 +213,6 @@ window.toggleCustomMsgField = function (index, isChecked) {
   captureCurrentCatalogInputs();
 };
 
-/**
- * Adiciona uma nova linha em branco no array local e re-renderiza
- */
 window.addNewServiceRow = function () {
   captureCurrentCatalogInputs();
   originalServicesList.push({
@@ -253,18 +228,12 @@ window.addNewServiceRow = function () {
   renderServicesCatalog(originalServicesList);
 };
 
-/**
- * Remove a linha do array local e atualiza a visualização
- */
 window.removeServiceRow = function (index) {
   captureCurrentCatalogInputs();
   originalServicesList.splice(index, 1);
   renderServicesCatalog(originalServicesList);
 };
 
-/**
- * Máscara em JavaScript puro para inputs de Horário (HH:MM)
- */
 window.maskTimeInput = function (input) {
   let value = input.value.replace(/\D/g, "");
   if (value.length > 4) value = value.slice(0, 4);
@@ -274,9 +243,6 @@ window.maskTimeInput = function (input) {
   input.value = value;
 };
 
-/**
- * Captura o estado atual digitado nos Inputs mapeando corretamente a estratégia estruturada
- */
 function captureCurrentCatalogInputs() {
   const rows = document.querySelectorAll(
     "#services-list-container .group-item",
@@ -290,7 +256,6 @@ function captureCurrentCatalogInputs() {
       parseFloat(row.querySelector(".catalog-service-price").value) || 0;
     const durationMinutes =
       parseInt(row.querySelector(".catalog-service-duration").value) || 30;
-
     const strategyType = row.querySelector(".catalog-service-strategy").value;
     const useCustomMessage = row.querySelector(
       ".catalog-use-custom-msg",
@@ -306,14 +271,12 @@ function captureCurrentCatalogInputs() {
           row.querySelector(`.course-fields-${idx} .catalog-course-total`)
             .value,
         ) || 4;
-
       const maxStudentsPerSlot =
         parseInt(
           row.querySelector(
             `.course-fields-${idx} .catalog-course-max-students`,
           ).value,
         ) || 1;
-
       const openTime = row
         .querySelector(`.course-fields-${idx} .catalog-course-open`)
         .value.trim();
@@ -348,7 +311,6 @@ function captureCurrentCatalogInputs() {
       durationMinutes,
       strategyType,
       courseMetadata,
-      // 🔥 REPASSA OS DADOS EXTRAÍDOS PARA O ARRAY DE RE-ENVIO
       useCustomMessage,
       customConfirmationMessage,
     });
@@ -357,9 +319,6 @@ function captureCurrentCatalogInputs() {
   originalServicesList = updatedList;
 }
 
-/**
- * Salva as alterações coletadas do catálogo enviando o POST para a API
- */
 window.saveCustomServicesCatalog = async function () {
   captureCurrentCatalogInputs();
 
@@ -383,7 +342,6 @@ window.saveCustomServicesCatalog = async function () {
     return;
   }
 
-  // VALIDAÇÃO ESTRITA DAS JANELAS DE HORÁRIO DOS CURSOS (Formato HH:MM)
   const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
   for (const service of originalServicesList) {
     if (
@@ -391,7 +349,6 @@ window.saveCustomServicesCatalog = async function () {
       service.courseMetadata?.customHours
     ) {
       const { open, close } = service.courseMetadata.customHours;
-
       if (open || close) {
         if (!timeRegex.test(open) || !timeRegex.test(close)) {
           if (feedback) {
@@ -427,7 +384,7 @@ window.saveCustomServicesCatalog = async function () {
     const resJson = await response.json();
 
     if (response.ok && resJson.success) {
-      feedback.innerText = "Catálogo inteligente atualizado com sucesso! 🚀";
+      feedback.innerText = "Catálogo inteligente updated com sucesso! 🚀";
       feedback.style.color = "#18eb35";
 
       const configData = resJson.data || {};
@@ -446,16 +403,21 @@ window.saveCustomServicesCatalog = async function () {
 };
 
 /**
- * 2. Carrega a lista de Reservas (Appointments) efetuadas pelos clientes
+ * 2. 🔄 ASSINATURA GLOBAL: Carrega a lista de Reservas (Appointments) via Polling
  */
-window.loadClientAppointments = async function () {
+window.refreshCustomServicesView = async function () {
+  window.showGlobalRefreshIndicator(); // 🚀 Liga o relógio global
   const token = localStorage.getItem("token");
   const apiUrl = window.APP_CONFIG.API_URL;
   const container = document.getElementById("appointments-list-container");
 
   if (!container) return;
-  container.innerHTML =
-    '<p class="result-feedback">Buscando compromissos...</p>';
+
+  // Exibe o carregando padrão apenas no primeiro load do componente
+  if (container.children.length === 0) {
+    container.innerHTML =
+      '<p class="result-feedback">Buscando compromissos...</p>';
+  }
 
   try {
     const response = await fetch(`${apiUrl}/custom-services/appointments`, {
@@ -530,13 +492,14 @@ window.loadClientAppointments = async function () {
           <i class="fas fa-times-circle"></i> Cancelar
         </button>
       `;
-
       container.appendChild(appCard);
     });
   } catch (error) {
     console.error("[Fetch Appointments Error]:", error);
     container.innerHTML =
       '<p class="result-feedback" style="color: #ff4d4d;">Erro ao renderizar agenda activa.</p>';
+  } finally {
+    window.hideGlobalRefreshIndicator(); // 🔒 Desliga o relógio global
   }
 };
 
@@ -571,7 +534,7 @@ window.cancelClientAppointment = async function (appointmentId) {
         feedback.innerText = "Agendamento cancelado com sucesso! 🛡️";
         feedback.style.color = "#ff9f43";
       }
-      await loadClientAppointments();
+      await window.refreshCustomServicesView();
     } else {
       throw new Error(resJson.error || "Erro ao deletar compromisso.");
     }
@@ -581,9 +544,6 @@ window.cancelClientAppointment = async function (appointmentId) {
   }
 };
 
-/**
- * Função Auxiliar Anti-XSS (Sanitização)
- */
 function escapeHtml(str) {
   if (!str) return "";
   return str

@@ -5,6 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NFlow Core - Registrar Cliente</title>
     <link rel="stylesheet" href="/css/login.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      /* Pequenos utilitários que combinam com seu login.css */
+      .form-step {
+        display: none;
+      }
+      .form-step.active {
+        display: flex;
+        flex-direction: column;
+      }
+      .step-indicators {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 24px;
+        justify-content: center;
+      }
+      .indicator {
+        width: 12px;
+        height: 6px;
+        borderradius: 3px;
+        background: #262626;
+        transition: all 0.3s ease;
+      }
+      .indicator.active {
+        background: #18eb35;
+        width: 24px;
+        box-shadow: 0 0 10px rgba(24, 235, 53, 0.4);
+      }
+      .btn-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .btn-secondary {
+        background: #262626;
+        color: #a0a0a0;
+      }
+      .btn-secondary:hover {
+        background: #333333;
+      }
+      .checkbox-group {
+        flex-direction: row !important;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 10px 0;
+      }
+      .checkbox-group input {
+        width: auto;
+        cursor: pointer;
+      }
+      .time-row {
+        display: flex;
+        gap: 12px;
+      }
+    </style>
   </head>
 
   <body>
@@ -12,52 +71,133 @@
       <div class="login-card card">
         <div class="logo">N</div>
 
-        <h1>Cadastro</h1>
-        <p class="subtitle">
+        <h1 id="step-title">Cadastro</h1>
+        <p class="subtitle" id="step-subtitle">
           Crie uma nova conta de cliente para liberar o acesso ao painel.
         </p>
 
-        <form id="registerForm">
-          <div class="form-group">
-            <label for="name">Nome / Empresa</label>
-            <input
-              id="name"
-              type="text"
-              placeholder="Ex: Mateus - NTech"
-              required
-            />
+        <div class="step-indicators">
+          <div class="indicator active" id="ind-1"></div>
+          <div class="indicator" id="ind-2"></div>
+          <div class="indicator" id="ind-3"></div>
+        </div>
+
+        <form id="registerWizard">
+          <div class="form-step active" id="step-1">
+            <div class="form-group">
+              <label for="name"
+                ><i class="fas fa-user-tie"></i> Nome do Administrador
+                (Dono)</label
+              >
+              <input id="name" type="text" placeholder="Ex: Mateus" required />
+            </div>
+
+            <div class="form-group">
+              <label for="email"
+                ><i class="fas fa-envelope"></i> E-mail de Login</label
+              >
+              <input
+                id="email"
+                type="email"
+                placeholder="Ex: cliente@ntech.com"
+                autocomplete="email"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password"
+                ><i class="fas fa-lock"></i> Senha de Acesso</label
+              >
+              <input
+                id="password"
+                type="password"
+                placeholder="Crie uma senha segura"
+                autocomplete="new-password"
+                required
+              />
+            </div>
+
+            <button type="button" onclick="goToStep(2)">
+              Avançar <i class="fas fa-arrow-right"></i>
+            </button>
           </div>
 
-          <div class="form-group">
-            <label for="email">E-mail de Login</label>
-            <input
-              id="email"
-              type="email"
-              placeholder="Ex: cliente@ntech.com"
-              autocomplete="email"
-              required
-            />
+          <div class="form-step" id="step-2">
+            <div class="form-group checkbox-group">
+              <input id="businessHoursEnabled" type="checkbox" checked />
+              <label for="businessHoursEnabled"
+                >Ativar controle de Horário Comercial</label
+              >
+            </div>
+
+            <div class="time-row">
+              <div class="form-group">
+                <label for="workStart"
+                  ><i class="fas fa-clock"></i> Abertura</label
+                >
+                <input id="workStart" type="time" value="08:00" />
+              </div>
+              <div class="form-group">
+                <label for="workEnd"
+                  ><i class="fas fa-history"></i> Fechamento</label
+                >
+                <input id="workEnd" type="time" value="18:00" />
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn-secondary" onclick="goToStep(1)">
+                <i class="fas fa-arrow-left"></i> Voltar
+              </button>
+              <button type="button" onclick="goToStep(3)">
+                Avançar <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label for="password">Senha de Acesso</label>
-            <input
-              id="password"
-              type="password"
-              placeholder="Crie uma senha segura"
-              autocomplete="new-password"
-              required
-            />
-          </div>
+          <div class="form-step" id="step-3">
+            <div class="form-group">
+              <label for="phone"
+                ><i class="fab fa-whatsapp"></i> WhatsApp Principal (DDD +
+                Número)</label
+              >
+              <input
+                id="phone"
+                type="text"
+                placeholder="Ex: 88999999999"
+                required
+              />
+            </div>
 
-          <button onclick="register()" type="button">Cadastrar Cliente</button>
+            <div class="form-group">
+              <label for="timezone"
+                ><i class="fas fa-globe-americas"></i> Fuso Horário do
+                Sistema</label
+              >
+              <input
+                id="timezone"
+                type="text"
+                value="America/Fortaleza"
+                required
+              />
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn-secondary" onclick="goToStep(2)">
+                <i class="fas fa-arrow-left"></i> Voltar
+              </button>
+              <button type="button" onclick="executeFinalRegister()">
+                Concluir Cadastro <i class="fas fa-check-circle"></i>
+              </button>
+            </div>
+          </div>
         </form>
 
         <p class="status-message" id="status"></p>
 
         <div class="footer-text">
-          Já possui uma conta ativa?
-          <a href="/login">Fazer Login</a>
+          Já possui uma conta ativa? <a href="/login">Fazer Login</a>
         </div>
       </div>
     </div>

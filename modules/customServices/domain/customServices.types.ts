@@ -17,7 +17,6 @@ export interface CustomServiceItem {
   durationMinutes: number;
   strategyType?: SchedulingStrategyType;
   courseMetadata?: RecurrentCourseMetadata;
-  // 🔥 NOVOS CAMPOS: Mensagem Customizada por Serviço
   useCustomMessage?: boolean;
   customConfirmationMessage?: string;
 }

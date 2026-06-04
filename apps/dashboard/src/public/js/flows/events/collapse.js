@@ -1,5 +1,3 @@
-// C:\My Codes\NFlow Core\apps\dashboard\src\public\js\flows\events\collapse.js
-
 function toggleFlow(flowId) {
   const body = document.getElementById(`flow-body-${flowId}`);
   const icon = document.getElementById(`collapse-${flowId}`);

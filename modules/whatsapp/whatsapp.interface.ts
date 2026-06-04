@@ -23,7 +23,7 @@ export interface IWhatsappService {
     number: string,
     text: string,
     imagePath?: string,
-  ): Promise<void>;
+  ): Promise<string>;
 
   /**
    * Enfileira disparos em massa para múltiplos grupos do WhatsApp.

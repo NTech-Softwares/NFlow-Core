@@ -1,7 +1,23 @@
-import fs from "fs";
-import path from "path";
+import { dbClient } from "../../../shared/database";
 import { Flow } from "../domain/flow.types";
 import { logger } from "../../../shared/utils/logger";
+
+// ==========================================
+// HELPERS DE VALIDAÇÃO E TRATAMENTO
+// ==========================================
+
+function resolveUserId(idOrSession: string): string {
+  if (!idOrSession) return "";
+  return idOrSession.startsWith("sess_")
+    ? idOrSession.replace("sess_", "")
+    : idOrSession;
+}
+
+function isValidUUID(id: string): boolean {
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
 
 export const DEFAULT_FLOW_TEMPLATE: Record<string, Flow> = {
   main: {
@@ -18,81 +34,79 @@ export const DEFAULT_FLOW_TEMPLATE: Record<string, Flow> = {
           "Você ainda não configurou as opções deste menu.",
           "Crie fluxos de atendimento para o seu bot!",
         ],
-        options: [
-          {
-            key: "0",
-            back: true,
-          },
-        ],
+        options: [{ key: "0", back: true }],
       },
     },
   },
 };
 
 /**
- * Auxiliar para capturar o caminho absoluto do arquivo flows.json baseado no ID do Usuário
- * Aponta para a pasta central de storage na raiz do projeto
+ * Retorna o fluxo customizado de uma sessão específica baseada no ID do usuário (UUID)
  */
-function getFlowFilePath(id: string): string {
-  return path.join(process.cwd(), "storage", "flows", id, "flows.json");
-}
-
-/**
- * Retorna o fluxo customizado de uma sessão específica baseada no ID do usuário
- */
-export function getFlowsForSession(
+export async function getFlowsForSession(
   sessionId: string,
-  id: string,
-): Record<string, Flow> {
-  const userFlowFile = getFlowFilePath(id);
-  const userFolder = path.dirname(userFlowFile);
+  userId: string,
+): Promise<Record<string, Flow>> {
+  const pureUserId = resolveUserId(userId);
+
+  if (!isValidUUID(pureUserId)) {
+    logger.warn(
+      `[Registry] getFlowsForSession recebeu ID inválido: "${pureUserId}". Retornando template padrão.`,
+    );
+    return DEFAULT_FLOW_TEMPLATE;
+  }
+
+  const query = `SELECT flows FROM user_flows WHERE user_id = $1`;
 
   try {
-    // 🎯 Garante que a árvore de pastas no storage/flows/{id} exista
-    if (!fs.existsSync(userFolder)) {
-      fs.mkdirSync(userFolder, { recursive: true });
-    }
+    const rows = await dbClient.query<{ flows: Record<string, Flow> }>(query, [
+      pureUserId,
+    ]);
 
-    // 🎯 Se o usuário não tiver o arquivo, grava o template minimalista
-    if (!fs.existsSync(userFlowFile)) {
+    if (rows.length === 0) {
       logger.info(
-        `[Registry] Inicializando estrutura minimalista padrão no storage para o ID: ${id} (Sessão: ${sessionId})`,
+        `[Registry] Inicializando template minimalista padrão no Banco para o User ID: ${pureUserId} (Sessão: ${sessionId})`,
       );
 
-      fs.writeFileSync(
-        userFlowFile,
-        JSON.stringify(DEFAULT_FLOW_TEMPLATE, null, 2),
-        "utf-8",
-      );
+      await saveFlowsForSession(sessionId, pureUserId, DEFAULT_FLOW_TEMPLATE);
+      return DEFAULT_FLOW_TEMPLATE;
     }
 
-    const fileContent = fs.readFileSync(userFlowFile, "utf-8");
-    return JSON.parse(fileContent) as Record<string, Flow>;
+    return rows[0].flows;
   } catch (error: any) {
     logger.error(
-      `Erro ao carregar/criar fluxos para o ID [${id}] (Sessão: ${sessionId}): ${error.message}`,
+      `Erro ao carregar fluxos para o User ID [${pureUserId}] (Sessão: ${sessionId}) no Banco: ${error.message}`,
     );
     return DEFAULT_FLOW_TEMPLATE;
   }
 }
 
 /**
- * Salva um novo fluxo customizado enviado pelo painel para um usuário específico
+ * Salva um novo fluxo customizado vindo do painel para um usuário específico
  */
-export function saveFlowsForSession(
+export async function saveFlowsForSession(
   sessionId: string,
-  id: string,
+  userId: string,
   newFlows: Record<string, Flow>,
-) {
-  const userFlowFile = getFlowFilePath(id);
-  const userFolder = path.dirname(userFlowFile);
+): Promise<void> {
+  const pureUserId = resolveUserId(userId);
 
-  if (!fs.existsSync(userFolder)) {
-    fs.mkdirSync(userFolder, { recursive: true });
+  if (!isValidUUID(pureUserId)) {
+    logger.error(
+      `[Registry] saveFlowsForSession falhou. O user_id "${pureUserId}" não é um UUID válido.`,
+    );
+    return;
   }
 
-  fs.writeFileSync(userFlowFile, JSON.stringify(newFlows, null, 2), "utf-8");
+  const query = `
+    INSERT INTO user_flows (user_id, flows, updated_at)
+    VALUES ($1, $2, CURRENT_TIMESTAMP)
+    ON CONFLICT (user_id) 
+    DO UPDATE SET flows = EXCLUDED.flows, updated_at = CURRENT_TIMESTAMP
+  `;
+
+  await dbClient.query(query, [pureUserId, JSON.stringify(newFlows)]);
   logger.info(
-    `[Registry] Fluxos atualizados com sucesso no storage para o ID: ${id}`,
+    `[Registry] Fluxos atualizados com sucesso no Banco para o User ID: ${pureUserId} (Sessão: ${sessionId})`,
   );
 }

@@ -1,44 +1,28 @@
-import fs from "fs";
-import path from "path";
 import { logger } from "../../shared/utils/logger";
-import { DEFAULT_FLOW_TEMPLATE } from "../flows/repository/flow.registry";
+import {
+  DEFAULT_FLOW_TEMPLATE,
+  saveFlowsForSession,
+} from "../flows/repository/flow.registry";
 import { BusinessHoursConfig } from "../../shared/utils/businessHours";
 import * as userRepository from "./users.repository";
 
 export class UserService {
   /**
-   * Provisiona a estrutura inicial de arquivos para um novo usuário cadastrado
+   * 🚀 CORRIGIDO: Agora aceita o whatsappSessionId real (sess_UUID) vindo do fluxo de autenticação
    */
-  async provisionNewTenantSpace(id: string): Promise<void> {
+  async provisionNewTenantSpace(
+    id: string,
+    whatsappSessionId: string,
+  ): Promise<void> {
     try {
-      const sessionFolder = path.join(
-        process.cwd(),
-        "providers",
-        "whatsapp",
-        "baileys",
-        "flows",
-        "data",
-        id,
+      // Grava na tabela chamando a PK correta que o Baileys/Chat vai buscar
+      await saveFlowsForSession(whatsappSessionId, id, DEFAULT_FLOW_TEMPLATE);
+      logger.info(
+        `[Provisionamento] Fluxos iniciais criados no Postgres para a Sessão: ${whatsappSessionId}`,
       );
-      const userFlowFile = path.join(sessionFolder, "flows.json");
-
-      if (!fs.existsSync(sessionFolder)) {
-        fs.mkdirSync(sessionFolder, { recursive: true });
-      }
-
-      if (!fs.existsSync(userFlowFile)) {
-        fs.writeFileSync(
-          userFlowFile,
-          JSON.stringify(DEFAULT_FLOW_TEMPLATE, null, 2),
-          "utf-8",
-        );
-        logger.info(
-          `[Provisionamento] Espaço de fluxos criado com sucesso para o novo inquilino: ${id}`,
-        );
-      }
     } catch (error: any) {
       logger.error(
-        `[Provisionamento] Falha ao criar espaço físico para o tenant [${id}]: ${error.message}`,
+        `[Provisionamento] Falha para o tenant [${id}]: ${error.message}`,
       );
     }
   }

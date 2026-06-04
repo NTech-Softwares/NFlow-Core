@@ -2,24 +2,21 @@ import { messageQueue } from "../../../shared/queue/messageQueue";
 import { getWhatsapp } from "../../../providers/whatsapp/baileys/client";
 import { logger } from "../../../shared/utils/logger";
 import { QueueJob } from "../../../shared/types/QueueJob";
-import { updateSchedule } from "../../../modules/scheduler/schedule.repository"; // 🟢 Importação do repositório
-import { getSession } from "../../../modules/flows/state/sessionStore";
+import { updateSchedule } from "../../../modules/scheduler/schedule.repository";
+import { dbClient } from "../../../shared/database"; // 🟢 Importado para logs de auditoria
+import {
+  getSession,
+  saveSession,
+} from "../../../modules/flows/state/sessionStore";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/*
- =========================
- PAYLOAD DA MENSAGEM
- =========================
-*/
 function createMessagePayload(job: any) {
   return job.imagePath
     ? {
-        image: {
-          url: job.imagePath,
-        },
+        image: { url: job.imagePath },
         caption: job.message.text,
       }
     : {
@@ -27,46 +24,33 @@ function createMessagePayload(job: any) {
       };
 }
 
-/*
- =========================
- ENVIO PARA GRUPOS
- =========================
-*/
 async function sendGroupMessage(sock: any, job: any, messagePayload: any) {
   logger.info(
     `\n[Sessão: ${job.sessionId}] === ENVIO GRUPO ===\nJID: ${job.jid}`,
   );
-
   await sock.sendPresenceUpdate("composing", job.jid);
   await delay(1000);
 
   const response = await sock.sendMessage(job.jid, messagePayload);
-
   logger.info(
     `\n[Sessão: ${job.sessionId}] === MENSAGEM ENVIADA ===\nJID: ${job.jid}\nID: ${response.key.id}`,
   );
 }
 
-/*
- =========================
- ENVIO PARA LID
- =========================
-*/
 async function sendLidMessage(sock: any, job: any, messagePayload: any) {
   logger.info(
     `\n[Sessão: ${job.sessionId}] === ENVIO LID ===\nJID: ${job.jid}`,
   );
-
   await sock.sendPresenceUpdate("composing", job.jid);
   await delay(1000);
 
   const response = await sock.sendMessage(job.jid, messagePayload);
 
-  // 🟢 Registra o ID enviado para não quebrar fluxos caso o webhook capture o eco
   if (response?.key?.id) {
-    const session = getSession(job.jid, job.sessionId);
+    const session = await getSession(job.jid, job.sessionId);
     if (!session.botMessageIds) session.botMessageIds = [];
     session.botMessageIds.push(response.key.id);
+    await saveSession(job.jid, job.sessionId, session);
   }
 
   logger.info(
@@ -74,11 +58,6 @@ async function sendLidMessage(sock: any, job: any, messagePayload: any) {
   );
 }
 
-/*
- =========================
- ENVIO PARA PRIVADOS
- =========================
-*/
 async function sendPrivateMessage(sock: any, job: any, messagePayload: any) {
   logger.info(
     `\n[Sessão: ${job.sessionId}] === ENVIO PRIVADO ===\nJID: ${job.jid}`,
@@ -95,18 +74,16 @@ async function sendPrivateMessage(sock: any, job: any, messagePayload: any) {
   }
 
   const realJid = result.jid;
-
   await sock.presenceSubscribe(realJid);
   await delay(500);
 
   const response = await sock.sendMessage(realJid, messagePayload);
 
-  // 🟢 CORREÇÃO: Agora mapeando as propriedades corretas vindas de 'realJid' e 'job'
   if (response?.key?.id) {
-    const session = getSession(realJid, job.sessionId);
-
+    const session = await getSession(realJid, job.sessionId);
     if (!session.botMessageIds) session.botMessageIds = [];
     session.botMessageIds.push(response.key.id);
+    await saveSession(realJid, job.sessionId, session);
   }
 
   logger.info(
@@ -114,16 +91,13 @@ async function sendPrivateMessage(sock: any, job: any, messagePayload: any) {
   );
 }
 
-/*
- =========================
- WORKER CORE
- =========================
-*/
 export async function startWorker() {
   logger.info("Worker iniciado operando em modo Multi-Tenant");
 
   while (true) {
-    if (messageQueue.length > 0) {
+    // 🟢 CORREÇÃO: Usando o método .size() em vez de .length
+    if (messageQueue.size() > 0) {
+      // 🟢 CORREÇÃO: Usando o método .shift() exposto pela classe manager
       const job = messageQueue.shift() as QueueJob | undefined;
 
       if (!job) {
@@ -152,7 +126,6 @@ export async function startWorker() {
         `);
 
         const messagePayload = createMessagePayload(job);
-
         const isGroup = job.jid.endsWith("@g.us");
         const isUser = job.jid.endsWith("@s.whatsapp.net");
         const isLid = job.jid.endsWith("@lid");
@@ -165,10 +138,8 @@ export async function startWorker() {
           await sendLidMessage(sock, job, messagePayload);
         } else {
           logger.error(
-            `[Sessão: ${job.sessionId}] JID Inválido ou desconhecido (Descarte Direto): ${job.jid}`,
+            `[Sessão: ${job.sessionId}] JID Inválido (Descarte): ${job.jid}`,
           );
-
-          // 🟢 Trata descarte de JID inválido também no repositório de agendamentos se aplicável
           if (job.userId && job.scheduleId) {
             await updateSchedule(job.userId, job.scheduleId, {
               status: "failed",
@@ -178,11 +149,17 @@ export async function startWorker() {
           continue;
         }
 
-        /*
-         =========================
-         DELAY ANTI-BAN RATELIMIT
-         =========================
-        */
+        // 🟢 AUDITORIA: Grava log de sucesso no banco relacional
+        await dbClient
+          .query(
+            `
+          INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status)
+          VALUES ($1, $2, $3, 'sent')
+        `,
+            [job.sessionId, job.jid, job.message.text],
+          )
+          .catch(() => {});
+
         const randomDelay = Math.floor(Math.random() * 2000) + 2000;
         await delay(randomDelay);
       } catch (error: any) {
@@ -197,7 +174,6 @@ export async function startWorker() {
         `);
 
         const errorMessage = error.message || "";
-
         const isConnectionError =
           errorMessage.includes("Closed") ||
           errorMessage.includes("not opened") ||
@@ -212,19 +188,27 @@ export async function startWorker() {
 
         if (isConnectionError && currentAttempts < 3) {
           job.attempts = currentAttempts + 1;
-
           logger.warn(
-            `[Worker] Instância [${job.sessionId}] com instabilidade. Reinserindo na fila para tentativa (${job.attempts}/3)...`,
+            `[Worker] Instância [${job.sessionId}] está instável. Tentando novamente (${job.attempts}/3)...`,
           );
-
           messageQueue.push(job);
           await delay(1000);
         } else {
           logger.error(
-            `[Worker] Job da sessão [${job.sessionId}] para [${job.jid}] descartado definitivamente.`,
+            `[Worker] Job da sessão [${job.sessionId}] descartado definitivamente.`,
           );
 
-          // 🟢 ⏰ CRÍTICO: Se o job veio do agendador, atualiza o status para 'failed' no JSON do cliente
+          // 🟢 AUDITORIA: Grava log de erro definitivo no banco relacional
+          await dbClient
+            .query(
+              `
+            INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message)
+            VALUES ($1, $2, $3, 'failed', $4)
+          `,
+              [job.sessionId, job.jid, job.message.text, errorMessage],
+            )
+            .catch(() => {});
+
           if (job.userId && job.scheduleId) {
             try {
               await updateSchedule(job.userId, job.scheduleId, {
@@ -233,12 +217,9 @@ export async function startWorker() {
                   errorMessage ||
                   "Limite máximo de tentativas de conexão esgotado.",
               });
-              logger.warn(
-                `[Worker] Status do agendamento [${job.scheduleId}] revertido para 'failed' no armazenamento.`,
-              );
             } catch (repoError: any) {
               logger.error(
-                `[Worker] Erro ao gravar status de falha no agendamento: ${repoError.message}`,
+                `[Worker] Erro ao gravar status de falha: ${repoError.message}`,
               );
             }
           }

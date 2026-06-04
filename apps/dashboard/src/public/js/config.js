@@ -1,3 +1,4 @@
 window.APP_CONFIG = {
-  API_URL: "http://192.168.18.38:3333",
+  // Pega dinamicamente o domínio e a porta exatos de onde o painel está sendo acessado
+  API_URL: window.location.origin,
 };

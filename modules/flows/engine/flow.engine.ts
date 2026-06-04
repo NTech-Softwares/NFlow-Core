@@ -6,7 +6,7 @@ import {
 import { handleCustomServicesFlow } from "../../customServices/engine/customServices.flow";
 import { getBusinessHoursByUserId } from "../../users/users.repository";
 import { getFlowsForSession } from "../repository/flow.registry";
-import { getSession } from "../state/sessionStore";
+import { getSession, saveSession } from "../state/sessionStore";
 
 // 1. DEFINIÇÃO DA INTERFACE DOS COMANDOS GLOBAIS
 interface GlobalCommandResult {
@@ -114,8 +114,7 @@ export async function processFlow(
   fromMe: boolean = false,
   messageId?: string,
 ) {
-  // 1. Recupera ou cria a sessão atual do lead ISOLADA por Tenant
-  const session = getSession(remoteJid, sessionId);
+  const session = await getSession(remoteJid, sessionId);
 
   /*
    =========================================================
@@ -123,65 +122,60 @@ export async function processFlow(
    =========================================================
   */
   if (fromMe) {
-    // Garante que a lista de controle de IDs do bot exista na sessão
     if (!session.botMessageIds) session.botMessageIds = [];
 
-    // 🟢 2. Verifica se este ID foi gerado por uma ação automática do próprio Bot
     const isBotMessage = session.botMessageIds.includes(messageId);
 
     if (isBotMessage) {
-      // É uma mensagem automática do bot! Limpamos o ID do cache para poupar memória
       session.botMessageIds = session.botMessageIds.filter(
         (id: string) => id !== messageId,
       );
     } else if (session.atendimento === "em_espera") {
-      // 🔥 Se NÃO é mensagem do bot e estava "em_espera", significa que o
-      // OPERADOR HUMANO digitou diretamente no celular ou no WhatsApp Web!
       session.atendimento = "em_atendimento";
       session.lastMessage = content;
       session.updatedAt = new Date();
     }
 
-    // Retorna vazio imediatamente para que a engine não responda a si mesma
+    // 🔥 Salva o estado modificado no banco antes de interromper
+    await saveSession(remoteJid, sessionId, session);
     return { messages: [] };
   }
 
-  // ATUALIZAÇÃO DE METADADOS (Mensagens recebidas estritamente do Cliente)
+  // ATUALIZAÇÃO DE METADADOS
   if (pushName) session.pushName = pushName;
   session.lastMessage = content;
   session.updatedAt = new Date();
 
-  // Normaliza o texto do cliente para evitar problemas de caixa ou acentuação
   const normalized = content
     .trim()
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-  // EXTRAÇÃO DO ID DO USUÁRIO
   const userId = sessionId.includes("_session")
     ? sessionId.split("_session")[0]
     : sessionId;
 
-  // 🔥 INTERCEPTADOR DO MÓDULO CUSTOM SERVICES
+  // INTERCEPTADOR DO MÓDULO CUSTOM SERVICES
   const customServicesResult = await handleCustomServicesFlow(
     remoteJid,
     content,
     sessionId,
     userId,
-    normalized, // texto limpo e sem acento
+    normalized,
+    session,
   );
 
   if (customServicesResult) {
-    // Se o módulo interceptou e processou, retorna a resposta gerada por ele imediatamente
+    // 🔥 Salva o estado modificado gerado pelo serviço customizado
+    await saveSession(remoteJid, sessionId, session);
     return customServicesResult;
   }
 
-  // Horário de funcionamento
   const businessHours = await getBusinessHoursByUserId(userId);
 
-  // 2. Carrega dinamicamente os fluxos exclusivos DESTE inquilino
-  const flows = getFlowsForSession(sessionId, userId);
+  // 🔥 Ajustado para usar AWAIT: Busca a árvore de fluxos registrada no banco de dados
+  const flows = await getFlowsForSession(sessionId, userId);
   const currentFlow = flows[session.currentFlow];
 
   if (!currentFlow) {
@@ -212,15 +206,19 @@ export async function processFlow(
   */
   if (session.atendimento !== "automatico") {
     if (normalized === "encerrar" || normalized === "autoatendimento") {
-      return globalCommands[normalized]();
+      const result = globalCommands[normalized]();
+      await saveSession(remoteJid, sessionId, session);
+      return result;
     }
 
-    // Silencia o bot enquanto o cliente estiver sob controle humano
+    await saveSession(remoteJid, sessionId, session);
     return { messages: [] };
   }
 
   if (globalCommands[normalized]) {
-    return globalCommands[normalized]();
+    const result = globalCommands[normalized]();
+    await saveSession(remoteJid, sessionId, session);
+    return result;
   }
 
   /*
@@ -229,10 +227,11 @@ export async function processFlow(
    =========================================================
   */
   if (
-    ["oi", "ola", "olá", "hello", "tudo manero cumpade"].includes(normalized) ||
+    ["oi", "ola", "hello", "tudo manero cumpade"].includes(normalized) ||
     !session.welcome
   ) {
     session.welcome = true;
+    await saveSession(remoteJid, sessionId, session);
     return { messages: currentStep.message };
   }
 
@@ -253,6 +252,7 @@ export async function processFlow(
       (stepOptions.length === 1 && stepOptions[0].key === "0");
 
     if (isFreeTextStep) {
+      await saveSession(remoteJid, sessionId, session);
       return { messages: [] };
     }
 
@@ -302,6 +302,9 @@ export async function processFlow(
   if (!nextStep) {
     return { messages: ["❌ Próxima etapa do fluxo não encontrada."] };
   }
+
+  // Grava definitivamente todas as transições de estado calculadas no banco de dados
+  await saveSession(remoteJid, sessionId, session);
 
   return {
     messages: nextStep.message,

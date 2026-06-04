@@ -24,4 +24,5 @@ export interface ScheduledMessage {
   // Timestamps de Auditoria
   createdAt: string; // Data de criação do agendamento
   sentAt?: string; // Data exata em que o Baileys confirmou o envio
+  payload?: Record<string, any>;
 }

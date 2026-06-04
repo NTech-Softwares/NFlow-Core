@@ -1,1 +1,447 @@
-[]
+[
+  {
+    "id": "adb97488-04f4-4ac7-a492-0bb1bc58cc48",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428697940",
+      "name": "Corte Degradê",
+      "price": 30,
+      "durationMinutes": 45,
+      "strategyType": "STANDARD",
+      "courseMetadata": null,
+      "useCustomMessage": false,
+      "customConfirmationMessage": ""
+    },
+    "serviceId": "new-1780428697940",
+    "date": "2026-06-04",
+    "time": "07:00",
+    "createdAt": "2026-06-02T22:14:17.961Z",
+    "remindersScheduled": {
+      "twentyFourHours": "21601a63-6bf1-47d7-8966-75f7aca507b3",
+      "oneHour": "9bc3bfc2-185b-4bfd-9a7d-5e4e9b70d6e0"
+    }
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-1",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-06-04",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.673Z",
+    "remindersScheduled": {
+      "twentyFourHours": "2b0008a1-f173-4fbe-9652-d506ae25b168",
+      "oneHour": "32a2422e-1275-43eb-bd91-a0d30ccfc1fc"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 1
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-2",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-06-11",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.690Z",
+    "remindersScheduled": {
+      "twentyFourHours": "167dd9e5-f823-4ad7-8012-116636552266",
+      "oneHour": "ff7fa084-e3f8-43af-a520-ada9268db8f7"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 2
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-3",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-06-18",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.708Z",
+    "remindersScheduled": {
+      "twentyFourHours": "aec783dd-bd1b-4f33-8d5e-949bce05ab5e",
+      "oneHour": "0e645c2a-daea-44ee-8498-d178d1489115"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 3
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-4",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-06-25",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.728Z",
+    "remindersScheduled": {
+      "twentyFourHours": "3d597847-7aad-4c52-8e49-15b1b1c26a13",
+      "oneHour": "f427f50a-f4b6-4830-8789-718571e8057f"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 4
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-5",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-07-02",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.747Z",
+    "remindersScheduled": {
+      "twentyFourHours": "56475e61-e08c-44bf-bca4-2726dfd0cc7b",
+      "oneHour": "d74fcc0f-9b83-430b-8465-7943ff9a7496"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 5
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-6",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-07-09",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.765Z",
+    "remindersScheduled": {
+      "twentyFourHours": "3fb3cbb4-8fe6-4713-9077-2559aaefec07",
+      "oneHour": "be96cdb0-e59a-4901-9250-9a31393ef6fa"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 6
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-7",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-07-16",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.782Z",
+    "remindersScheduled": {
+      "twentyFourHours": "ce39397a-54b9-4189-b808-aecf609902ab",
+      "oneHour": "62ed4e15-46ed-43b2-b47d-dbea38eaf73b"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 7
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-8",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-07-23",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.800Z",
+    "remindersScheduled": {
+      "twentyFourHours": "75dc5910-a59c-4e6c-b9f0-850fc33ff1b2",
+      "oneHour": "59292832-5853-4b9e-a256-a78e6ee0070f"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 8
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-9",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-07-30",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.817Z",
+    "remindersScheduled": {
+      "twentyFourHours": "e4fb1037-534e-4280-8261-b715f8f29533",
+      "oneHour": "398df89f-635d-46f1-b83a-eb0510c3b3fc"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 9
+  },
+  {
+    "id": "63545f60-3698-4e18-8a04-06efaf5e0eb5-10",
+    "userId": "mateus",
+    "sessionId": "mateus_session",
+    "remoteJid": "40811148374235@lid",
+    "clientName": "Mateus",
+    "service": {
+      "id": "new-1780428715188",
+      "name": "Curso de Programação",
+      "price": 99.9,
+      "durationMinutes": 120,
+      "strategyType": "RECURRENT_COURSE",
+      "courseMetadata": {
+        "totalClasses": 10,
+        "maxStudentsPerSlot": 1,
+        "allowedDaysOfWeek": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "customHours": {
+          "open": "18:00",
+          "close": "22:00"
+        }
+      },
+      "useCustomMessage": true,
+      "customConfirmationMessage": "🎓 *Matrícula Confirmada no Curso, {cliente}!* \n\nSeu acesso à turma de *{servico}* está liberado. Nossas aulas começam nos dias *{data}* rigorosamente às *{horario}*.\n\nO professor entrará em contato e enviará o link da aula! 💻"
+    },
+    "serviceId": "new-1780428715188",
+    "date": "2026-08-06",
+    "time": "20:00",
+    "createdAt": "2026-06-02T22:14:41.833Z",
+    "remindersScheduled": {
+      "twentyFourHours": "13094a7f-f822-402d-a1e4-8493cf16ef69",
+      "oneHour": "2c1ac970-fca3-4a75-8aed-958bf71c4069"
+    },
+    "parentId": "63545f60-3698-4e18-8a04-06efaf5e0eb5",
+    "classIndex": 10
+  }
+]

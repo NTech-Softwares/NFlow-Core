@@ -1,6 +1,5 @@
 import makeWASocket, {
   Browsers,
-  useMultiFileAuthState,
   DisconnectReason,
   fetchLatestWaWebVersion,
   WASocket,
@@ -8,13 +7,12 @@ import makeWASocket, {
 import { pino } from "pino";
 import qrcode from "qrcode-terminal";
 import { Boom } from "@hapi/boom";
-import fs from "fs";
-import path from "path";
 import { logger } from "../../../shared/utils/logger";
 import { getMessage } from "../../../shared/utils/message";
+import { dbClient } from "../../../shared/database";
+import { usePostgresAuthState } from "./baileysDbAuth";
 import MessageHandler from "./handlers/message.handler";
 
-// Interfaces para controle interno por instância
 interface SessionControl {
   sock: WASocket;
   status: "DISCONNECTED" | "CONNECTING" | "QRCODE" | "CONNECTED";
@@ -23,18 +21,35 @@ interface SessionControl {
   isStarting: boolean;
 }
 
-// 🎯 O CORAÇÃO DO MULTI-TENANT: Armazena as sessões ativas isoladas na memória do Node.js
 const activeSessions = new Map<string, SessionControl>();
-
 const MAX_RECONNECT_ATTEMPTS = 5;
 const USE_LATEST_VERSION = true;
 
-/**
- * Inicializa ou retorna a sessão do WhatsApp de um usuário específico
- * @param sessionId O whatsappSessionId vindo do banco/JSON do usuário
- */
+// Função auxiliar interna para atualizar o status na memória e no Postgres de forma síncrona/transparente
+async function updateSessionStatusTable(
+  sessionId: string,
+  status: SessionControl["status"],
+  qr: string | null = null,
+) {
+  try {
+    await dbClient.query(
+      `
+      INSERT INTO whatsapp_session_status (session_id, status, qr_code, updated_at)
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+      ON CONFLICT (session_id) 
+      DO UPDATE SET status = EXCLUDED.status, qr_code = EXCLUDED.qr_code, updated_at = CURRENT_TIMESTAMP
+    `,
+      [sessionId, status, qr],
+    );
+  } catch (err) {
+    logger.error(
+      `[Sessão: ${sessionId}] Erro ao espelhar status no banco:`,
+      err,
+    );
+  }
+}
+
 export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
-  // Se a sessão já existe, está conectada ou tentando conectar, reaproveita a instância
   const existingSession = activeSessions.get(sessionId);
   if (
     existingSession &&
@@ -43,10 +58,6 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
     return existingSession.sock;
   }
 
-  // Define o caminho dinâmico e isolado da pasta de autenticação do cliente
-  const authFolder = path.join(process.cwd(), "auth", "sessions", sessionId);
-
-  // Inicializa ou recupera o objeto de controle da sessão específica no Map
   if (!activeSessions.has(sessionId)) {
     activeSessions.set(sessionId, {
       sock: null as any,
@@ -62,14 +73,13 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
   const currentControl = activeSessions.get(sessionId)!;
 
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(authFolder);
+    // 🔥 Mudança estratégica: Usando o banco de dados Postgres em vez do sistema de arquivos local
+    const { state, saveCreds } = await usePostgresAuthState(sessionId);
     const { version, isLatest } = await fetchLatestWaWebVersion({});
 
     if (USE_LATEST_VERSION) {
       logger.info(
-        `[Sessão: ${sessionId}] Versão WaWeb: ${version.join(".")} | ${
-          isLatest ? "Mais recente" : "Desatualizada"
-        }`,
+        `[Sessão: ${sessionId}] Versão WaWeb: ${version.join(".")} | ${isLatest ? "Mais recente" : "Desatualizada"}`,
       );
     }
 
@@ -79,14 +89,12 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
       printQRInTerminal: false,
       version: USE_LATEST_VERSION ? version : undefined,
       defaultQueryTimeoutMs: 60000,
-      logger: pino({ level: "silent" }), // Evita flooding de logs no terminal
+      logger: pino({ level: "silent" }),
       generateHighQualityLinkPreview: false,
     });
 
-    // Vincula o socket criado ao controle da sessão do cliente
     currentControl.sock = sock;
 
-    // Escuta atualizações de conexão
     sock.ev.on(
       "connection.update",
       async ({ connection, lastDisconnect, qr }: any) => {
@@ -97,14 +105,15 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
         if (qr) {
           currentControl.status = "QRCODE";
           currentControl.qr = qr;
+          await updateSessionStatusTable(sessionId, "QRCODE", qr);
 
-          // Exibe o QR do cliente específico no terminal para debug local
           console.log(`\n--- QR CODE DO CLIENTE: ${sessionId} ---`);
           qrcode.generate(qr, { small: true });
         }
 
         if (connection === "connecting") {
           currentControl.status = "CONNECTING";
+          await updateSessionStatusTable(sessionId, "CONNECTING");
         }
 
         if (connection === "open") {
@@ -112,6 +121,7 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
           currentControl.qr = null;
           currentControl.reconnectAttempts = 0;
           currentControl.isStarting = false;
+          await updateSessionStatusTable(sessionId, "CONNECTED");
           logger.info(`[Sessão: ${sessionId}] Bot Conectado com Sucesso!`);
         }
 
@@ -125,6 +135,7 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
 
           if (shouldReconnect) {
             currentControl.reconnectAttempts++;
+            await updateSessionStatusTable(sessionId, "DISCONNECTED");
 
             if (currentControl.reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
               logger.error(
@@ -143,21 +154,25 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
               startWhatsapp(sessionId);
             }, 5000);
           } else {
-            // TRATAMENTO DE LOGOUT PERMANENTE DO CLIENTE ESPECÍFICO
+            // TRATAMENTO DE LOGOUT PERMANENTE (Desconexão pelo celular do cliente)
             logger.warn(
-              `[Sessão: ${sessionId}] Desconectado permanentemente. Limpando diretório local...`,
+              `[Sessão: ${sessionId}] Desconectado permanentemente. Limpando dados do Banco...`,
             );
 
             try {
-              if (fs.existsSync(authFolder)) {
-                fs.rmSync(authFolder, { recursive: true, force: true });
-                logger.info(
-                  `[Sessão: ${sessionId}] Pasta de credenciais limpa.`,
-                );
-              }
+              // Limpa todas as credenciais secretas do banco de dados para forçar novo login e QR Code limpo
+              await dbClient.query(
+                `DELETE FROM whatsapp_auth_creds WHERE session_id = $1`,
+                [sessionId],
+              );
+              await dbClient.query(
+                `DELETE FROM whatsapp_auth_keys WHERE session_id = $1`,
+                [sessionId],
+              );
+              await updateSessionStatusTable(sessionId, "DISCONNECTED", null);
             } catch (err) {
               logger.error(
-                `[Sessão: ${sessionId}] Erro ao remover pasta de autenticação:`,
+                `[Sessão: ${sessionId}] Erro ao remover credenciais do banco:`,
                 err,
               );
             }
@@ -165,7 +180,7 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
             currentControl.reconnectAttempts = 0;
             currentControl.isStarting = false;
             currentControl.qr = null;
-            activeSessions.delete(sessionId); // Remove do Map para reset total
+            activeSessions.delete(sessionId);
 
             setTimeout(() => {
               startWhatsapp(sessionId);
@@ -175,7 +190,6 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
       },
     );
 
-    // Escuta novas mensagens recebidas por esta instância
     sock.ev.on("messages.upsert", async ({ messages, type }) => {
       if (type !== "notify" && type !== "append") return;
 
@@ -194,16 +208,13 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
           )
             continue;
 
-          // O seu getMessage já recebe o 'sock' perfeitamente aqui:
           const formattedMessage = getMessage(message, sock);
           if (!formattedMessage || !formattedMessage.content) continue;
 
-          // Log incremental para você acompanhar o comportamento no terminal
           logger.info(
             `[Sessão: ${sessionId}] Mensagem processada | De: ${formattedMessage.pushName || "User"} | deMim? ${formattedMessage.fromMe}`,
           );
 
-          // 💡 IMPORTANTE: Passamos o sessionId para o Handler saber qual fluxo de qual cliente rodar!
           await MessageHandler(formattedMessage, sessionId);
         } catch (error) {
           logger.error(
@@ -222,9 +233,6 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
   }
 };
 
-/**
- * Recupera a instância do socket de um usuário ativo na memória
- */
 export function getWhatsapp(sessionId: string): WASocket {
   const session = activeSessions.get(sessionId);
   if (!session || !session.sock) {
@@ -233,9 +241,6 @@ export function getWhatsapp(sessionId: string): WASocket {
   return session.sock;
 }
 
-/**
- * Retorna o status atualizado de uma sessão específica para a API
- */
 export function getSessionStatus(sessionId: string) {
   const session = activeSessions.get(sessionId);
   if (!session) {

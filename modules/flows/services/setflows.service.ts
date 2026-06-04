@@ -31,7 +31,7 @@ export async function addFlowJson(
     }
 
     const stepNome = initialStep || "inicio";
-    const registroAtual = getFlowsForSession(sessionId, id);
+    const registroAtual = await getFlowsForSession(sessionId, id);
 
     if (registroAtual[flowId]) {
       throw new Error(`Um fluxo com o ID '${flowId}' já existe.`);
@@ -61,7 +61,7 @@ export async function addFlowJson(
     todosOsFlowsClone[flowId] = newFlow;
 
     // 3. Sincroniza a memória RAM e persiste no disco de forma isolada
-    saveFlowsForSession(sessionId, id, todosOsFlowsClone);
+    await saveFlowsForSession(sessionId, id, todosOsFlowsClone);
 
     return newFlow;
   } catch (error: any) {
@@ -82,7 +82,7 @@ export async function removeFlowJson(
       throw new Error("O ID do fluxo é obrigatório.");
     }
 
-    const registroAtual = getFlowsForSession(sessionId, id);
+    const registroAtual = await getFlowsForSession(sessionId, id);
 
     if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
@@ -94,7 +94,7 @@ export async function removeFlowJson(
     delete todosOsFlowsClone[flowId];
 
     // 2. Sincroniza a memória RAM e persiste no disco de forma isolada
-    saveFlowsForSession(sessionId, id, todosOsFlowsClone);
+    await saveFlowsForSession(sessionId, id, todosOsFlowsClone);
   } catch (error: any) {
     throw new Error(`[removeFlowJson] Falha na operação: ${error.message}`);
   }
@@ -124,7 +124,7 @@ export async function addStepJson(
       throw new Error("ID do fluxo e ID do novo step são obrigatórios.");
     }
 
-    const registroAtual = getFlowsForSession(sessionId, id);
+    const registroAtual = await getFlowsForSession(sessionId, id);
 
     if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
@@ -157,7 +157,7 @@ export async function addStepJson(
     };
 
     // 4. Sincroniza a memória RAM e persiste no disco de forma isolada
-    saveFlowsForSession(sessionId, id, todosOsFlowsClone);
+    await saveFlowsForSession(sessionId, id, todosOsFlowsClone);
   } catch (error: any) {
     throw new Error(`[addStepJson] Falha na operação: ${error.message}`);
   }
@@ -178,7 +178,7 @@ export async function removeStepJson(
       throw new Error("ID do fluxo e ID do step são obrigatórios.");
     }
 
-    const registroAtual = getFlowsForSession(sessionId, id);
+    const registroAtual = await getFlowsForSession(sessionId, id);
 
     if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
@@ -201,7 +201,7 @@ export async function removeStepJson(
     delete todosOsFlowsClone[flowId].steps[stepId];
 
     // 2. Sincroniza a memória RAM e persiste no disco de forma isolada
-    saveFlowsForSession(sessionId, id, todosOsFlowsClone);
+    await saveFlowsForSession(sessionId, id, todosOsFlowsClone);
   } catch (error: any) {
     throw new Error(`[removeStepJson] Falha na operação: ${error.message}`);
   }
@@ -226,7 +226,7 @@ export async function updateStepMessageJson(
       throw new Error("ID do fluxo e ID do step são obrigatórios.");
     }
 
-    const registroAtual = getFlowsForSession(sessionId, id);
+    const registroAtual = await getFlowsForSession(sessionId, id);
 
     if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
@@ -242,7 +242,7 @@ export async function updateStepMessageJson(
 
     todosOsFlowsClone[flowId].steps[stepId].message = messageArray;
 
-    saveFlowsForSession(sessionId, id, todosOsFlowsClone);
+    await saveFlowsForSession(sessionId, id, todosOsFlowsClone);
   } catch (error: any) {
     throw new Error(
       `[updateStepMessageJson] Falha na operação: ${error.message}`,
@@ -265,7 +265,7 @@ export async function updateStepOptionsJson(
       throw new Error("ID do fluxo e ID do step são obrigatórios.");
     }
 
-    const registroAtual = getFlowsForSession(sessionId, id);
+    const registroAtual = await getFlowsForSession(sessionId, id);
 
     if (!registroAtual[flowId]) {
       throw new Error(`O fluxo com o ID '${flowId}' não existe.`);
@@ -279,7 +279,7 @@ export async function updateStepOptionsJson(
 
     todosOsFlowsClone[flowId].steps[stepId].options = newOptions;
 
-    saveFlowsForSession(sessionId, id, todosOsFlowsClone);
+    await saveFlowsForSession(sessionId, id, todosOsFlowsClone);
   } catch (error: any) {
     throw new Error(
       `[updateStepOptionsJson] Falha na operação: ${error.message}`,

@@ -31,7 +31,7 @@ export class ApiCustomServicesService {
         courseMetadata:
           service.strategyType === "RECURRENT_COURSE"
             ? service.courseMetadata
-            : null,
+            : undefined,
         // 🔥 GARANTE O MAPEAMENTO DOS NOVOS CAMPOS NA GRAVAÇÃO DO JSON
         useCustomMessage: !!service.useCustomMessage,
         customConfirmationMessage:

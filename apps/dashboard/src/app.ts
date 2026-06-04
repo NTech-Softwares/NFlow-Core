@@ -1,6 +1,6 @@
 import express from "express";
 import path from "path";
-import dashboardRoutes from "./routes/dashboard.routes";
+import mainRoutes from "./routes/main.routes";
 import cors from "cors";
 
 const app = express();
@@ -13,6 +13,6 @@ app.use(express.static(path.resolve(__dirname, "public")));
 
 app.use("/uploads", express.static("uploads"));
 
-app.use("/", dashboardRoutes);
+app.use("/", mainRoutes);
 
 export { app };

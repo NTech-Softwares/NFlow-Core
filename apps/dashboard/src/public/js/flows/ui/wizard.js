@@ -209,7 +209,7 @@ async function concluirWizard() {
 
     if (data.success || data.status === "success") {
       alert("Fluxo criado e configurado com sucesso!");
-      window.location.href = "/flows";
+      window.location.href = "/";
     } else {
       alert(
         `Erro na criação: ${data.message || "Verifique os logs do servidor."}`,

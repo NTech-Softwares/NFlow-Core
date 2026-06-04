@@ -1,10 +1,3 @@
-// Variável global do escopo do arquivo para controlar o Timer
-let attendanceIntervalId = null;
-
-/**
- * Função Utilitária de Segurança (Anti-XSS)
- * Sanitiza strings vindas do WhatsApp antes de renderizar no HTML
- */
 function escapeHtml(str) {
   if (!str) return "";
   return str
@@ -15,35 +8,80 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+/**
+ * 🔄 INICIALIZAÇÃO SPA
+ */
 window.initAttendanceView = async function () {
   console.log("[Attendance] Inicializando painel de atendimento humano...");
+  // Apenas puxa o primeiro carregamento imediato ao entrar na tela
+  await window.refreshAttendanceView();
+};
 
-  // 1. Garante que não haverá duplicidade de timers
-  if (attendanceIntervalId) {
-    clearInterval(attendanceIntervalId);
+/**
+ * 🟢 ASSINATURA GLOBAL: O Motor de Polling vai chamar esta função a cada 5s
+ */
+window.refreshAttendanceView = async function () {
+  window.showGlobalRefreshIndicator(); // 🚀 Liga o relógio global
+  const token = localStorage.getItem("token");
+  const apiUrl = window.APP_CONFIG.API_URL;
+
+  const waitingContainer = document.getElementById("waiting-queue");
+  const activeContainer = document.getElementById("active-queue");
+
+  if (!waitingContainer || !activeContainer) return;
+
+  // Só mostra mensagem de "Carregando" se a lista estiver totalmente vazia (primeiro load)
+  // Evita o efeito chato de "piscar" a tela a cada 5 segundos
+  if (waitingContainer.children.length === 0) {
+    waitingContainer.innerHTML =
+      '<p class="result-feedback">Carregando fila...</p>';
+  }
+  if (activeContainer.children.length === 0) {
+    activeContainer.innerHTML =
+      '<p class="result-feedback">Carregando conversas...</p>';
   }
 
-  // 2. Carrega os dados imediatamente ao entrar na tela
-  await loadAttendanceSessions();
+  try {
+    const response = await fetch(`${apiUrl}/attendance/sessions`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  // 3. Inicia o Auto-Refresh de 1 em 1 minuto (60000ms)
-  // Dica: Se quiser mais tempo real, altere para 15000 (15 segundos)
-  attendanceIntervalId = setInterval(async () => {
-    const viewSection = document.getElementById("view-attendance");
+    if (!response.ok) throw new Error("Erro ao buscar sessões do servidor.");
 
-    // 🔍 Se a tela não existir ou ganhou a classe 'hidden', o usuário saiu dela!
-    if (!viewSection || viewSection.classList.contains("hidden")) {
-      console.log(
-        "[Attendance] Usuário saiu da página. Desativando Auto-Refresh.",
-      );
-      clearInterval(attendanceIntervalId);
-      attendanceIntervalId = null;
-      return;
+    const data = await response.json();
+    const sessions = data.sessions || [];
+
+    waitingContainer.innerHTML = "";
+    activeContainer.innerHTML = "";
+
+    const waitingLeads = sessions.filter((s) => s.atendimento === "em_espera");
+    const activeLeads = sessions.filter(
+      (s) => s.atendimento === "humano" || s.atendimento === "em_atendimento",
+    );
+
+    if (waitingLeads.length === 0) {
+      waitingContainer.innerHTML =
+        '<p class="result-feedback" style="opacity: 0.5;">Ninguém aguardando na fila. 🙌</p>';
+    } else {
+      waitingLeads.forEach((lead) => {
+        waitingContainer.appendChild(createLeadCard(lead, "waiting"));
+      });
     }
 
-    console.log("[Attendance] Executando atualização automática de rotina...");
-    await loadAttendanceSessions();
-  }, 60000);
+    if (activeLeads.length === 0) {
+      activeContainer.innerHTML =
+        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento ativo no momento. 🤖</p>';
+    } else {
+      activeLeads.forEach((lead) => {
+        activeContainer.appendChild(createLeadCard(lead, "active"));
+      });
+    }
+  } catch (error) {
+    console.error("[Attendance Error]:", error);
+  } finally {
+    window.hideGlobalRefreshIndicator(); // 🔒 Desliga o relógio global
+  }
 };
 
 /**

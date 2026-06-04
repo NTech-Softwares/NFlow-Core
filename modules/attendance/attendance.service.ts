@@ -2,16 +2,19 @@ import {
   getActiveChatsBySession,
   updateChatStatus,
   getSession,
-  deleteChatSession, // 🟢 Certifique-se de exportar um método de exclusão no seu sessionStore se existir
+  saveSession, // Adicionado para persistir estados complexos se necessário
 } from "../flows/state/sessionStore";
+import db from "../../shared/database";
+import { logger } from "../../shared/utils/logger";
 
 /**
- * Filtra as sessões em memória do Tenant atual que precisam de suporte humano
+ * Filtra as sessões no Postgres do Tenant atual que precisam de suporte humano
  */
 export async function listHumanAttendanceSessions(
   sessionId: string,
 ): Promise<any[]> {
-  const activeChats = getActiveChatsBySession(sessionId);
+  // 🔥 Adicionado AWAIT para buscar dados reais do banco
+  const activeChats = await getActiveChatsBySession(sessionId);
 
   return activeChats.map((chat) => ({
     ...chat,
@@ -27,7 +30,8 @@ export async function changeAttendanceStatus(
   remoteJid: string,
   status: "em_espera" | "em_atendimento",
 ): Promise<boolean> {
-  const success = updateChatStatus(remoteJid, sessionId, status as any);
+  // 🔥 Adicionado AWAIT para aguardar a query de update rodar no Postgres
+  const success = await updateChatStatus(remoteJid, sessionId, status);
 
   if (!success) {
     throw new Error(
@@ -35,7 +39,7 @@ export async function changeAttendanceStatus(
     );
   }
 
-  console.log(
+  logger.info(
     `[Core Attendance] Contato ${remoteJid} alterado para: ${status} (Sessão: ${sessionId})`,
   );
   return true;
@@ -48,7 +52,8 @@ export async function resetToBotAutomation(
   sessionId: string,
   remoteJid: string,
 ): Promise<boolean> {
-  const success = updateChatStatus(remoteJid, sessionId, "automatico");
+  // 🔥 Adicionado AWAIT para aguardar a query de update rodar no Postgres
+  const success = await updateChatStatus(remoteJid, sessionId, "automatico");
 
   if (!success) {
     throw new Error(
@@ -56,47 +61,42 @@ export async function resetToBotAutomation(
     );
   }
 
-  console.log(
+  logger.info(
     `[Core Attendance] Automação reativada para ${remoteJid} (Sessão: ${sessionId})`,
   );
   return true;
 }
 
 /**
- * 🟢 NOVO: Remove completamente a sessão de atendimento da memória (Botão Excluir Atendimento)
+ * Remove completamente a sessão de atendimento do banco (Botão Excluir Atendimento)
+ * Nota: Como adicionou na listagem, criamos a deleção direta no banco por segurança.
  */
 export async function clearAttendanceSession(
   sessionId: string,
   remoteJid: string,
 ): Promise<boolean> {
-  // Caso seu sessionStore use outro nome, mude aqui. Geralmente é deletar a chave do objeto/map.
-  const success = deleteChatSession(remoteJid, sessionId);
-
-  if (!success) {
-    throw new Error(
-      "Atendimento não encontrado ou já foi removido da memória.",
-    );
-  }
-
-  console.log(
-    `[Core Attendance] Atendimento deletado definitivamente para ${remoteJid}`,
+  await db.query(
+    `DELETE FROM chat_sessions WHERE session_id = $1 AND remote_jid = $2`,
+    [sessionId, remoteJid],
   );
   return true;
 }
 
 /**
- * 🟢 NOVO: Interceptador Automático de Mensagem do Atendente
+ * Interceptador Automático de Mensagem do Atendente
  * Se o chat estiver 'em_espera' e o atendente mandar mensagem, joga para 'em_atendimento' automaticamente.
  */
 export async function autoAdvanceOnOperatorMessage(
   sessionId: string,
   remoteJid: string,
 ): Promise<void> {
-  const session = getSession(remoteJid, sessionId);
+  // 🔥 Adicionado AWAIT para recuperar o estado real de concorrência do banco
+  const session = await getSession(remoteJid, sessionId);
 
   if (session && session.atendimento === "em_espera") {
-    updateChatStatus(remoteJid, sessionId, "em_atendimento");
-    console.log(
+    // 🔥 Adicionado AWAIT para a gravação síncrona de status do chat
+    await updateChatStatus(remoteJid, sessionId, "em_atendimento");
+    logger.info(
       `[Core Attendance] Auto-avanço: ${remoteJid} movido para 'em_atendimento' por ação do operador.`,
     );
   }

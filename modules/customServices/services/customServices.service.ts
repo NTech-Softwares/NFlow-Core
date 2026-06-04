@@ -36,7 +36,6 @@ export async function getAvailableDaysForBot(
   const days: { dateStr: string; label: string }[] = [];
   const now = new Date();
 
-  // CORREÇÃO: Define o limite de dias dinamicamente (7 para cursos, 14 para padrão)
   const maxDaysAhead = isCourse ? 7 : 14;
 
   for (let i = 0; i < maxDaysAhead; i++) {
@@ -137,13 +136,11 @@ export async function getAvailableHoursForBot(
     let currentMins = startMins;
 
     if (isCourse) {
-      // FIX DAS OPÇÕES DE HORÁRIO: Avança estritamente no bloco correto da grade do curso.
-      // Se a janela fecha às 22h, o último slot inicial válido para um curso de 120min é às 20h.
       while (currentMins + durationOfSelected <= endMins) {
         if (!isToday || currentMins > currentMinsNow) {
           slotsSet.add(toTimeStr(currentMins));
         }
-        currentMins += durationOfSelected; // Pula de 120 em 120 minutos
+        currentMins += durationOfSelected;
       }
     } else {
       while (currentMins < endMins) {
@@ -171,10 +168,8 @@ export async function getAvailableHoursForBot(
       const appStartMins = toMins(app.time);
       const appEndMins = appStartMins + appDuration;
 
-      // Verifica intersecção de horários na linha do tempo
       if (slotStartMins < appEndMins && slotEndMins > appStartMins) {
         if (isCourse) {
-          // CORREÇÃO DA VALIDAÇÃO DE VAGAS: Verifica de forma resiliente tanto a propriedade direta quanto o objeto mapeado
           const currentAppServiceId = app.serviceId || app.service?.id;
           if (currentAppServiceId === selectedService?.id) {
             overlappingCount++;
@@ -191,9 +186,6 @@ export async function getAvailableHoursForBot(
     if (isCourse) {
       const courseMax =
         selectedService?.courseMetadata?.maxStudentsPerSlot || 1;
-      logger.info(
-        `[NFlow Core] Slot ${slot} possui ${overlappingCount}/${courseMax} alunos matriculados.`,
-      );
       return overlappingCount < courseMax;
     } else {
       const maxSimultaneous = config.maxSimultaneousSlots || 1;
@@ -213,19 +205,14 @@ export async function executeBooking(params: {
 }): Promise<Appointment> {
   const { userId, sessionId, remoteJid, clientName, service, dates, time } =
     params;
-  const currentAppointments = await repo.getAppointmentsByTenant(userId);
 
   if (service.strategyType !== "RECURRENT_COURSE" || !service.courseMetadata) {
     const app = await createSingleAppointmentRecord(
-      {
-        ...params,
-        date: dates[0],
-      },
+      { ...params, date: dates[0] },
       undefined,
       undefined,
     );
-    currentAppointments.push(app);
-    await repo.saveAppointmentsByTenant(userId, currentAppointments);
+    await repo.insertAppointment(app);
     return app;
   }
 
@@ -266,16 +253,13 @@ export async function executeBooking(params: {
         classesScheduled,
       );
 
-      currentAppointments.push(appInstance);
-      if (classesScheduled === 1) {
-        primeAppointment = appInstance;
-      }
-    }
+      await repo.insertAppointment(appInstance);
 
+      if (classesScheduled === 1) primeAppointment = appInstance;
+    }
     pivotDate.setDate(pivotDate.getDate() + 1);
   }
 
-  await repo.saveAppointmentsByTenant(userId, currentAppointments);
   return primeAppointment!;
 }
 
@@ -294,20 +278,20 @@ async function createSingleAppointmentRecord(
 ): Promise<Appointment> {
   const { userId, sessionId, remoteJid, clientName, service, date, time } =
     params;
+
   const appointmentDateTime = new Date(`${date}T${time}:00`);
   const now = new Date();
   const diffInHours =
     (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
 
-  const appointmentId =
-    parentId && classIndex ? `${parentId}-${classIndex}` : randomUUID();
+  // 🌟 CORREÇÃO CRÍTICA: ID agora é SEMPRE um UUID legítimo e puro para satisfazer o tipo UUID do Postgres
+  const appointmentId = randomUUID();
   const reminders: { twentyFourHours?: string | null; oneHour?: string } = {};
 
   let suffix = classIndex ? ` (Aula ${classIndex})` : "";
   const serviceLabel = `*${service.name}${suffix}*`;
   const dateFormatted = appointmentDateTime.toLocaleDateString("pt-BR");
 
-  // 1. Agendamento do Lembrete de 24 Horas
   if (diffInHours >= 24) {
     const target24h = new Date(
       appointmentDateTime.getTime() - 24 * 60 * 60 * 1000,
@@ -324,7 +308,6 @@ async function createSingleAppointmentRecord(
     reminders.twentyFourHours = null;
   }
 
-  // 2. CORREÇÃO: Agendamento do Lembrete de 1 Hora com ISOString estrito
   if (diffInHours >= 1) {
     const target1h = new Date(
       appointmentDateTime.getTime() - 1 * 60 * 60 * 1000,
@@ -334,7 +317,7 @@ async function createSingleAppointmentRecord(
       sessionId,
       remoteJid,
       text: `Ei, ${clientName}! Falta apenas 1 hora para ${serviceLabel} hoje às ${time}. Te aguardamos! ⏳`,
-      scheduledAt: target1h.toISOString(), // <-- Corrigido aqui!
+      scheduledAt: target1h.toISOString(),
     });
     reminders.oneHour = schedule1.id;
   }
@@ -367,26 +350,20 @@ export async function removeAppointmentAndReminders(
     throw new Error("Agendamento não encontrado.");
   }
 
-  let idsToRemove = [appointmentId];
-  if (target.parentId) {
-    idsToRemove = appointments
-      .filter((app) => app.parentId === target.parentId)
-      .map((app) => app.id);
-  }
+  const itemsToRemove = target.parentId
+    ? appointments.filter((app) => app.parentId === target.parentId)
+    : [target];
 
-  for (const id of idsToRemove) {
-    const index = appointments.findIndex((app) => app.id === id);
-    if (index !== -1) {
-      const [appRemoved] = appointments.splice(index, 1);
-      if (appRemoved.remindersScheduled) {
-        const { twentyFourHours, oneHour } = appRemoved.remindersScheduled;
-        if (twentyFourHours)
-          await cancelSchedule(userId, twentyFourHours).catch(() => null);
-        if (oneHour) await cancelSchedule(userId, oneHour).catch(() => null);
-      }
+  for (const app of itemsToRemove) {
+    if (app.remindersScheduled) {
+      const { twentyFourHours, oneHour } = app.remindersScheduled;
+      if (twentyFourHours)
+        await cancelSchedule(userId, twentyFourHours).catch(() => null);
+      if (oneHour) await cancelSchedule(userId, oneHour).catch(() => null);
     }
+
+    await repo.deleteAppointment(userId, app.id);
   }
 
-  await repo.saveAppointmentsByTenant(userId, appointments);
   return true;
 }

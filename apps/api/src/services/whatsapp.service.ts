@@ -1,4 +1,3 @@
-// apps/api/src/services/whatsapp.service.ts
 import { WhatsappService as CoreWhatsappService } from "../../../../modules/whatsapp/whatsapp.service";
 
 /**

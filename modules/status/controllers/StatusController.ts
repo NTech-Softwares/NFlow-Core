@@ -1,6 +1,9 @@
 import { Request, Response } from "express";
-import { getSessionStatus } from "../../../providers/whatsapp/baileys/client";
+import { WhatsappService } from "../../whatsapp/whatsapp.service"; // 🚀 Importando o service correto
 import { logger } from "../../../shared/utils/logger";
+
+// Instancia o serviço que possui a regra de inicialização sob demanda
+const whatsappService = new WhatsappService();
 
 class StatusController {
   async handle(req: Request, res: Response) {
@@ -16,20 +19,20 @@ class StatusController {
           .json({ error: "Não autorizado ou sessão não identificada." });
       }
 
-      // 🎯 Se o whatsappSessionId não veio no JWT, monta dinamicamente usando o padrão do auth.service.ts
-      const sessionId = user.whatsappSessionId || `${user.id}_session`;
+      // 🎯 Ajustado o fallback para o padrão correto 'sess_UUID' caso não venha no JWT
+      const sessionId = user.whatsappSessionId || `sess_${user.id}`;
 
-      // Consulta o status em tempo real da instância isolada
-      const whatsappSession = getSessionStatus(sessionId);
+      // 🚀 AGORA SIM: Usa o WhatsappService para consultar E iniciar o Baileys se necessário
+      const whatsappSession = await whatsappService.getStatus(sessionId);
 
       logger.info(
-        `Status do WhatsApp requisitado pelo usuário: ${user.email} (Sessão: ${sessionId}) -> Status: ${whatsappSession ? whatsappSession.status : "unknown"}`,
+        `Status do WhatsApp requisitado pelo usuário: ${user.email} (Sessão: ${sessionId}) -> Status: ${whatsappSession.status}`,
       );
 
       return res.json({
         api: "Online",
-        status: whatsappSession ? whatsappSession.status : "DISCONNECTED",
-        qr: whatsappSession ? whatsappSession.qr : null,
+        status: whatsappSession.status,
+        qr: whatsappSession.qr || null,
         worker: "Online",
       });
     } catch (error: any) {

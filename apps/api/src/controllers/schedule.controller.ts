@@ -13,7 +13,7 @@ export class SchedulerController {
       const userId = req.user.id;
 
       // 2. Define o sessionId baseado no usuário (ou use req.user.sessionId se seu token já carregar isso)
-      const sessionId = req.user.sessionId || `${userId}_session`;
+      const sessionId = req.user.whatsappSessionId || `${userId}_session`;
 
       // 3. Pega apenas os dados de envio do body
       const { remoteJid, text, scheduledAt, mediaUrl } = req.body;

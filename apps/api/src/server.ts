@@ -5,7 +5,7 @@ import { whatsappService } from "./services/whatsapp.service";
 import { logger } from "../../../shared/utils/logger";
 import { startScheduleWorker } from "../../../modules/scheduler/schedule.worker";
 
-const PORT = 3333;
+const PORT = process.env.PORT || 3333;
 
 async function bootstrap() {
   // 🔄 Liga o agendador em background na inicialização do servidor

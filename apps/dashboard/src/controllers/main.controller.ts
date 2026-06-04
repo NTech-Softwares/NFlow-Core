@@ -1,7 +1,7 @@
 import path from "path";
 import { Request, Response } from "express";
 
-export class DashboardController {
+export class MainController {
   static index(req: Request, res: Response) {
     const filePath = path.resolve(__dirname, "..", "views", "index.html");
 
@@ -40,6 +40,28 @@ export class DashboardController {
 
   static register(req: Request, res: Response) {
     const filePath = path.resolve(__dirname, "..", "views", "register.html");
+
+    return res.sendFile(filePath);
+  }
+
+  static forgotPassword(req: Request, res: Response) {
+    const filePath = path.resolve(
+      __dirname,
+      "..",
+      "views",
+      "forgot-password.html",
+    );
+
+    return res.sendFile(filePath);
+  }
+
+  static resetPassword(req: Request, res: Response) {
+    const filePath = path.resolve(
+      __dirname,
+      "..",
+      "views",
+      "reset-password.html",
+    );
 
     return res.sendFile(filePath);
   }
