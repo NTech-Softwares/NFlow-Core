@@ -195,9 +195,7 @@ export async function processFlow(
   session.lastMessage = content;
   session.updatedAt = new Date();
 
-  const userId = sessionId.includes("_session")
-    ? sessionId.split("_session")[0]
-    : sessionId;
+  const userId = sessionId.split("sess_")[1] || null;
 
   // INTERCEPTADOR DO MÓDULO CUSTOM SERVICES
   const customServicesResult = await handleCustomServicesFlow(

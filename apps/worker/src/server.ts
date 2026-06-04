@@ -2,7 +2,6 @@ import { messageQueue, QueueJob } from "../../../shared/queue/messageQueue";
 import { getWhatsapp } from "../../../providers/whatsapp/baileys/client";
 import { logger } from "../../../shared/utils/logger";
 import { dbClient } from "../../../shared/database";
-import { getSession, saveSession } from "../../../modules/chat/sessionStore";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -16,7 +15,7 @@ function createMessagePayload(job: QueueJob) {
 
 async function sendGroupMessage(sock: any, job: QueueJob, messagePayload: any) {
   await sock.sendPresenceUpdate("composing", job.jid);
-  await delay(1000);
+  await delay(507);
   await sock.sendMessage(job.jid, messagePayload);
   logger.info(
     `[Sessão: ${job.sessionId}] Mensagem enviada para o grupo ${job.jid}`,
@@ -25,14 +24,17 @@ async function sendGroupMessage(sock: any, job: QueueJob, messagePayload: any) {
 
 async function sendLidMessage(sock: any, job: QueueJob, messagePayload: any) {
   await sock.sendPresenceUpdate("composing", job.jid);
-  await delay(1000);
+  await delay(500);
   const response = await sock.sendMessage(job.jid, messagePayload);
 
+  // 🛠️ CORRIGIDO: Substituído realJid por job.jid que é o identificador correto neste escopo
   if (response?.key?.id) {
-    const session = await getSession(job.jid, job.sessionId);
-    if (!session.botMessageIds) session.botMessageIds = [];
-    session.botMessageIds.push(response.key.id);
-    await saveSession(job.jid, job.sessionId, session);
+    await dbClient.query(
+      `UPDATE chat_sessions 
+       SET bot_message_ids = COALESCE(bot_message_ids, '[]'::jsonb) || $1::jsonb, updated_at = CURRENT_TIMESTAMP
+       WHERE session_id = $2 AND remote_jid = $3`,
+      [JSON.stringify([response.key.id]), job.sessionId, job.jid],
+    );
   }
 }
 
@@ -55,10 +57,12 @@ async function sendPrivateMessage(
   const response = await sock.sendMessage(realJid, messagePayload);
 
   if (response?.key?.id) {
-    const session = await getSession(realJid, job.sessionId);
-    if (!session.botMessageIds) session.botMessageIds = [];
-    session.botMessageIds.push(response.key.id);
-    await saveSession(realJid, job.sessionId, session);
+    await dbClient.query(
+      `UPDATE chat_sessions 
+       SET bot_message_ids = COALESCE(bot_message_ids, '[]'::jsonb) || $1::jsonb, updated_at = CURRENT_TIMESTAMP
+       WHERE session_id = $2 AND remote_jid = $3`,
+      [JSON.stringify([response.key.id]), job.sessionId, realJid],
+    );
   }
 }
 
@@ -88,7 +92,7 @@ async function processJob(job: QueueJob) {
     // Marca como sucesso na fila do banco
     await messageQueue.complete(job.id);
 
-    // 🔄 ATUALIZADO: Gravando user_id e schedule_id no log de auditoria de sucesso
+    // Gravando log de auditoria de sucesso
     dbClient
       .query(
         `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status) 
@@ -105,6 +109,7 @@ async function processJob(job: QueueJob) {
     const isConnectionError =
       errorMessage.includes("SESSAO_OFFLINE") ||
       errorMessage.includes("Closed") ||
+      errorMessage.includes("stream") ||
       error.code === "ECONNRESET";
 
     const newAttempts = job.attempts + 1;
@@ -120,7 +125,7 @@ async function processJob(job: QueueJob) {
       );
       await messageQueue.fail(job.id, 999, errorMessage); // 999 garante status 'failed' absoluto
 
-      // 🔄 ATUALIZADO: Gravando user_id e schedule_id no log de erro
+      // Gravando log de erro
       dbClient
         .query(
           `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message) 
@@ -137,28 +142,36 @@ async function processJob(job: QueueJob) {
 }
 
 export async function startWorker() {
-  logger.info("🚀 Worker DB-Queue Multi-Tenant iniciado!");
+  logger.info("🚀 [Worker De Envio] iniciado!");
 
   while (true) {
-    // Busca até 10 mensagens simultâneas travando-as para este worker processar
-    const batch = await messageQueue.fetchBatch(10);
+    try {
+      // Busca até 10 mensagens simultâneas travando-as para este worker processar
+      const batch = await messageQueue.fetchBatch(10);
 
-    if (batch.length === 0) {
-      await delay(2000); // Fila vazia, descansa 2s antes de buscar novamente
-      continue;
+      if (batch.length === 0) {
+        await delay(2000); // Fila vazia, descansa 2s antes de buscar novamente
+        continue;
+      }
+
+      logger.info(
+        `[Worker] Processando lote de ${batch.length} mensagens concorrentes...`,
+      );
+
+      // Executa o processamento de forma paralela usando Promise.allSettled
+      await Promise.allSettled(
+        batch.map(async (job) => {
+          // Delay randômico de anti-ban aplicado individualmente por thread
+          await delay(Math.floor(Math.random() * 1000));
+          await processJob(job);
+        }),
+      );
+    } catch (loopError: any) {
+      // Proteção para o loop infinito nunca morrer em caso de falha grave de banco
+      logger.error(
+        `[Worker Loop Error] Erro crítico no loop do worker: ${loopError.message}`,
+      );
+      await delay(1000);
     }
-
-    logger.info(
-      `[Worker] Processando lote de ${batch.length} mensagens concorrentes...`,
-    );
-
-    // Executa o processamento de forma paralela usando Promise.allSettled
-    await Promise.allSettled(
-      batch.map(async (job) => {
-        // Delay randômico de anti-ban aplicado individualmente por thread
-        await delay(Math.floor(Math.random() * 1000) + 400);
-        await processJob(job);
-      }),
-    );
   }
 }
