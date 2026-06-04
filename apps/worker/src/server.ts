@@ -92,7 +92,7 @@ async function processJob(job: QueueJob) {
     dbClient
       .query(
         `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status) 
-         VALUES ($1, $2, $3, $4, $5, 'sent')`,
+         VALUES ($1, $2, $3, 'sent')`,
         [job.sessionId, job.jid, job.messageText],
       )
       .catch((err) =>

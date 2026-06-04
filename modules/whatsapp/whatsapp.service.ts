@@ -65,6 +65,8 @@ export class WhatsappService implements IWhatsappService {
     }
 
     const cleanJid = `${formattedNumber}@s.whatsapp.net`;
+    const users = await getUsers();
+    
 
     // 🔄 ATUALIZADO: Nova estrutura plana de messageText e imagePath
     messageQueue.push({
