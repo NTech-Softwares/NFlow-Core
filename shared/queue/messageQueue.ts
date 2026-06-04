@@ -23,8 +23,9 @@ class MessageQueueManager {
   ): Promise<void> {
     try {
       await dbClient.query(
-        `INSERT INTO whatsapp_scheduled_messages (session_id, jid, message_text, image_path, status)
-         VALUES ($1, $2, $3, $4, 'pending', $5, $6)`,
+        `INSERT INTO whatsapp_scheduled_messages 
+        (session_id, jid, message_text, image_path, status, user_id, schedule_id)
+        VALUES ($1, $2, $3, $4, 'pending', $5, $6)`,
         [
           job.sessionId,
           job.jid,
