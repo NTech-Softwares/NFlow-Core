@@ -1,4 +1,4 @@
-import { Session } from "../../flows/state/sessionStore";
+import { Session } from "../../chat/sessionStore";
 import * as repo from "../repository/customServices.repository";
 import * as service from "../services/customServices.service";
 

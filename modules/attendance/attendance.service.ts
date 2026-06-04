@@ -3,7 +3,7 @@ import {
   updateChatStatus,
   getSession,
   saveSession, // Adicionado para persistir estados complexos se necessário
-} from "../flows/state/sessionStore";
+} from "../chat/sessionStore";
 import db from "../../shared/database";
 import { logger } from "../../shared/utils/logger";
 

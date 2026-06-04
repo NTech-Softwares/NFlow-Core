@@ -7,7 +7,7 @@ import { dbClient } from "../../../shared/database"; // 🟢 Importado para logs
 import {
   getSession,
   saveSession,
-} from "../../../modules/flows/state/sessionStore";
+} from "../../../modules/chat/sessionStore";
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -95,22 +95,23 @@ export async function startWorker() {
   logger.info("Worker iniciado operando em modo Multi-Tenant");
 
   while (true) {
-    // 🟢 CORREÇÃO: Usando o método .size() em vez de .length
     if (messageQueue.size() > 0) {
-      // 🟢 CORREÇÃO: Usando o método .shift() exposto pela classe manager
       const job = messageQueue.shift() as QueueJob | undefined;
 
       if (!job) {
-        await delay(700);
+        await delay(1000);
+        logger.error("NO JOB!");
         continue;
       }
 
       try {
         const sock = getWhatsapp(job.sessionId);
 
-        if (!sock) {
+        // 🟢 OTIMIZAÇÃO: Valida se o socket existe E se o WebSocket está de fato conectado (readyState 1 = OPEN)
+        // Isso evita falsos positivos e tentativas de escrita em conexões mortas/fechadas
+        if (!sock || !sock.ws || sock.ws.readyState !== 1) {
           throw new Error(
-            "SESSAO_OFFLINE: O socket do Baileys não está inicializado ou está indisponível.",
+            "SESSAO_OFFLINE: O socket do Baileys não está inicializado ou perdeu a conexão com o servidor do WhatsApp.",
           );
         }
 
@@ -141,16 +142,22 @@ export async function startWorker() {
             `[Sessão: ${job.sessionId}] JID Inválido (Descarte): ${job.jid}`,
           );
           if (job.userId && job.scheduleId) {
+            // O updateSchedule do repositório altera dados do agendamento, mantido com await para consistência do fluxo do usuário
             await updateSchedule(job.userId, job.scheduleId, {
               status: "failed",
               error: "JID do destinatário inválido ou malformado.",
-            });
+            }).catch((e) =>
+              logger.error(
+                `[Worker] Erro ao atualizar schedule de JID inválido: ${e.message}`,
+              ),
+            );
           }
           continue;
         }
 
-        // 🟢 AUDITORIA: Grava log de sucesso no banco relacional
-        await dbClient
+        // 🟢 OTIMIZAÇÃO: Removido o 'await' do log de auditoria do Neon.
+        // O log agora é despachado de forma assíncrona, eliminando o delay de rede do loop principal.
+        dbClient
           .query(
             `
           INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status)
@@ -158,9 +165,13 @@ export async function startWorker() {
         `,
             [job.sessionId, job.jid, job.message.text],
           )
-          .catch(() => {});
+          .catch((err) => {
+            throw new Error(
+              `[Worker] Falha assíncrona ao salvar log de sucesso no Neon: ${err.message}`,
+            );
+          });
 
-        const randomDelay = Math.floor(Math.random() * 2000) + 2000;
+        const randomDelay = Math.floor(Math.random() * 1000) + 1126;
         await delay(randomDelay);
       } catch (error: any) {
         logger.error(`
@@ -192,14 +203,14 @@ export async function startWorker() {
             `[Worker] Instância [${job.sessionId}] está instável. Tentando novamente (${job.attempts}/3)...`,
           );
           messageQueue.push(job);
-          await delay(1000);
+          await delay(1200); // Pequeno backoff para dar tempo de restabelecer o socket
         } else {
           logger.error(
             `[Worker] Job da sessão [${job.sessionId}] descartado definitivamente.`,
           );
 
-          // 🟢 AUDITORIA: Grava log de erro definitivo no banco relacional
-          await dbClient
+          // 🟢 OTIMIZAÇÃO: Log de falha definitiva também sem 'await' para manter o rendimento da fila acelerado
+          dbClient
             .query(
               `
             INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message)
@@ -207,7 +218,11 @@ export async function startWorker() {
           `,
               [job.sessionId, job.jid, job.message.text, errorMessage],
             )
-            .catch(() => {});
+            .catch((err) => {
+              logger.error(
+                `[Worker] Falha assíncrona ao salvar log de erro no Neon: ${err.message}`,
+              );
+            });
 
           if (job.userId && job.scheduleId) {
             try {
@@ -219,7 +234,7 @@ export async function startWorker() {
               });
             } catch (repoError: any) {
               logger.error(
-                `[Worker] Erro ao gravar status de falha: ${repoError.message}`,
+                `[Worker] Erro ao gravar status de falha no repositório: ${repoError.message}`,
               );
             }
           }

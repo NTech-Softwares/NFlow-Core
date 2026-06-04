@@ -1,5 +1,5 @@
-import { logger } from "../../../shared/utils/logger";
-import { dbClient } from "../../../shared/database";
+import { logger } from "../../shared/utils/logger";
+import { dbClient } from "../../shared/database";
 
 type StackItem = {
   flow: string;
@@ -207,4 +207,18 @@ export async function updateChatStatus(
   } catch {
     return false;
   }
+}
+
+// 🟢 NOVA FUNÇÃO: Busca chats que estão em atendimento/espera e passaram do tempo limite
+export async function getInactiveChats(minutes: number) {
+  // Subtrai os minutos do tempo atual para criar uma data de corte
+  const cutoffTime = new Date(Date.now() - minutes * 60000);
+
+  const query = `
+    SELECT session_id, remote_jid
+    FROM chat_sessions
+    WHERE updated_at < $1
+  `;
+
+  return await dbClient.query(query, [cutoffTime]);
 }

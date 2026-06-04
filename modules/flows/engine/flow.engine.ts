@@ -6,7 +6,7 @@ import {
 import { handleCustomServicesFlow } from "../../customServices/engine/customServices.flow";
 import { getBusinessHoursByUserId } from "../../users/users.repository";
 import { getFlowsForSession } from "../repository/flow.registry";
-import { getSession, saveSession } from "../state/sessionStore";
+import { getSession, saveSession } from "../../chat/sessionStore";
 
 // 1. DEFINIÇÃO DA INTERFACE DOS COMANDOS GLOBAIS
 interface GlobalCommandResult {
@@ -116,12 +116,61 @@ export async function processFlow(
 ) {
   const session = await getSession(remoteJid, sessionId);
 
+  const normalized = content
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
   /*
    =========================================================
     INTERCEPTADOR DE MENSAGENS DO OPERADOR (FROM ME)
    =========================================================
   */
-  if (fromMe) {
+  if (fromMe && normalized === "ajuda") {
+    await saveSession(remoteJid, sessionId, session);
+    return {
+      messages: [
+        "ℹ️ Bem vindo ao menu de ajuda. :)",
+        "",
+        "⏸️ Para Pausar o bot Digite: ",
+        "Digite: pausar atendimento automatico",
+        "",
+        "▶️ Para retomar o bot Digite: ",
+        "Digite: retomar atendimento automatico",
+        "",
+        "📆 Para agendar um serviço: ",
+        "Digite: agendar ou agenda",
+        "",
+        "🙋‍♂️ Para atendimento humano: ",
+        "Digite: atendimento ou atendente",
+        "",
+        "🙋‍♂️ Para encerrar atendimento humano: ",
+        "Digite: encerrar ou autoatendimento",
+        "",
+        "⚠️ Recomendações 🪧",
+        "• Sempre que precisar conversar com um cliente sem interferência do bot, digite atendimento. A partir desse momento, a conversa será transferida para atendimento humano e o bot deixará de responder automaticamente.",
+        "",
+        "• Desative o bot apenas em conversas que não envolvam clientes, como chats com funcionários, amigos ou familiares, especialmente se você utiliza o mesmo WhatsApp para fins pessoais e profissionais.",
+        "",
+        "• Para garantir uma melhor experiência aos seus clientes, mantenha o bot ativo nas conversas de atendimento sempre que possível.",
+      ],
+    };
+  } else if (fromMe && normalized === "pausar atendimento automatico") {
+    session.atendimento = "em_atendimento";
+    session.lastMessage = content;
+    session.updatedAt = new Date();
+    await saveSession(remoteJid, sessionId, session);
+
+    return { messages: ["🔴 Atendimento Automático pausado!"] };
+  } else if (fromMe && normalized === "retomar atendimento automatico") {
+    session.atendimento = "automatico";
+    session.lastMessage = content;
+    session.updatedAt = new Date();
+    await saveSession(remoteJid, sessionId, session);
+
+    return { messages: ["🟢 Atendimento Automático reativado!"] };
+  } else if (fromMe) {
     if (!session.botMessageIds) session.botMessageIds = [];
 
     const isBotMessage = session.botMessageIds.includes(messageId);
@@ -136,7 +185,7 @@ export async function processFlow(
       session.updatedAt = new Date();
     }
 
-    // 🔥 Salva o estado modificado no banco antes de interromper
+    // Salva o estado modificado no banco antes de interromper
     await saveSession(remoteJid, sessionId, session);
     return { messages: [] };
   }
@@ -145,12 +194,6 @@ export async function processFlow(
   if (pushName) session.pushName = pushName;
   session.lastMessage = content;
   session.updatedAt = new Date();
-
-  const normalized = content
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
 
   const userId = sessionId.includes("_session")
     ? sessionId.split("_session")[0]
@@ -167,14 +210,14 @@ export async function processFlow(
   );
 
   if (customServicesResult) {
-    // 🔥 Salva o estado modificado gerado pelo serviço customizado
+    // Salva o estado modificado gerado pelo serviço customizado
     await saveSession(remoteJid, sessionId, session);
     return customServicesResult;
   }
 
   const businessHours = await getBusinessHoursByUserId(userId);
 
-  // 🔥 Ajustado para usar AWAIT: Busca a árvore de fluxos registrada no banco de dados
+  // Ajustado para usar AWAIT: Busca a árvore de fluxos registrada no banco de dados
   const flows = await getFlowsForSession(sessionId, userId);
   const currentFlow = flows[session.currentFlow];
 
@@ -256,10 +299,14 @@ export async function processFlow(
       return { messages: [] };
     }
 
+    const msgs = [
+      "❌ Opção inválida. Escolha uma das opções válidas informadas no menu.",
+      "",
+      ...currentStep.message,
+    ];
+
     return {
-      messages: [
-        "❌ Opção inválida. Escolha uma das opções válidas informadas no menu acima.",
-      ],
+      messages: msgs,
     };
   }
 
