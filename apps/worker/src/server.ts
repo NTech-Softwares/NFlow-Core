@@ -16,7 +16,16 @@ function createMessagePayload(job: QueueJob) {
 async function sendGroupMessage(sock: any, job: QueueJob, messagePayload: any) {
   await sock.sendPresenceUpdate("composing", job.jid);
   await delay(507);
-  await sock.sendMessage(job.jid, messagePayload);
+  const response = await sock.sendMessage(job.jid, messagePayload);
+
+  if (response?.key?.id) {
+    await dbClient.query(
+      `UPDATE chat_sessions 
+       SET bot_message_ids = COALESCE(bot_message_ids, '[]'::jsonb) || $1::jsonb, updated_at = CURRENT_TIMESTAMP
+       WHERE session_id = $2 AND remote_jid = $3`,
+      [JSON.stringify([response.key.id]), job.sessionId, job.jid],
+    );
+  }
   logger.info(
     `[Sessão: ${job.sessionId}] Mensagem enviada para o grupo ${job.jid}`,
   );
@@ -71,7 +80,7 @@ async function processJob(job: QueueJob) {
     const sock = getWhatsapp(job.sessionId);
 
     // Validação estrita da saúde do WebSocket
-    if (!sock || !sock.ws || sock.ws.readyState !== 1) {
+    if (!sock || !sock.ws || !sock.ws.isOpen) {
       throw new Error(
         "SESSAO_OFFLINE: Socket não inicializado ou sem conexão.",
       );

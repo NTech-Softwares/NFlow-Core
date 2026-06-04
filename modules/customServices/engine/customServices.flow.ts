@@ -110,6 +110,8 @@ export async function handleCustomServicesFlow(
       }
 
       case "PROCESS_DAY": {
+        const isCourse =
+          state.selectedService.strategyType === "RECURRENT_COURSE";
         const daysMap = state.tempDaysMap || [];
         const inputParts = content
           .split(",")
@@ -127,9 +129,12 @@ export async function handleCustomServicesFlow(
         }
 
         state.selectedDates = validIndices.map((idx) => daysMap[idx].dateStr);
-        state.selectedDatesLabels = validIndices
-          .map((idx) => daysMap[idx].label)
-          .join(", ");
+
+        state.selectedDatesLabels = isCourse
+          ? validIndices
+              .map((idx) => daysMap[idx].label.split(",")[0].trim())
+              .join(", ")
+          : validIndices.map((idx) => daysMap[idx].label).join(", ");
 
         const referenceDate = state.selectedDates[0];
 
