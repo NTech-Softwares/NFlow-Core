@@ -10,7 +10,8 @@ import { Boom } from "@hapi/boom";
 import { logger } from "../../../shared/utils/logger";
 import { getMessage } from "../../../shared/utils/message";
 import { dbClient } from "../../../shared/database";
-import { usePostgresAuthState } from "./baileysDbAuth";
+// 🔄 ATUALIZADO: Importando a função de limpeza que criamos
+import { usePostgresAuthState, clearPostgresAuthState } from "./baileysDbAuth";
 import MessageHandler from "./handlers/message.handler";
 
 interface SessionControl {
@@ -73,7 +74,6 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
   const currentControl = activeSessions.get(sessionId)!;
 
   try {
-    // 🔥 Mudança estratégica: Usando o banco de dados Postgres em vez do sistema de arquivos local
     const { state, saveCreds } = await usePostgresAuthState(sessionId);
     const { version, isLatest } = await fetchLatestWaWebVersion({});
 
@@ -131,7 +131,12 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
 
           const statusCode = (lastDisconnect?.error as Boom)?.output
             ?.statusCode;
-          const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+          // 🔄 ATUALIZADO: Tratando 401 e 403 como deslogado para evitar loop infinito
+          const shouldReconnect =
+            statusCode !== DisconnectReason.loggedOut &&
+            statusCode !== 401 &&
+            statusCode !== 403;
 
           if (shouldReconnect) {
             currentControl.reconnectAttempts++;
@@ -154,21 +159,14 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
               startWhatsapp(sessionId);
             }, 5000);
           } else {
-            // TRATAMENTO DE LOGOUT PERMANENTE (Desconexão pelo celular do cliente)
+            // TRATAMENTO DE LOGOUT PERMANENTE OU CHAVES CORROMPIDAS
             logger.warn(
-              `[Sessão: ${sessionId}] Desconectado permanentemente. Limpando dados do Banco...`,
+              `[Sessão: ${sessionId}] Desconectado permanentemente (Logout/Credenciais Inválidas). Limpando dados do Banco...`,
             );
 
             try {
-              // Limpa todas as credenciais secretas do banco de dados para forçar novo login e QR Code limpo
-              await dbClient.query(
-                `DELETE FROM whatsapp_auth_creds WHERE session_id = $1`,
-                [sessionId],
-              );
-              await dbClient.query(
-                `DELETE FROM whatsapp_auth_keys WHERE session_id = $1`,
-                [sessionId],
-              );
+              // 🔄 ATUALIZADO: Usando a função modular para limpar as credenciais velhas
+              await clearPostgresAuthState(sessionId);
               await updateSessionStatusTable(sessionId, "DISCONNECTED", null);
             } catch (err) {
               logger.error(
@@ -182,6 +180,7 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
             currentControl.qr = null;
             activeSessions.delete(sessionId);
 
+            // Gera uma nova tentativa de conexão (que agora vai gerar um QR Code novo, pois o banco está limpo)
             setTimeout(() => {
               startWhatsapp(sessionId);
             }, 2000);

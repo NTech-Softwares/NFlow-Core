@@ -8,6 +8,30 @@ import {
 import { dbClient } from "../../../shared/database";
 import { logger } from "../../../shared/utils/logger";
 
+/**
+ * Limpa completamente as credenciais e chaves criptográficas de uma sessão.
+ * Crucial para evitar erros de descriptografia ao reconectar novos números.
+ */
+export async function clearPostgresAuthState(sessionId: string): Promise<void> {
+  try {
+    await dbClient.query(
+      `DELETE FROM whatsapp_auth_creds WHERE session_id = $1`,
+      [sessionId],
+    );
+    await dbClient.query(
+      `DELETE FROM whatsapp_auth_keys WHERE session_id = $1`,
+      [sessionId],
+    );
+    logger.warn(
+      `[Auth DB] 🧹 Histórico de autenticação totalmente limpo para a sessão: ${sessionId}`,
+    );
+  } catch (err: any) {
+    logger.error(
+      `[Auth DB] Erro ao limpar estado de autenticação da sessão ${sessionId}: ${err.message}`,
+    );
+  }
+}
+
 export async function usePostgresAuthState(
   sessionId: string,
 ): Promise<{ state: AuthenticationState; saveCreds: () => Promise<void> }> {
@@ -52,7 +76,7 @@ export async function usePostgresAuthState(
               data[row.key_id] = JSON.parse(row.key_data, BufferJSON.reviver);
             }
           } catch (err) {
-            logger.error(`[Auth DB] Erro ao ler chaves do tipo ${type}:`, err);
+            logger.error(`[Auth DB] Erro ao leer chaves do tipo ${type}:`, err);
           }
 
           return data;
