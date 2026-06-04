@@ -91,15 +91,9 @@ async function processJob(job: QueueJob) {
     // 🔄 ATUALIZADO: Gravando user_id e schedule_id no log de auditoria de sucesso
     dbClient
       .query(
-        `INSERT INTO whatsapp_message_logs (session_id, user_id, schedule_id, jid, message_text, status) 
+        `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status) 
          VALUES ($1, $2, $3, $4, $5, 'sent')`,
-        [
-          job.sessionId,
-          job.userId || null,
-          job.scheduleId || null,
-          job.jid,
-          job.messageText,
-        ],
+        [job.sessionId, job.jid, job.messageText],
       )
       .catch((err) =>
         logger.error(
@@ -129,16 +123,9 @@ async function processJob(job: QueueJob) {
       // 🔄 ATUALIZADO: Gravando user_id e schedule_id no log de erro
       dbClient
         .query(
-          `INSERT INTO whatsapp_message_logs (session_id, user_id, schedule_id, jid, message_text, status, error_message) 
+          `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message) 
            VALUES ($1, $2, $3, $4, $5, 'failed', $6)`,
-          [
-            job.sessionId,
-            job.userId || null,
-            job.scheduleId || null,
-            job.jid,
-            job.messageText,
-            errorMessage,
-          ],
+          [job.sessionId, job.jid, job.messageText, errorMessage],
         )
         .catch((err) =>
           logger.error(
