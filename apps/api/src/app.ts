@@ -19,6 +19,10 @@ app.use(
   }),
 );
 
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
