@@ -11,10 +11,14 @@ schedulerRoutes.use(authMiddleware);
 // POST /schedules
 schedulerRoutes.post("/", schedulerController.create);
 
+// POST /schedules/campaigns
+// Endpoint dedicado para recebimento de múltiplas requisições da tela "Campanhas"
+schedulerRoutes.post("/campaigns", schedulerController.createCampaign);
+
 // GET /schedules
 schedulerRoutes.get("/", schedulerController.list);
 
-// DELETE /schedules/:scheduleId (Removido o /:userId daqui)
+// DELETE /schedules/:scheduleId
 schedulerRoutes.delete("/:scheduleId", schedulerController.delete);
 
 export { schedulerRoutes };

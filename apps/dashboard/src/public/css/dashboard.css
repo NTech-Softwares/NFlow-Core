@@ -346,6 +346,136 @@ button:disabled {
   background: #18eb35;
 }
 
+/* =========================
+   ADVANCED OPTIONS & TOGGLES
+========================= */
+.advanced-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+  background: #141414;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px dashed #262626;
+}
+
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.neon-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #0d0d0d;
+  border: 2px solid #2a2a2a;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.neon-checkbox:checked {
+  background: #18eb35;
+  border-color: #18eb35;
+  box-shadow: 0 0 10px rgba(24, 235, 53, 0.4);
+}
+
+.neon-checkbox:checked::after {
+  content: "✔";
+  position: absolute;
+  color: black;
+  font-size: 14px;
+  font-weight: bold;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* =========================
+   SCHEDULE BOX & TIME INPUTS
+========================= */
+.schedule-box {
+  background: #0d0d0d;
+  padding: 14px;
+  border-radius: 10px;
+  border-left: 3px solid #18eb35;
+  margin-bottom: 16px;
+  animation: fadeIn 0.3s ease;
+}
+
+.time-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.time-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Input padrão de data nativo ajustado pro tema dark */
+.schedule-time-input {
+  flex: 1;
+  color-scheme: dark; /* Força o modal de calendário do celular para modo escuro */
+}
+
+.remove-time-btn {
+  width: 44px;
+  background: #2a0d0d;
+  color: #ff4444;
+  border: 1px solid #4a1a1a;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-time-btn:hover {
+  background: #ff4444;
+  color: white;
+}
+
+.btn-sm {
+  padding: 10px;
+  font-size: 13px;
+  width: auto;
+}
+
+/* Transição suave do botão dinâmico */
+#dynamicSubmitBtn {
+  transition:
+    background-color 0.3s,
+    transform 0.1s;
+}
+
+.btn-campaign {
+  background: #e1eb18 !important; /* Muda levemente a cor para indicar que é uma ação em massa (amarelado) */
+  box-shadow: 0 0 15px rgba(225, 235, 24, 0.2);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
 /* ===================================================
    PROGRESSIVE ENHANCEMENT (Desktop - Mínimo de 992px)
 =================================================== */

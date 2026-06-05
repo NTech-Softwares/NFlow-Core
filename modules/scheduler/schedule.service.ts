@@ -1,6 +1,18 @@
 import { randomUUID } from "crypto"; // Nativo do Node.js (Evita dependências externas)
 import { ScheduledMessage, ScheduleStatus } from "./schedule.types";
 import * as scheduleRepository from "./schedule.repository";
+import { CampaignTemplate, CampaignSchedule } from "./schedule.types";
+
+interface CreateCampaignInput {
+  userId: string;
+  sessionId: string;
+  name: string;
+  text: string;
+  mediaUrl?: string;
+  mediaType?: "image" | "video" | "document";
+  recipients: string[]; // JIDs que vão receber
+  sendAtList: string[]; // Array de horários de disparo (ISO Strings)
+}
 
 interface CreateScheduleInput {
   userId: string;
@@ -102,4 +114,53 @@ export async function listSchedules(
   }
 
   return schedules;
+}
+
+/**
+ * Salva uma campanha como template e cria múltiplos agendamentos para ela.
+ */
+export async function createCampaign(
+  input: CreateCampaignInput,
+): Promise<void> {
+  // 1. Cria o Template
+  const templateId = randomUUID();
+  const template: CampaignTemplate = {
+    id: templateId,
+    userId: input.userId,
+    name: input.name,
+    message: {
+      text: input.text,
+      mediaUrl: input.mediaUrl,
+      mediaType: input.mediaType,
+    },
+    recipients: input.recipients,
+  };
+
+  await scheduleRepository.saveCampaignTemplate(template);
+
+  // 2. Gera os horários agendados associados a este template
+  const schedules: CampaignSchedule[] = input.sendAtList.map((time) => {
+    const parsedDate = new Date(time);
+    if (isNaN(parsedDate.getTime()) || parsedDate.getTime() < Date.now()) {
+      throw new Error(
+        `O horário de envio ${time} é inválido ou está no passado.`,
+      );
+    }
+
+    return {
+      id: randomUUID(),
+      templateId: template.id,
+      sessionId: input.sessionId,
+      status: "pending",
+      sendAt: parsedDate.toISOString(),
+    };
+  });
+
+  if (schedules.length > 0) {
+    await scheduleRepository.addCampaignSchedules(schedules);
+  }
+
+  console.log(
+    `[Service] Campanha [${input.name}] criada com ${schedules.length} agendamentos para o tenant: ${input.userId}`,
+  );
 }

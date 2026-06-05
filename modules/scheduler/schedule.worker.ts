@@ -11,45 +11,29 @@ export async function startScheduleWorker() {
 
   while (true) {
     try {
-      // 1. Faxina de agendamentos cancelados
+      // ========================================================
+      // 1. PROCESSAMENTO DE MENSAGENS INDIVIDUAIS (1 PARA 1)
+      // ========================================================
       const canceledSchedules =
         await scheduleRepository.getAllCanceledSchedules();
-
       if (canceledSchedules.length > 0) {
-        logger.info(
-          `[Scheduler] Faxina: Encontrados ${canceledSchedules.length} agendamentos cancelados.`,
-        );
         for (const canceled of canceledSchedules) {
           await scheduleRepository
             .deleteSchedule(canceled.userId, canceled.id)
-            .catch((err) =>
-              logger.error(`Erro ao deletar [${canceled.id}]: ${err.message}`),
-            );
+            .catch(() => {});
         }
       }
 
-      // 2. Processamento de disparos no tempo correto
       const pendingSchedules =
         await scheduleRepository.getAllPendingSchedules();
       const now = new Date();
 
-      // Utiliza a propriedade correta unificada da interface
-      const dueSchedules = pendingSchedules.filter((schedule) => {
-        const scheduleDate = new Date(schedule.scheduledAt);
-        return scheduleDate <= now;
-      });
+      const dueSchedules = pendingSchedules.filter(
+        (schedule) => new Date(schedule.scheduledAt) <= now,
+      );
 
       if (dueSchedules.length > 0) {
-        logger.info(
-          `[Scheduler] ${dueSchedules.length} mensagens prontas para disparo.`,
-        );
-
         for (const schedule of dueSchedules) {
-          logger.info(
-            `[Scheduler] Encaminhando agendamento [${schedule.id}] para a fila de envio.`,
-          );
-
-          // 🔄 ATUALIZADO: Formato plano, passando userId e scheduleId diretamente
           messageQueue.push({
             sessionId: schedule.sessionId,
             jid: schedule.remoteJid,
@@ -59,7 +43,6 @@ export async function startScheduleWorker() {
             scheduleId: schedule.id,
           });
 
-          // Atualiza o status para enviado
           await scheduleRepository.updateSchedule(
             schedule.userId,
             schedule.id,
@@ -70,6 +53,50 @@ export async function startScheduleWorker() {
                 sentAt: new Date().toISOString(),
               },
             },
+          );
+        }
+      }
+
+      // ========================================================
+      // 2. PROCESSAMENTO DE CAMPANHAS EM MASSA (1 PARA N)
+      // ========================================================
+      const dueCampaigns = await scheduleRepository.getDueCampaignSchedules();
+
+      if (dueCampaigns.length > 0) {
+        logger.info(
+          `[Scheduler] ${dueCampaigns.length} horários de campanhas prontos para processamento.`,
+        );
+
+        for (const campaignSchedule of dueCampaigns) {
+          const template = campaignSchedule.template;
+
+          if (
+            template &&
+            template.recipients &&
+            template.recipients.length > 0
+          ) {
+            logger.info(
+              `[Scheduler] Gerando ${template.recipients.length} jobs para a campanha: ${template.name}`,
+            );
+
+            // Adiciona cada destinatário da campanha na fila de envios
+            for (const recipientJid of template.recipients) {
+              messageQueue.push({
+                sessionId: campaignSchedule.sessionId,
+                jid: recipientJid,
+                messageText: template.message.text,
+                imagePath: template.message.mediaUrl || undefined,
+                userId: template.userId,
+                // Aqui usamos o ID do horário para possível auditoria futura
+                scheduleId: campaignSchedule.id,
+              });
+            }
+          }
+
+          // Marca ESTE horário da campanha como processado
+          await scheduleRepository.updateCampaignScheduleStatus(
+            campaignSchedule.id,
+            "processed",
           );
         }
       }

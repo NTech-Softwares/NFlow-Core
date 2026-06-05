@@ -1,5 +1,6 @@
 import { dbClient } from "../../shared/database";
 import { ScheduledMessage, ScheduleStatus } from "./schedule.types";
+import { CampaignTemplate, CampaignSchedule } from "./schedule.types";
 
 // ==========================================
 // HELPERS DE VALIDAÇÃO E TRATAMENTO
@@ -186,4 +187,91 @@ async function getAllSchedulesByStatus(
   `;
   const rows = await dbClient.query(query, [status]);
   return rows.map(mapRowToScheduledMessage);
+}
+
+// ==========================================
+// FUNÇÕES DE CAMPANHAS (TEMPLATES & HORÁRIOS)
+// ==========================================
+
+export async function saveCampaignTemplate(
+  template: CampaignTemplate,
+): Promise<void> {
+  const query = `
+    INSERT INTO public.whatsapp_campaign_templates (id, user_id, name, message, recipients)
+    VALUES ($1, $2, $3, $4, $5)
+  `;
+  await dbClient.query(query, [
+    template.id,
+    template.userId.toLowerCase(),
+    template.name,
+    JSON.stringify(template.message),
+    JSON.stringify(template.recipients),
+  ]);
+}
+
+export async function addCampaignSchedules(
+  schedules: CampaignSchedule[],
+): Promise<void> {
+  if (schedules.length === 0) return;
+
+  // Inserção em massa para alta performance
+  const values: any[] = [];
+  const placeholders: string[] = [];
+  let i = 1;
+
+  for (const s of schedules) {
+    placeholders.push(`($${i++}, $${i++}, $${i++}, $${i++}, $${i++})`);
+    values.push(s.id, s.templateId, s.sessionId, s.status, s.sendAt);
+  }
+
+  const query = `
+    INSERT INTO public.whatsapp_campaign_schedules (id, template_id, session_id, status, send_at)
+    VALUES ${placeholders.join(", ")}
+  `;
+  await dbClient.query(query, values);
+}
+
+/**
+ * Busca todos os horários de campanhas que já passaram da hora e estão pendentes.
+ * Faz um JOIN automático para trazer o conteúdo do Template junto.
+ */
+export async function getDueCampaignSchedules(): Promise<CampaignSchedule[]> {
+  const query = `
+    SELECT 
+      s.id as schedule_id, s.session_id, s.status, s.send_at,
+      t.id as template_id, t.user_id, t.name, t.message, t.recipients
+    FROM public.whatsapp_campaign_schedules s
+    INNER JOIN public.whatsapp_campaign_templates t ON s.template_id = t.id
+    WHERE s.status = 'pending' AND s.send_at <= CURRENT_TIMESTAMP
+    ORDER BY s.send_at ASC
+  `;
+
+  const rows = await dbClient.query(query);
+
+  return rows.map((row) => ({
+    id: row.schedule_id,
+    templateId: row.template_id,
+    sessionId: row.session_id,
+    status: row.status,
+    sendAt: row.send_at.toISOString(),
+    template: {
+      id: row.template_id,
+      userId: row.user_id,
+      name: row.name,
+      message:
+        typeof row.message === "string" ? JSON.parse(row.message) : row.message,
+      recipients:
+        typeof row.recipients === "string"
+          ? JSON.parse(row.recipients)
+          : row.recipients,
+    },
+  }));
+}
+
+export async function updateCampaignScheduleStatus(
+  scheduleId: string,
+  status: string,
+): Promise<void> {
+  const query = `UPDATE public.whatsapp_campaign_schedules SET status = $1 WHERE id = $2`;
+  await dbClient.query(query, [status, scheduleId]);
 }

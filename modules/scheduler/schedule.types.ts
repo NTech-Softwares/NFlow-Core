@@ -26,3 +26,29 @@ export interface ScheduledMessage {
   sentAt?: string; // Data exata em que o Baileys confirmou o envio
   payload?: Record<string, any>;
 }
+
+// ... (mantenha os tipos existentes) ...
+
+export interface CampaignTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  message: {
+    text: string;
+    mediaUrl?: string;
+    mediaType?: "image" | "video" | "document";
+  };
+  recipients: string[]; // Array contendo os JIDs de destino
+  createdAt?: string;
+}
+
+export interface CampaignSchedule {
+  id: string;
+  templateId: string;
+  sessionId: string;
+  status: ScheduleStatus | "processed";
+  sendAt: string;
+  createdAt?: string;
+  // Propriedade injetada via JOIN no repositório para o Worker
+  template?: CampaignTemplate;
+}
