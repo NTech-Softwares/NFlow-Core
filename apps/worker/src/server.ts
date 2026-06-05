@@ -7,6 +7,21 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// 🛡️ ESSENCIAL: Impede que o Baileys congele o worker para sempre
+function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  errorMessage: string,
+): Promise<T> {
+  let timer: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(errorMessage)), ms);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() =>
+    clearTimeout(timer),
+  );
+}
+
 function createMessagePayload(job: QueueJob) {
   return job.imagePath
     ? { image: { url: job.imagePath }, caption: job.messageText }
@@ -14,9 +29,18 @@ function createMessagePayload(job: QueueJob) {
 }
 
 async function sendGroupMessage(sock: any, job: QueueJob, messagePayload: any) {
-  await sock.sendPresenceUpdate("composing", job.jid);
-  await delay(507);
-  const response = await sock.sendMessage(job.jid, messagePayload);
+  await delay(100);
+
+  const response = await withTimeout(
+    sock.sendMessage(job.jid, messagePayload),
+    30000, // Aumentado para 30s
+    "TIMEOUT_BAILEYS_GRUPO",
+  );
+
+  // Verificação de segurança: O Baileys apenas retorna um objeto se o servidor confirmar a recepção
+  if (!response || !response.key || !response.key.id) {
+    throw new Error("MENSAGEM_NAO_CONFIRMADA_PELO_SERVIDOR");
+  }
 
   if (response?.key?.id) {
     await dbClient.query(
@@ -34,9 +58,13 @@ async function sendGroupMessage(sock: any, job: QueueJob, messagePayload: any) {
 async function sendLidMessage(sock: any, job: QueueJob, messagePayload: any) {
   await sock.sendPresenceUpdate("composing", job.jid);
   await delay(500);
-  const response = await sock.sendMessage(job.jid, messagePayload);
 
-  // 🛠️ CORRIGIDO: Substituído realJid por job.jid que é o identificador correto neste escopo
+  const response = await withTimeout(
+    sock.sendMessage(job.jid, messagePayload),
+    15000,
+    "TIMEOUT_BAILEYS: Falha ao enviar mensagem LID.",
+  );
+
   if (response?.key?.id) {
     await dbClient.query(
       `UPDATE chat_sessions 
@@ -53,7 +81,12 @@ async function sendPrivateMessage(
   messagePayload: any,
 ) {
   const number = job.jid.replace("@s.whatsapp.net", "");
-  const [result] = await sock.onWhatsApp(number);
+
+  const [result] = await withTimeout(
+    sock.onWhatsApp(number),
+    10000,
+    "TIMEOUT_BAILEYS: Falha ao verificar existência do número.",
+  );
 
   if (!result?.exists) {
     throw new Error("NÚMERO_INEXISTENTE: Este número não existe no WhatsApp.");
@@ -63,7 +96,11 @@ async function sendPrivateMessage(
   await sock.presenceSubscribe(realJid);
   await delay(500);
 
-  const response = await sock.sendMessage(realJid, messagePayload);
+  const response = await withTimeout(
+    sock.sendMessage(realJid, messagePayload),
+    15000,
+    "TIMEOUT_BAILEYS: Falha ao enviar mensagem privada.",
+  );
 
   if (response?.key?.id) {
     await dbClient.query(
@@ -79,7 +116,6 @@ async function processJob(job: QueueJob) {
   try {
     const sock = getWhatsapp(job.sessionId);
 
-    // Validação estrita da saúde do WebSocket
     if (!sock || !sock.ws || !sock.ws.isOpen) {
       throw new Error(
         "SESSAO_OFFLINE: Socket não inicializado ou sem conexão.",
@@ -98,14 +134,11 @@ async function processJob(job: QueueJob) {
       await sendPrivateMessage(sock, job, messagePayload);
     }
 
-    // Marca como sucesso na fila do banco
     await messageQueue.complete(job.id);
 
-    // Gravando log de auditoria de sucesso
     dbClient
       .query(
-        `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status) 
-         VALUES ($1, $2, $3, 'sent')`,
+        `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status) VALUES ($1, $2, $3, 'sent')`,
         [job.sessionId, job.jid, job.messageText],
       )
       .catch((err) =>
@@ -119,26 +152,25 @@ async function processJob(job: QueueJob) {
       errorMessage.includes("SESSAO_OFFLINE") ||
       errorMessage.includes("Closed") ||
       errorMessage.includes("stream") ||
+      errorMessage.includes("TIMEOUT_BAILEYS") ||
       error.code === "ECONNRESET";
 
     const newAttempts = job.attempts + 1;
 
     if (isConnectionError && newAttempts < 3) {
       logger.warn(
-        `[Worker] Falha de rede para ${job.jid}. Reagendando (Tentativa ${newAttempts}/3)...`,
+        `[Worker] Falha temporal para ${job.jid}. Reagendando (Tentativa ${newAttempts}/3)... - Motivo: ${errorMessage}`,
       );
       await messageQueue.fail(job.id, newAttempts, errorMessage);
     } else {
       logger.error(
         `[Worker] Falha definitiva para ${job.jid}: ${errorMessage}`,
       );
-      await messageQueue.fail(job.id, 999, errorMessage); // 999 garante status 'failed' absoluto
+      await messageQueue.fail(job.id, 999, errorMessage);
 
-      // Gravando log de erro
       dbClient
         .query(
-          `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message) 
-           VALUES ($1, $2, $3, 'failed', $4)`,
+          `INSERT INTO whatsapp_message_logs (session_id, jid, message_text, status, error_message) VALUES ($1, $2, $3, 'failed', $4)`,
           [job.sessionId, job.jid, job.messageText, errorMessage],
         )
         .catch((err) =>
@@ -153,34 +185,53 @@ async function processJob(job: QueueJob) {
 export async function startWorker() {
   logger.info("🚀 [Worker De Envio] iniciado!");
 
+  await delay(7000);
+
   while (true) {
     try {
-      // Busca até 10 mensagens simultâneas travando-as para este worker processar
+      // 1. Busca o lote (Batch)
       const batch = await messageQueue.fetchBatch(10);
 
       if (batch.length === 0) {
-        await delay(2000); // Fila vazia, descansa 2s antes de buscar novamente
+        await delay(2000);
         continue;
       }
 
       logger.info(
-        `[Worker] Processando lote de ${batch.length} mensagens concorrentes...`,
+        `[Worker] Iniciando processamento de lote com ${batch.length} jobs.`,
       );
 
-      // Executa o processamento de forma paralela usando Promise.allSettled
-      await Promise.allSettled(
-        batch.map(async (job) => {
-          // Delay randômico de anti-ban aplicado individualmente por thread
-          await delay(Math.floor(Math.random() * 1000));
+      const completedIds: string[] = [];
+
+      // 2. Processamento SEQUENCIAL (mesmo sendo um lote, enviamos um por um)
+      for (const job of batch) {
+        try {
+          const isGroup = job.jid.endsWith("@g.us");
+          const randomDelay = isGroup
+            ? 1000 + Math.floor(Math.random() * 1000)
+            : 500 + Math.floor(Math.random() * 1000);
+
+          await delay(randomDelay);
+
+          // processJob continua existindo, mas REMOVA o messageQueue.complete(job.id) de dentro dele
+          // para não fazer query a cada mensagem individualmente.
           await processJob(job);
-        }),
+
+          completedIds.push(job.id);
+        } catch (error) {
+          logger.error(`[Worker] Erro no job ${job.id}: ${error}`);
+          // Se falhar, o método fail() do seu queue manager já cuida do status individual
+        }
+      }
+
+      // 3. Persistência em lote (Salva o sucesso de todos de uma vez)
+      await messageQueue.completeBatch(completedIds);
+      logger.info(
+        `[Worker] Lote finalizado. ${completedIds.length} mensagens marcadas como enviadas.`,
       );
     } catch (loopError: any) {
-      // Proteção para o loop infinito nunca morrer em caso de falha grave de banco
-      logger.error(
-        `[Worker Loop Error] Erro crítico no loop do worker: ${loopError.message}`,
-      );
-      await delay(1000);
+      logger.error(`[Worker Loop Error]: ${loopError.message}`);
+      await delay(2000);
     }
   }
 }

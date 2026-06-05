@@ -8,10 +8,6 @@ import {
 import { dbClient } from "../../../shared/database";
 import { logger } from "../../../shared/utils/logger";
 
-/**
- * Limpa completamente as credenciais e chaves criptográficas de uma sessão.
- * Crucial para evitar erros de descriptografia ao reconectar novos números.
- */
 export async function clearPostgresAuthState(sessionId: string): Promise<void> {
   try {
     await dbClient.query(
@@ -35,6 +31,7 @@ export async function clearPostgresAuthState(sessionId: string): Promise<void> {
 export async function usePostgresAuthState(
   sessionId: string,
 ): Promise<{ state: AuthenticationState; saveCreds: () => Promise<void> }> {
+  // 1. CARREGA AS CREDENCIAIS
   const credsRows = await dbClient.query(
     `SELECT creds FROM whatsapp_auth_creds WHERE session_id = $1`,
     [sessionId],
@@ -55,6 +52,34 @@ export async function usePostgresAuthState(
     );
   }
 
+  // 🚀 2. O SEGREDO: CARREGAMENTO EM MASSA PARA A RAM 🚀
+  // Trazemos todas as chaves desta sessão para a memória de uma única vez na inicialização
+  const memoryCache: { [type: string]: { [id: string]: any } } = {};
+
+  try {
+    const startTime = Date.now();
+    const allKeys = await dbClient.query(
+      `SELECT key_type, key_id, key_data FROM whatsapp_auth_keys WHERE session_id = $1`,
+      [sessionId],
+    );
+
+    for (const row of allKeys) {
+      if (!memoryCache[row.key_type]) memoryCache[row.key_type] = {};
+      memoryCache[row.key_type][row.key_id] = JSON.parse(
+        row.key_data,
+        BufferJSON.reviver,
+      );
+    }
+    logger.info(
+      `[Auth DB] ⚡ RAM Cache carregado com ${allKeys.length} chaves em ${Date.now() - startTime}ms para a sessão: ${sessionId}`,
+    );
+  } catch (err) {
+    logger.error(
+      `[Auth DB] Erro crítico ao carregar cache de chaves para RAM:`,
+      err,
+    );
+  }
+
   return {
     state: {
       creds,
@@ -63,32 +88,35 @@ export async function usePostgresAuthState(
           const data: { [id: string]: any } = {};
           if (ids.length === 0) return data;
 
-          try {
-            const rows = await dbClient.query(
-              `
-                SELECT key_id, key_data FROM whatsapp_auth_keys 
-                WHERE session_id = $1 AND key_type = $2 AND key_id = ANY($3::text[])
-              `,
-              [sessionId, type, ids],
-            );
-
-            for (const row of rows) {
-              data[row.key_id] = JSON.parse(row.key_data, BufferJSON.reviver);
+          // 🚀 LÊ DIRETAMENTE DA RAM (0ms de latência) EM VEZ DO POSTGRES
+          for (const id of ids) {
+            if (memoryCache[type] && memoryCache[type][id]) {
+              data[id] = memoryCache[type][id];
             }
-          } catch (err) {
-            logger.error(`[Auth DB] Erro ao leer chaves do tipo ${type}:`, err);
           }
-
           return data;
         },
 
         set: async (data) => {
           try {
             for (const category of Object.keys(data)) {
+              if (!memoryCache[category]) memoryCache[category] = {};
+
               const entries = Object.entries(
                 data[category as keyof SignalDataTypeMap] || {},
               );
-              const CHUNK_SIZE = 100; // Limita o tamanho do lote para proteger o banco
+
+              // 1. ATUALIZA A RAM IMEDIATAMENTE PARA DISPONIBILIZAR PARA O BAILEYS
+              for (const [id, value] of entries) {
+                if (value) {
+                  memoryCache[category][id] = value;
+                } else {
+                  delete memoryCache[category][id];
+                }
+              }
+
+              // 2. SALVA NO BANCO EM LOTE (BACKGROUND)
+              const CHUNK_SIZE = 100;
 
               for (let i = 0; i < entries.length; i += CHUNK_SIZE) {
                 const chunk = entries.slice(i, i + CHUNK_SIZE);

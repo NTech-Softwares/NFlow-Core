@@ -3,6 +3,7 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestWaWebVersion,
   WASocket,
+  makeCacheableSignalKeyStore,
 } from "@whiskeysockets/baileys";
 import { pino } from "pino";
 import qrcode from "qrcode-terminal";
@@ -83,8 +84,13 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
       );
     }
 
+    const authWithCache = {
+      creds: state.creds,
+      keys: makeCacheableSignalKeyStore(state.keys, pino({ level: "silent" })),
+    };
+
     const sock = makeWASocket({
-      auth: state,
+      auth: authWithCache,
       browser: Browsers.appropriate("Desktop"),
       printQRInTerminal: false,
       version: USE_LATEST_VERSION ? version : undefined,
@@ -211,7 +217,7 @@ export const startWhatsapp = async (sessionId: string): Promise<WASocket> => {
           if (!formattedMessage || !formattedMessage.content) continue;
 
           logger.info(
-            `[Sessão: ${sessionId}] Mensagem processada | De: ${formattedMessage.pushName || "User"} | deMim? ${formattedMessage.fromMe}`,
+            `[Sessão: ${sessionId}] Mensagem Recebida | De: ${formattedMessage.pushName || "User"} | deMim? ${formattedMessage.fromMe}`,
           );
 
           await MessageHandler(formattedMessage, sessionId);

@@ -82,6 +82,23 @@ class MessageQueueManager {
   }
 
   /**
+   * Marca um lote inteiro de jobs como concluídos de uma só vez
+   */
+  public async completeBatch(jobIds: string[]): Promise<void> {
+    if (jobIds.length === 0) return;
+    try {
+      await dbClient.query(
+        `UPDATE whatsapp_scheduled_messages 
+       SET status = 'completed', updated_at = CURRENT_TIMESTAMP 
+       WHERE id = ANY($1)`,
+        [jobIds],
+      );
+    } catch (e: any) {
+      logger.error(`[Queue DB] Erro ao concluir lote de jobs: ${e.message}`);
+    }
+  }
+
+  /**
    * Marca o job como concluído
    */
   public async complete(jobId: string): Promise<void> {
