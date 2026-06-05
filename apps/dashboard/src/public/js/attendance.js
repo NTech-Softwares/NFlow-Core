@@ -27,6 +27,7 @@ window.refreshAttendanceView = async function () {
 
   const waitingContainer = document.getElementById("waiting-queue");
   const activeContainer = document.getElementById("active-queue");
+  const botContainer = document.getElementById("bot-queue");
 
   if (!waitingContainer || !activeContainer) return;
 
@@ -38,6 +39,10 @@ window.refreshAttendanceView = async function () {
   }
   if (activeContainer.children.length === 0) {
     activeContainer.innerHTML =
+      '<p class="result-feedback">Carregando conversas...</p>';
+  }
+  if (botContainer.children.length === 0) {
+    botContainer.innerHTML =
       '<p class="result-feedback">Carregando conversas...</p>';
   }
 
@@ -54,13 +59,15 @@ window.refreshAttendanceView = async function () {
 
     waitingContainer.innerHTML = "";
     activeContainer.innerHTML = "";
+    botContainer.innerHTML = "";
 
     const waitingLeads = sessions.filter((s) => s.atendimento === "em_espera");
     const activeLeads = sessions.filter(
       (s) => s.atendimento === "humano" || s.atendimento === "em_atendimento",
     );
+    const botLeads = sessions.filter((s) => s.atendimento === "automatico");
 
-    if (waitingLeads.length === 0) {
+    if (waitingLeads.length !== 0) {
       waitingContainer.innerHTML =
         '<p class="result-feedback" style="opacity: 0.5;">Ninguém aguardando na fila. 🙌</p>';
     } else {
@@ -71,10 +78,19 @@ window.refreshAttendanceView = async function () {
 
     if (activeLeads.length === 0) {
       activeContainer.innerHTML =
-        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento ativo no momento. 🤖</p>';
+        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento ativo no momento. 💆‍♀️</p>';
     } else {
       activeLeads.forEach((lead) => {
         activeContainer.appendChild(createLeadCard(lead, "active"));
+      });
+    }
+
+    if (botLeads.length === 0) {
+      botContainer.innerHTML =
+        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento na fila do bot. 🤖</p>';
+    } else {
+      botLeads.forEach((lead) => {
+        botContainer.appendChild(createLeadCard(lead, "waiting"));
       });
     }
   } catch (error) {
