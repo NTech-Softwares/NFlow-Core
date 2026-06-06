@@ -13,37 +13,35 @@ function escapeHtml(str) {
  */
 window.initAttendanceView = async function () {
   console.log("[Attendance] Inicializando painel de atendimento humano...");
-  // Apenas puxa o primeiro carregamento imediato ao entrar na tela
-  await window.refreshAttendanceView();
+  // Passa true na primeira inicialização para mostrar o texto "Carregando..."
+  await window.refreshAttendanceView(true);
 };
 
 /**
- * 🟢 ASSINATURA GLOBAL: O Motor de Polling vai chamar esta função a cada 5s
+ * 🟢 ASSINATURA GLOBAL: Motor de Polling (a cada 5s) e de Ações Manuais
+ * @param {boolean} isInitialLoad - Se for true, exibe a mensagem "Carregando conversas" se a fila estiver vazia.
  */
-window.refreshAttendanceView = async function () {
+window.refreshAttendanceView = async function (isInitialLoad = false) {
   window.showGlobalRefreshIndicator(); // 🚀 Liga o relógio global
   const token = localStorage.getItem("token");
   const apiUrl = window.APP_CONFIG.API_URL;
 
-  const waitingContainer = document.getElementById("waiting-queue");
-  const activeContainer = document.getElementById("active-queue");
-  const botContainer = document.getElementById("bot-queue");
+  const queues = {
+    waiting: document.getElementById("waiting-queue"),
+    active: document.getElementById("active-queue"),
+    bot: document.getElementById("bot-queue"),
+  };
 
-  if (!waitingContainer || !activeContainer) return;
+  if (!queues.waiting || !queues.active || !queues.bot) return;
 
-  // Só mostra mensagem de "Carregando" se a lista estiver totalmente vazia (primeiro load)
-  // Evita o efeito chato de "piscar" a tela a cada 5 segundos
-  if (waitingContainer.children.length === 0) {
-    waitingContainer.innerHTML =
-      '<p class="result-feedback">Carregando fila...</p>';
-  }
-  if (activeContainer.children.length === 0) {
-    activeContainer.innerHTML =
-      '<p class="result-feedback">Carregando conversas...</p>';
-  }
-  if (botContainer.children.length === 0) {
-    botContainer.innerHTML =
-      '<p class="result-feedback">Carregando conversas...</p>';
+  // Mostra "Carregando" apenas se for o load inicial e as colunas estiverem vazias
+  if (isInitialLoad) {
+    Object.values(queues).forEach((container) => {
+      if (container.children.length === 0) {
+        container.innerHTML =
+          '<p class="result-feedback">Carregando conversas...</p>';
+      }
+    });
   }
 
   try {
@@ -57,116 +55,52 @@ window.refreshAttendanceView = async function () {
     const data = await response.json();
     const sessions = data.sessions || [];
 
-    waitingContainer.innerHTML = "";
-    activeContainer.innerHTML = "";
-    botContainer.innerHTML = "";
-
-    const waitingLeads = sessions.filter((s) => s.atendimento === "em_espera");
-    const activeLeads = sessions.filter(
-      (s) => s.atendimento === "humano" || s.atendimento === "em_atendimento",
+    // Renderiza cada coluna usando a função auxiliar
+    renderQueue(
+      queues.waiting,
+      sessions.filter((s) => s.atendimento === "em_espera"),
+      "waiting",
+      "Ninguém aguardando na fila. 🙌",
     );
-    const botLeads = sessions.filter((s) => s.atendimento === "automatico");
-
-    if (waitingLeads.length !== 0) {
-      waitingContainer.innerHTML =
-        '<p class="result-feedback" style="opacity: 0.5;">Ninguém aguardando na fila. 🙌</p>';
-    } else {
-      waitingLeads.forEach((lead) => {
-        waitingContainer.appendChild(createLeadCard(lead, "waiting"));
-      });
-    }
-
-    if (activeLeads.length === 0) {
-      activeContainer.innerHTML =
-        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento ativo no momento. 💆‍♀️</p>';
-    } else {
-      activeLeads.forEach((lead) => {
-        activeContainer.appendChild(createLeadCard(lead, "active"));
-      });
-    }
-
-    if (botLeads.length === 0) {
-      botContainer.innerHTML =
-        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento na fila do bot. 🤖</p>';
-    } else {
-      botLeads.forEach((lead) => {
-        botContainer.appendChild(createLeadCard(lead, "waiting"));
-      });
-    }
+    renderQueue(
+      queues.active,
+      sessions.filter(
+        (s) => s.atendimento === "humano" || s.atendimento === "em_atendimento",
+      ),
+      "active",
+      "Nenhum atendimento ativo no momento. 💆‍♀️",
+    );
+    renderQueue(
+      queues.bot,
+      sessions.filter((s) => s.atendimento === "automatico"),
+      "automatico",
+      "Nenhum atendimento na fila do bot. 🤖",
+    );
   } catch (error) {
     console.error("[Attendance Error]:", error);
+    if (isInitialLoad) {
+      Object.values(queues).forEach((container) => {
+        if (container.children.length === 0)
+          container.innerHTML =
+            '<p class="result-feedback">Erro ao sincronizar dados.</p>';
+      });
+    }
   } finally {
     window.hideGlobalRefreshIndicator(); // 🔒 Desliga o relógio global
   }
 };
 
 /**
- * Consome a API para listar todas as sessões e renderiza nas respectivas colunas
+ * Utilitário para limpar e popular uma coluna de forma dinâmica
  */
-async function loadAttendanceSessions() {
-  const token = localStorage.getItem("token");
-  const apiUrl = window.APP_CONFIG.API_URL;
-
-  const waitingContainer = document.getElementById("waiting-queue");
-  const activeContainer = document.getElementById("active-queue");
-
-  if (!waitingContainer || !activeContainer) return;
-
-  if (waitingContainer.children.length === 0) {
-    waitingContainer.innerHTML =
-      '<p class="result-feedback">Carregando fila...</p>';
-  }
-  if (activeContainer.children.length === 0) {
-    activeContainer.innerHTML =
-      '<p class="result-feedback">Carregando conversas...</p>';
-  }
-
-  try {
-    const response = await fetch(`${apiUrl}/attendance/sessions`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
+function renderQueue(container, leads, context, emptyMessage) {
+  container.innerHTML = "";
+  if (leads.length === 0) {
+    container.innerHTML = `<p class="result-feedback" style="opacity: 0.5;">${emptyMessage}</p>`;
+  } else {
+    leads.forEach((lead) => {
+      container.appendChild(createLeadCard(lead, context));
     });
-
-    if (!response.ok) throw new Error("Erro ao buscar sessões do servidor.");
-
-    const data = await response.json();
-    const sessions = data.sessions || [];
-
-    waitingContainer.innerHTML = "";
-    activeContainer.innerHTML = "";
-
-    const waitingLeads = sessions.filter((s) => s.atendimento === "em_espera");
-    const activeLeads = sessions.filter(
-      (s) => s.atendimento === "humano" || s.atendimento === "em_atendimento",
-    );
-
-    if (waitingLeads.length === 0) {
-      waitingContainer.innerHTML =
-        '<p class="result-feedback" style="opacity: 0.5;">Ninguém aguardando na fila. 🙌</p>';
-    } else {
-      waitingLeads.forEach((lead) => {
-        waitingContainer.appendChild(createLeadCard(lead, "waiting"));
-      });
-    }
-
-    if (activeLeads.length === 0) {
-      activeContainer.innerHTML =
-        '<p class="result-feedback" style="opacity: 0.5;">Nenhum atendimento ativo no momento. 🤖</p>';
-    } else {
-      activeLeads.forEach((lead) => {
-        activeContainer.appendChild(createLeadCard(lead, "active"));
-      });
-    }
-  } catch (error) {
-    if (waitingContainer.children.length === 0) {
-      waitingContainer.innerHTML =
-        '<p class="result-feedback">Erro ao sincronizar dados.</p>';
-    }
-    if (activeContainer.children.length === 0) {
-      activeContainer.innerHTML =
-        '<p class="result-feedback">Erro ao sincronizar dados.</p>';
-    }
-    console.error("[Attendance Error]:", error);
   }
 }
 
@@ -195,7 +129,6 @@ function createLeadCard(lead, context) {
   const card = document.createElement("div");
   card.classList.add("group-item");
 
-  // position: relative para ancorar o balãozinho absolute sem quebrar o fluxo do card
   card.style.display = "flex";
   card.style.flexDirection = "column";
   card.style.alignItems = "stretch";
@@ -217,13 +150,11 @@ function createLeadCard(lead, context) {
   const phoneFormatted = lead.remoteJid
     ? lead.remoteJid.split("@")[0]
     : "Desconhecido";
-
   const safeName = escapeHtml(lead.pushName || "Cliente sem Nome");
   const safeMessage = escapeHtml(
     lead.lastMessage || "Nenhuma mensagem enviada",
   );
 
-  // btnBaseStyle inclui 'justify-content: center' para alinhar os elementos (ícone + texto) perfeitamente
   const btnBaseStyle = `
     padding: 8px 14px; 
     font-size: 0.85rem; 
@@ -297,130 +228,95 @@ function createLeadCard(lead, context) {
   return card;
 }
 
+/* ======================================================================
+   🔥 API HELPERS E AÇÕES
+   ====================================================================== */
+
 /**
- * [Mover status] -> Altera o estado do lead na fila (ex: mover para em_atendimento)
+ * Utilitário centralizado para evitar boilerplate de fetch nas ações
  */
-async function changeLeadStatus(remoteJid, newStatus) {
+async function sendAttendanceAction(
+  endpoint,
+  method = "POST",
+  body = null,
+  successMsg = null,
+) {
   const token = localStorage.getItem("token");
   const apiUrl = window.APP_CONFIG.API_URL;
 
-  try {
-    const response = await fetch(`${apiUrl}/attendance/status`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ remoteJid, status: newStatus }),
-    });
+  const options = {
+    method,
+    headers: { Authorization: `Bearer ${token}` },
+  };
 
+  if (body) {
+    options.headers["Content-Type"] = "application/json";
+    options.body = JSON.stringify(body);
+  }
+
+  try {
+    const response = await fetch(`${apiUrl}${endpoint}`, options);
     if (response.ok) {
-      await loadAttendanceSessions();
+      if (successMsg) alert(successMsg);
+      await window.refreshAttendanceView(false); // Recarrega a fila sem "piscar" a tela
     } else {
-      alert("Erro ao alterar status do atendimento.");
+      alert("Erro ao realizar a operação no servidor.");
     }
   } catch (error) {
-    console.error(error);
+    console.error(`[API Action Error - ${endpoint}]:`, error);
+    alert("Erro de comunicação com o servidor.");
   }
 }
 
 /**
- * [Devolver para o Bot] -> Encerra a sessão humana e joga o fluxo de volta para a automação
+ * [Mover status] -> Altera o estado do lead na fila
  */
-async function closeLeadAttendance(remoteJid) {
-  const token = localStorage.getItem("token");
-  const apiUrl = window.APP_CONFIG.API_URL;
+function changeLeadStatus(remoteJid, newStatus) {
+  sendAttendanceAction("/attendance/status", "POST", {
+    remoteJid,
+    status: newStatus,
+  });
+}
 
+/**
+ * [Devolver para o Bot] -> Encerra a sessão humana e volta para automação
+ */
+function closeLeadAttendance(remoteJid) {
   if (
-    !confirm(
+    confirm(
       "Deseja encerrar o atendimento humano e reativar o Robô Automático para este cliente?",
     )
   ) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`${apiUrl}/attendance/close`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ remoteJid }),
-    });
-
-    if (response.ok) {
-      await loadAttendanceSessions();
-    } else {
-      alert("Erro ao devolver atendimento para o Robô.");
-    }
-  } catch (error) {
-    console.error(error);
+    sendAttendanceAction("/attendance/close", "POST", { remoteJid });
   }
 }
 
 /**
- * [Transferir Atendimento] -> Pergunta para qual operador/setor deseja mover o cliente
+ * [Transferir Atendimento] -> Pergunta para qual operador/setor deseja mover
  */
-async function transferLeadAttendance(remoteJid) {
-  const token = localStorage.getItem("token");
-  const apiUrl = window.APP_CONFIG.API_URL;
-
+function transferLeadAttendance(remoteJid) {
   const targetOperator = prompt(
     "Digite o ID do operador ou o nome do Setor/Fila destino:",
   );
-  if (!targetOperator || targetOperator.trim() === "") return;
-
-  try {
-    const response = await fetch(`${apiUrl}/attendance/transfer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ remoteJid, target: targetOperator.trim() }),
-    });
-
-    if (response.ok) {
-      alert("Atendimento transferido com sucesso!");
-      await loadAttendanceSessions();
-    } else {
-      alert("Erro ao transferir atendimento. Verifique o destino informado.");
-    }
-  } catch (error) {
-    console.error("[Transfer Error]:", error);
+  if (targetOperator && targetOperator.trim() !== "") {
+    sendAttendanceAction(
+      "/attendance/transfer",
+      "POST",
+      { remoteJid, target: targetOperator.trim() },
+      "Atendimento transferido com sucesso!",
+    );
   }
 }
 
 /**
  * [Excluir Atendimento] -> Remove o registro da listagem ativa do painel
  */
-async function deleteLeadAttendance(remoteJid) {
-  const token = localStorage.getItem("token");
-  const apiUrl = window.APP_CONFIG.API_URL;
-
+function deleteLeadAttendance(remoteJid) {
   if (
-    !confirm(
+    confirm(
       "Atenção: Deseja realmente remover este atendimento do painel? O histórico local desse chat será perdido.",
     )
   ) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`${apiUrl}/attendance/sessions/${remoteJid}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (response.ok) {
-      await loadAttendanceSessions();
-    } else {
-      alert("Erro ao excluir o atendimento do servidor.");
-    }
-  } catch (error) {
-    console.error("[Delete Error]:", error);
+    sendAttendanceAction(`/attendance/sessions/${remoteJid}`, "DELETE");
   }
 }
