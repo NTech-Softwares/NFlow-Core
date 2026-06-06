@@ -22,7 +22,6 @@ window.initProfileView = async function () {
   }
 
   try {
-    // 🟢 Ajustado para a rota correta do seu Express Core
     const response = await fetch(`${apiUrl}/profile`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
@@ -31,11 +30,16 @@ window.initProfileView = async function () {
     if (!response.ok) throw new Error("Erro na requisição.");
 
     const resBody = await response.json();
-
-    // Suporta tanto se o backend responder o objeto direto quanto envelopado em .data ou .user
     const data = resBody.businessHours
       ? resBody
       : resBody.data || resBody.user || resBody;
+
+    // 🟢 1. Preenchendo os novos campos de Dados Empresariais
+    document.getElementById("profile-company-name").value =
+      data.companyName || "";
+    document.getElementById("profile-business-type").value =
+      data.businessType || "";
+    document.getElementById("profile-address").value = data.address || "";
 
     if (!data || !data.businessHours) {
       throw new Error(
@@ -154,7 +158,11 @@ window.saveProfileBusinessHours = async function () {
     .map((line) => line.trim())
     .filter((line) => line.length > 0);
 
+  // 🟢 2. Adicionando os dados ao payload
   const payload = {
+    companyName: document.getElementById("profile-company-name").value.trim(),
+    businessType: document.getElementById("profile-business-type").value.trim(),
+    address: document.getElementById("profile-address").value.trim(),
     businessHours: {
       enabled: document.getElementById("profile-bh-enabled").checked,
       timezone: document.getElementById("profile-bh-timezone").value,
@@ -164,7 +172,7 @@ window.saveProfileBusinessHours = async function () {
   };
 
   try {
-    // 🟢 Ajustado também o endpoint do PUT para bater com o Router do Core
+    // 🔥 Dica: Considere mudar o nome do endpoint no seu backend de `/profile/business-hours` para apenas `/profile`, já que agora ele salva dados gerais também.
     const response = await fetch(`${apiUrl}/profile/business-hours`, {
       method: "PUT",
       headers: {

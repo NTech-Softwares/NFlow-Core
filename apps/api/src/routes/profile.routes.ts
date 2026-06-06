@@ -7,8 +7,8 @@ const profileController = new ProfileController();
 
 profileRoutes.use(authMiddleware);
 
-// Rotas de Perfil protegidas por Tenant
 profileRoutes.get("/", profileController.show);
-profileRoutes.put("/business-hours", profileController.updateHours);
+
+profileRoutes.put("/business-hours", profileController.updateProfile);
 
 export { profileRoutes };

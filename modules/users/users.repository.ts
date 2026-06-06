@@ -8,6 +8,9 @@ export interface UserDTO {
   passwordHash: string;
   whatsappSessionId: string;
   businessHours?: BusinessHoursConfig;
+  companyName?: string; // 🟢 Novo
+  businessType?: string; // 🟢 Novo
+  address?: string; // 🟢 Novo
   createdAt: string;
 }
 
@@ -15,10 +18,6 @@ export interface UserDTO {
 // HELPERS DE VALIDAÇÃO E TRATAMENTO
 // ==========================================
 
-/**
- * 💡 Remove o prefixo "sess_" caso a string seja um sessionId,
- * retornando apenas o UUID puro esperado pelo banco de dados.
- */
 function resolveUserId(idOrSession: string): string {
   if (!idOrSession) return "";
   return idOrSession.startsWith("sess_")
@@ -26,7 +25,6 @@ function resolveUserId(idOrSession: string): string {
     : idOrSession;
 }
 
-// Valida se a string final é realmente um UUID antes de mandar pro Postgres
 function isValidUUID(id: string): boolean {
   const uuidRegex =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -39,7 +37,14 @@ function isValidUUID(id: string): boolean {
 
 export async function getUsers(): Promise<UserDTO[]> {
   const query = `
-    SELECT id, name, email, password_hash as "passwordHash", whatsapp_session_id as "whatsappSessionId", business_hours as "businessHours", created_at as "createdAt"
+    SELECT 
+      id, name, email, password_hash as "passwordHash", 
+      whatsapp_session_id as "whatsappSessionId", 
+      business_hours as "businessHours", 
+      company_name as "companyName", 
+      business_type as "businessType", 
+      address, 
+      created_at as "createdAt"
     FROM users
   `;
   return dbClient.query<UserDTO>(query);
@@ -50,7 +55,6 @@ export async function getBusinessHoursByUserId(
 ): Promise<BusinessHoursConfig | undefined> {
   const pureUserId = resolveUserId(userId);
 
-  // 🛡️ Evita o crash do banco se o ID extraído não for um UUID válido
   if (!isValidUUID(pureUserId)) {
     console.warn(
       `[getBusinessHoursByUserId] Recebido ID inválido para UUID: "${pureUserId}". Abortando query.`,
@@ -88,6 +92,9 @@ export async function updateUserProfile(
     email: "email",
     whatsappSessionId: "whatsapp_session_id",
     businessHours: "business_hours",
+    companyName: "company_name",
+    businessType: "business_type",
+    address: "address",
   };
 
   for (const [key, val] of Object.entries(profileData)) {
@@ -104,7 +111,14 @@ export async function updateUserProfile(
     UPDATE users 
     SET ${fields.join(", ")}
     WHERE id = $1
-    RETURNING id, name, email, password_hash as "passwordHash", whatsapp_session_id as "whatsappSessionId", business_hours as "businessHours", created_at as "createdAt"
+    RETURNING 
+      id, name, email, password_hash as "passwordHash", 
+      whatsapp_session_id as "whatsappSessionId", 
+      business_hours as "businessHours", 
+      company_name as "companyName", 
+      business_type as "businessType", 
+      address, 
+      created_at as "createdAt"
   `;
 
   const rows = await dbClient.query<UserDTO>(query, [pureUserId, ...values]);

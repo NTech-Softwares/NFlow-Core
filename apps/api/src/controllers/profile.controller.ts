@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getProfile, updateBusinessHours } from "../services/profile.service";
+import { getProfile, updateProfileData } from "../services/profile.service";
 import { logger } from "../../../../shared/utils/logger";
 
 export class ProfileController {
@@ -23,31 +23,32 @@ export class ProfileController {
 
   /**
    * PUT /api/users/profile/business-hours
+   * (Mantendo a rota original, mas atualizando todos os dados do perfil)
    */
-  async updateHours(req: Request, res: Response): Promise<Response> {
+  async updateProfile(req: Request, res: Response): Promise<Response> {
     try {
       const user = (req as any).user;
       if (!user || !user.id) {
         return res.status(401).json({ error: "Não autorizado." });
       }
 
-      const { businessHours } = req.body;
+      const { businessHours, companyName, businessType, address } = req.body;
 
-      if (!businessHours) {
-        return res
-          .status(400)
-          .json({ error: "Configuração de horários não fornecida." });
-      }
-
-      const updatedHours = await updateBusinessHours(user.id, businessHours);
+      const updatedUser = await updateProfileData(user.id, {
+        businessHours,
+        companyName,
+        businessType,
+        address,
+      });
 
       logger.info(
-        `[Profile] Horário de funcionamento atualizado para o usuário: ${user.id}`,
+        `[Profile] Perfil/Horários atualizados para o usuário: ${user.id}`,
       );
-      return res.json({ success: true, businessHours: updatedHours });
+
+      return res.json({ success: true, data: updatedUser });
     } catch (error: any) {
       logger.error(
-        `Erro ao atualizar horário de atendimento: ${error.message}`,
+        `Erro ao atualizar perfil/horário de atendimento: ${error.message}`,
       );
       return res.status(400).json({ error: error.message });
     }

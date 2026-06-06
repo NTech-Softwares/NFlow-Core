@@ -7,15 +7,11 @@ import { BusinessHoursConfig } from "../../shared/utils/businessHours";
 import * as userRepository from "./users.repository";
 
 export class UserService {
-  /**
-   * 🚀 CORRIGIDO: Agora aceita o whatsappSessionId real (sess_UUID) vindo do fluxo de autenticação
-   */
   async provisionNewTenantSpace(
     id: string,
     whatsappSessionId: string,
   ): Promise<void> {
     try {
-      // Grava na tabela chamando a PK correta que o Baileys/Chat vai buscar
       await saveFlowsForSession(whatsappSessionId, id, DEFAULT_FLOW_TEMPLATE);
       logger.info(
         `[Provisionamento] Fluxos iniciais criados no Postgres para a Sessão: ${whatsappSessionId}`,
@@ -28,7 +24,7 @@ export class UserService {
   }
 
   /**
-   * 🎯 Busca dados seguros e públicos do perfil do usuário
+   *  Busca dados seguros e públicos do perfil do usuário
    */
   async getUserProfile(userId: string) {
     const users = await userRepository.getUsers();
@@ -42,6 +38,9 @@ export class UserService {
       id: user.id,
       name: user.name,
       email: user.email,
+      companyName: user.companyName || "",
+      businessType: user.businessType || "",
+      address: user.address || "",
       businessHours: user.businessHours || {
         enabled: false,
         timezone: "America/Sao_Paulo",
@@ -60,20 +59,26 @@ export class UserService {
   }
 
   /**
-   * 🎯 Atualiza as configurações de horário de funcionamento do usuário
+   * Atualiza os dados gerais do perfil do usuário
    */
-  async updateBusinessHours(
+  async updateProfileData(
     userId: string,
-    businessHours: BusinessHoursConfig,
+    profileData: {
+      businessHours?: BusinessHoursConfig;
+      companyName?: string;
+      businessType?: string;
+      address?: string;
+    },
   ) {
-    const updatedUser = await userRepository.updateUserProfile(userId, {
-      businessHours,
-    });
+    const updatedUser = await userRepository.updateUserProfile(
+      userId,
+      profileData,
+    );
 
     if (!updatedUser) {
       throw new Error("Falha ao atualizar perfil. Usuário não encontrado.");
     }
 
-    return updatedUser.businessHours;
+    return updatedUser;
   }
 }
