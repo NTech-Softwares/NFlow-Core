@@ -284,7 +284,7 @@
             <button
               type="button"
               class="btn-add-flow neon-action-btn"
-              onclick="window.location.href = '/criar-flow'"
+              onclick="promptAddFlow()"
             >
               <i class="fas fa-plus"></i> Novo Fluxo
             </button>
@@ -890,6 +890,74 @@
           </button>
           <button type="button" id="btn-modal-step-save" class="btn-modal-save">
             Criar Passo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="flow-create-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3><i class="fas fa-project-diagram"></i> Adicionar Novo Fluxo</h3>
+          <button
+            type="button"
+            class="btn-close-modal"
+            onclick="closeFlowModal()"
+          >
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-form-group">
+            <label class="modal-label">Nome do Fluxo:</label>
+            <input
+              type="text"
+              id="modal-flow-name-input"
+              placeholder="Ex: Suporte Técnico"
+              class="input-modal-field"
+              oninput="handleFlowNameAutoFill(this.value)"
+            />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label"
+              >ID do Fluxo (Gerado Automaticamente):</label
+            >
+            <input
+              type="text"
+              id="modal-flow-id-input"
+              disabled
+              class="input-modal-readonly"
+            />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">ID do Passo Inicial:</label>
+            <input
+              type="text"
+              id="modal-flow-initial-step"
+              value="inicio"
+              placeholder="Ex: inicio, menu_principal"
+              class="input-modal-field"
+            />
+          </div>
+          <div class="modal-form-group">
+            <label class="modal-label">Mensagem do Passo Inicial:</label>
+            <textarea
+              id="modal-flow-message-input"
+              rows="5"
+              placeholder="Ex: 👋 Olá! Seja bem-vindo(a) ao atendimento."
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-modal-cancel"
+            onclick="closeFlowModal()"
+          >
+            Cancelar
+          </button>
+          <button type="button" id="btn-modal-flow-save" class="btn-modal-save">
+            Criar Fluxo
           </button>
         </div>
       </div>

@@ -8,20 +8,8 @@ export class MainController {
     return res.sendFile(filePath);
   }
 
-  static campaigns(req: Request, res: Response) {
-    const filePath = path.resolve(__dirname, "..", "views", "campaigns.html");
-
-    return res.sendFile(filePath);
-  }
-
   static qrCode(req: Request, res: Response) {
     const filePath = path.resolve(__dirname, "..", "views", "qr-code.html");
-
-    return res.sendFile(filePath);
-  }
-
-  static flows(req: Request, res: Response) {
-    const filePath = path.resolve(__dirname, "..", "views", "flows.html");
 
     return res.sendFile(filePath);
   }
