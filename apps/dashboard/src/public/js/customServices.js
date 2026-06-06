@@ -79,7 +79,6 @@ function renderServicesCatalog(services) {
 
     itemRow.style.display = "flex";
     itemRow.style.flexDirection = "column";
-    itemRow.style.gap = "12px";
     itemRow.style.padding = "16px";
     itemRow.style.background = "#141414";
     itemRow.style.border = "1px solid #262626";
@@ -90,6 +89,7 @@ function renderServicesCatalog(services) {
     const serviceId = service.id || `temp-${Date.now()}-${idx}`;
     const strategyType = service.strategyType || "STANDARD";
     const useCustomMsg = !!service.useCustomMessage;
+    const isExpanded = service._isExpanded === true; // Padrão é false para itens carregados
 
     const meta = service.courseMetadata || {
       totalClasses: 4,
@@ -99,96 +99,108 @@ function renderServicesCatalog(services) {
     };
 
     itemRow.innerHTML = `
-      <div style="display: flex; width: 100%; align-items: center; justify-content: space-between; border-bottom: 1px solid #1a1a1a; padding-bottom: 6px;">
-        <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-layout-neon); font-weight: bold;">
-          <i class="fas fa-tag"></i> Item #${idx + 1}
-        </span>
-        <input type="hidden" class="catalog-service-id" value="${serviceId}" />
-        <button type="button" onclick="removeServiceRow(${idx})" style="background: transparent; border: 1px solid rgba(235,24,24,0.2); color: #ff4d4d; padding: 4px 10px; font-size: 11px; border-radius: 6px; width: auto; cursor: pointer; transition: all 0.2s;">
-          <i class="fas fa-trash-alt"></i> Remover
-        </button>
+      <div onclick="toggleServiceCollapse(${idx})" style="display: flex; width: 100%; align-items: center; justify-content: space-between; border-bottom: ${isExpanded ? "1px solid #1a1a1a" : "none"}; padding-bottom: ${isExpanded ? "6px" : "0"}; cursor: pointer; user-select: none;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <i class="fas fa-chevron-${isExpanded ? "up" : "down"} collapse-icon-${idx}" style="color: #a0a0a0; font-size: 13px; width: 14px; text-align: center; transition: 0.2s;"></i>
+          <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-layout-neon); font-weight: bold;">
+            <i class="fas fa-tag"></i> Item #${idx + 1}
+          </span>
+          <span class="preview-name-${idx}" style="font-size: 11px; color: #8f8f8f; margin-left: 4px;">
+            ${service.name ? "- " + escapeHtml(service.name) : ""}
+          </span>
+        </div>
+        
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <input type="hidden" class="catalog-service-id" value="${serviceId}" />
+          <input type="hidden" class="catalog-service-expanded" value="${isExpanded}" />
+          <button type="button" onclick="event.stopPropagation(); removeServiceRow(${idx})" style="background: transparent; border: 1px solid rgba(235,24,24,0.2); color: #ff4d4d; padding: 4px 10px; font-size: 11px; border-radius: 6px; width: auto; cursor: pointer; transition: all 0.2s;">
+            <i class="fas fa-trash-alt"></i> Remover
+          </button>
+        </div>
       </div>
       
-      <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; width: 100%;">
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 11px; color: #8f8f8f; margin-bottom: 4px;">Nome do Serviço / Curso</label>
-          <input type="text" class="catalog-service-name" value="${escapeHtml(service.name)}" placeholder="Ex: Curso de Programação" required style="padding: 10px; font-size: 13px; background: #0d0d0d;" />
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 11px; color: #8f8f8f; margin-bottom: 4px;">Preço Total (R$)</label>
-          <input type="number" step="0.01" class="catalog-service-price" value="${service.price || 0}" placeholder="0,00" required style="padding: 10px; font-size: 13px; background: #0d0d0d;" />
-        </div>
-        
-        <div class="form-group" style="margin-bottom: 0;">
-          <label style="font-size: 11px; color: #8f8f8f; margin-bottom: 4px;">Duração (mins)</label>
-          <input type="number" class="catalog-service-duration" value="${service.durationMinutes || 30}" placeholder="Minutos" required style="padding: 10px; font-size: 13px; background: #0d0d0d;" />
-        </div>
-      </div>
-
-      <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; background: #080808; padding: 14px; border-radius: 8px; border: 1px solid #1f1f1f;">
-        <div class="form-group" style="margin-bottom: 0; width: 100%;">
-          <label style="font-size: 10px; color: #a0a0a0; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Tipo de Agendamento</label>
-          <div style="position: relative;">
-            <select class="catalog-service-strategy" onchange="toggleStrategyFields(${idx}, this.value)" style="padding: 10px 30px 10px 10px; font-size: 12px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; cursor: pointer; appearance: none; -webkit-appearance: none; font-weight: 500;">
-              <option value="STANDARD" ${strategyType === "STANDARD" ? "selected" : ""}>💼 Serviço Padrão (Avulso)</option>
-              <option value="RECURRENT_COURSE" ${strategyType === "RECURRENT_COURSE" ? "selected" : ""}>📚 Curso Recorrente</option>
-            </select>
-            <div style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666; pointer-events: none; font-size: 10px;">
-              <i class="fas fa-chevron-down"></i>
-            </div>
+      <div class="service-body-${idx}" style="display: ${isExpanded ? "flex" : "none"}; flex-direction: column; gap: 12px; width: 100%; margin-top: ${isExpanded ? "12px" : "0"};">
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; width: 100%;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 11px; color: #8f8f8f; margin-bottom: 4px;">Nome do Serviço / Curso</label>
+            <input type="text" class="catalog-service-name" oninput="updateServiceNamePreview(${idx}, this.value)" value="${escapeHtml(service.name)}" placeholder="Ex: Curso de Programação" required style="padding: 10px; font-size: 13px; background: #0d0d0d;" />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 11px; color: #8f8f8f; margin-bottom: 4px;">Preço Total (R$)</label>
+            <input type="number" step="0.01" class="catalog-service-price" value="${service.price || 0}" placeholder="0,00" required style="padding: 10px; font-size: 13px; background: #0d0d0d;" />
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-size: 11px; color: #8f8f8f; margin-bottom: 4px;">Duração (mins)</label>
+            <input type="number" class="catalog-service-duration" value="${service.durationMinutes || 30}" placeholder="Minutos" required style="padding: 10px; font-size: 13px; background: #0d0d0d;" />
           </div>
         </div>
 
-        <div class="course-fields-${idx}" style="display: ${strategyType === "RECURRENT_COURSE" ? "flex" : "none"}; flex-direction: column; gap: 12px; border-top: 1px solid #1a1a1a; padding-top: 12px;">
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Total Aulas</label>
-              <input type="number" class="catalog-course-total" min="1" value="${meta.totalClasses || 4}" style="padding: 8px; font-size: 12px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%;" />
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Vagas/Hora</label>
-              <input type="number" class="catalog-course-max-students" min="1" value="${meta.maxStudentsPerSlot || 1}" style="padding: 8px; font-size: 12px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%;" />
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Janela Horário</label>
-              <div style="display: flex; gap: 4px; align-items: center;">
-                <input type="text" class="catalog-course-open" placeholder="08:00" maxlength="5" oninput="maskTimeInput(this)" onblur="captureCurrentCatalogInputs()" value="${meta.customHours?.open || ""}" style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
-                <span style="color:#555; font-size:10px;">as</span>
-                <input type="text" class="catalog-course-close" placeholder="18:00" maxlength="5" oninput="maskTimeInput(this)" onblur="captureCurrentCatalogInputs()" value="${meta.customHours?.close || ""}" style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; background: #080808; padding: 14px; border-radius: 8px; border: 1px solid #1f1f1f;">
+          <div class="form-group" style="margin-bottom: 0; width: 100%;">
+            <label style="font-size: 10px; color: #a0a0a0; margin-bottom: 6px; display: block; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;">Tipo de Agendamento</label>
+            <div style="position: relative;">
+              <select class="catalog-service-strategy" onchange="toggleStrategyFields(${idx}, this.value)" style="padding: 10px 30px 10px 10px; font-size: 12px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; cursor: pointer; appearance: none; -webkit-appearance: none; font-weight: 500;">
+                <option value="STANDARD" ${strategyType === "STANDARD" ? "selected" : ""}>💼 Serviço Padrão (Avulso)</option>
+                <option value="RECURRENT_COURSE" ${strategyType === "RECURRENT_COURSE" ? "selected" : ""}>📚 Curso Recorrente</option>
+              </select>
+              <div style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #666; pointer-events: none; font-size: 10px;">
+                <i class="fas fa-chevron-down"></i>
               </div>
             </div>
           </div>
 
-          <div class="form-group" style="margin-bottom: 0;">
-            <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 6px; display: block;">Dias da Semana Permitidos:</label>
-            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-              ${["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
-                .map((dayName, dIdx) => {
-                  const isChecked = meta.allowedDaysOfWeek
-                    ? meta.allowedDaysOfWeek.includes(dIdx)
-                    : [1, 2, 3, 4, 5].includes(dIdx);
-                  return `
-                  <label style="display: flex; align-items: center; gap: 4px; background: #141414; padding: 6px 8px; border-radius: 4px; border: 1px solid #2d2d2d; font-size: 11px; color: #fff; cursor: pointer;">
-                    <input type="checkbox" class="catalog-course-days" onchange="captureCurrentCatalogInputs()" value="${dIdx}" ${isChecked ? "checked" : ""} style="accent-color: #00ff88;" />
-                    ${dayName}
-                  </label>
-                `;
-                })
-                .join("")}
+          <div class="course-fields-${idx}" style="display: ${strategyType === "RECURRENT_COURSE" ? "flex" : "none"}; flex-direction: column; gap: 12px; border-top: 1px solid #1a1a1a; padding-top: 12px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Total Aulas</label>
+                <input type="number" class="catalog-course-total" min="1" value="${meta.totalClasses || 4}" style="padding: 8px; font-size: 12px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Vagas/Hora</label>
+                <input type="number" class="catalog-course-max-students" min="1" value="${meta.maxStudentsPerSlot || 1}" style="padding: 8px; font-size: 12px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%;" />
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 4px; display: block;">Janela Horário</label>
+                <div style="display: flex; gap: 4px; align-items: center;">
+                  <input type="text" class="catalog-course-open" placeholder="08:00" maxlength="5" oninput="maskTimeInput(this)" onblur="captureCurrentCatalogInputs()" value="${meta.customHours?.open || ""}" style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
+                  <span style="color:#555; font-size:10px;">as</span>
+                  <input type="text" class="catalog-course-close" placeholder="18:00" maxlength="5" oninput="maskTimeInput(this)" onblur="captureCurrentCatalogInputs()" value="${meta.customHours?.close || ""}" style="padding: 8px 4px; font-size: 11px; background: #141414; color: #fff; border: 1px solid #333; border-radius: 6px; width: 100%; text-align: center;" />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="font-size: 10px; color: #8f8f8f; margin-bottom: 6px; display: block;">Dias da Semana Permitidos:</label>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                ${["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+                  .map((dayName, dIdx) => {
+                    const isChecked = meta.allowedDaysOfWeek
+                      ? meta.allowedDaysOfWeek.includes(dIdx)
+                      : [1, 2, 3, 4, 5].includes(dIdx);
+                    return `
+                    <label style="display: flex; align-items: center; gap: 4px; background: #141414; padding: 6px 8px; border-radius: 4px; border: 1px solid #2d2d2d; font-size: 11px; color: #fff; cursor: pointer;">
+                      <input type="checkbox" class="catalog-course-days" onchange="captureCurrentCatalogInputs()" value="${dIdx}" ${isChecked ? "checked" : ""} style="accent-color: #00ff88;" />
+                      ${dayName}
+                    </label>
+                  `;
+                  })
+                  .join("")}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div style="border-top: 1px solid #1a1a1a; padding-top: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px; width: 100%;">
-          <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #fff; cursor: pointer; user-select: none; width: max-content;">
-            <input type="checkbox" class="catalog-use-custom-msg" onchange="toggleCustomMsgField(${idx}, this.checked)" ${useCustomMsg ? "checked" : ""} style="accent-color: var(--color-layout-neon); width: 15px; height: 15px;" />
-            <span style="font-weight: 600; color: #a0a0a0;">💬 Ativar Mensagem de Confirmação Personalizada</span>
-          </label>
-          
-          <div class="custom-msg-wrapper-${idx}" style="display: ${useCustomMsg ? "flex" : "none"}; flex-direction: column; gap: 4px; width: 100%;">
-            <textarea class="catalog-custom-msg-text" placeholder="Insira o texto do WhatsApp para este serviço. Tags suportadas: {cliente}, {servico}, {preco}, {data}, {horario}" style="width: 100%; min-height: 70px; max-height: 150px; background: #0d0d0d; color: #fff; border: 1px solid #2d2d2d; border-radius: 6px; padding: 10px; font-size: 12px; font-family: monospace; line-height: 1.4; resize: vertical;">${service.customConfirmationMessage || ""}</textarea>
-            <span style="font-size: 10px; color: #555; font-style: italic;">Tags válidas: {cliente}, {servico}, {preco}, {data}, {horario}</span>
+          <div style="border-top: 1px solid #1a1a1a; padding-top: 12px; margin-top: 4px; display: flex; flex-direction: column; gap: 8px; width: 100%;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 11px; color: #fff; cursor: pointer; user-select: none; width: max-content;">
+              <input type="checkbox" class="catalog-use-custom-msg" onchange="toggleCustomMsgField(${idx}, this.checked)" ${useCustomMsg ? "checked" : ""} style="accent-color: var(--color-layout-neon); width: 15px; height: 15px;" />
+              <span style="font-weight: 600; color: #a0a0a0;">💬 Ativar Mensagem de Confirmação Personalizada</span>
+            </label>
+            
+            <div class="custom-msg-wrapper-${idx}" style="display: ${useCustomMsg ? "flex" : "none"}; flex-direction: column; gap: 4px; width: 100%;">
+              <textarea class="catalog-custom-msg-text" placeholder="Insira o texto do WhatsApp para este serviço. Tags suportadas: {cliente}, {servico}, {preco}, {data}, {horario}" style="width: 100%; min-height: 70px; max-height: 150px; background: #0d0d0d; color: #fff; border: 1px solid #2d2d2d; border-radius: 6px; padding: 10px; font-size: 12px; font-family: monospace; line-height: 1.4; resize: vertical;">${service.customConfirmationMessage || ""}</textarea>
+              <span style="font-size: 10px; color: #555; font-style: italic;">Tags válidas: {cliente}, {servico}, {preco}, {data}, {horario}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -196,6 +208,44 @@ function renderServicesCatalog(services) {
     container.appendChild(itemRow);
   });
 }
+
+/**
+ * Função para atualizar o preview do nome do serviço no Header do Collapse
+ */
+window.updateServiceNamePreview = function (index, value) {
+  const preview = document.querySelector(`.preview-name-${index}`);
+  if (preview) {
+    preview.textContent = value.trim() ? `- ${value}` : "";
+  }
+};
+
+/**
+ * Função para controlar o expandir/contrair de cada item
+ */
+window.toggleServiceCollapse = function (index) {
+  const body = document.querySelector(`.service-body-${index}`);
+  const icon = document.querySelector(`.collapse-icon-${index}`);
+  const header = body.previousElementSibling;
+  const hiddenInput = document.querySelector(
+    `.group-item[data-service-index="${index}"] .catalog-service-expanded`,
+  );
+
+  if (body.style.display === "none") {
+    body.style.display = "flex";
+    body.style.marginTop = "12px";
+    header.style.borderBottom = "1px solid #1a1a1a";
+    header.style.paddingBottom = "6px";
+    icon.classList.replace("fa-chevron-down", "fa-chevron-up");
+    if (hiddenInput) hiddenInput.value = "true";
+  } else {
+    body.style.display = "none";
+    body.style.marginTop = "0";
+    header.style.borderBottom = "none";
+    header.style.paddingBottom = "0";
+    icon.classList.replace("fa-chevron-up", "fa-chevron-down");
+    if (hiddenInput) hiddenInput.value = "false";
+  }
+};
 
 window.toggleStrategyFields = function (index, value) {
   const fields = document.querySelectorAll(`.course-fields-${index}`);
@@ -224,6 +274,7 @@ window.addNewServiceRow = function () {
     courseMetadata: null,
     useCustomMessage: false,
     customConfirmationMessage: "",
+    _isExpanded: true, // Item novo sempre inicia expandido
   });
   renderServicesCatalog(originalServicesList);
 };
@@ -263,6 +314,11 @@ function captureCurrentCatalogInputs() {
     const customConfirmationMessage = row.querySelector(
       ".catalog-custom-msg-text",
     ).value;
+
+    const isExpandedInput = row.querySelector(".catalog-service-expanded");
+    const _isExpanded = isExpandedInput
+      ? isExpandedInput.value === "true"
+      : false;
 
     let courseMetadata = null;
     if (strategyType === "RECURRENT_COURSE") {
@@ -313,6 +369,7 @@ function captureCurrentCatalogInputs() {
       courseMetadata,
       useCustomMessage,
       customConfirmationMessage,
+      _isExpanded, // Preserva o estado do collapse no momento de re-renderizar
     });
   });
 
@@ -384,7 +441,7 @@ window.saveCustomServicesCatalog = async function () {
     const resJson = await response.json();
 
     if (response.ok && resJson.success) {
-      feedback.innerText = "Catálogo inteligente updated com sucesso! 🚀";
+      feedback.innerText = "Catálogo inteligente atualizado com sucesso! 🚀";
       feedback.style.color = "#18eb35";
 
       const configData = resJson.data || {};
